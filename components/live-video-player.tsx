@@ -1,3 +1,5 @@
+"use client";
+
 import { RoomAudioRenderer, VideoTrack, useParticipants, useTracks } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import { useLiveKitSession } from "@/components/livekit-session";
@@ -21,7 +23,7 @@ export function LiveVideoPlayer({
 }
 
 function BroadcastVideo({ fallback }: { fallback: React.ReactNode }) {
-  const tracks = useTracks([Track.Source.Camera]);
+  const tracks = useTracks([Track.Source.ScreenShare, Track.Source.Camera]);
   const videoTrack = tracks[0];
 
   if (!videoTrack) return fallback;

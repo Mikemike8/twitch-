@@ -4,6 +4,7 @@ import { channels, type Channel } from "@/lib/channels";
 import { isBlockedByUser } from "@/lib/block-service";
 import { getUserByUsername } from "@/lib/user-service";
 import { isFollowingUser } from "@/lib/follow-service";
+import { hasSelf, isSelfUser } from "@/lib/auth-service";
 
 export default async function UserPage({
   params,
@@ -24,12 +25,14 @@ export default async function UserPage({
     notFound();
   }
 
-  return <ChannelPage channel={channel} initialFollowing={user ? await isFollowingUser(user.id) : false} />;
+  return <ChannelPage channel={channel} initialFollowing={user ? await isFollowingUser(user.id) : false} canFollow={user ? !(await isSelfUser(user.id)) : true} authenticated={await hasSelf()} />;
 }
 
 function toChannel(user: {
   id: string;
   username: string;
+  imageUrl: string;
+  bio: string | null;
   followedBy: unknown[];
   stream: {
     isLive: boolean;
@@ -49,5 +52,8 @@ function toChannel(user: {
     initials: user.username.slice(0, 2).toUpperCase(),
     hostIdentity: user.id,
     thumbnailUrl: user.stream?.thumbnailUrl,
+    imageUrl: user.imageUrl,
+    bio: user.bio,
+    followerCount: user.followedBy.length,
   };
 }

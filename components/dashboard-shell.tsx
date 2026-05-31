@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ChevronIcon, UsersIcon, VideoIcon } from "@/components/icons";
+import { ChevronIcon, MenuIcon, UsersIcon, VideoIcon } from "@/components/icons";
 
 const items = [
   { label: "Stream", href: "", icon: VideoIcon },
@@ -21,27 +21,31 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const base = `/u/${username}`;
 
   return (
     <div className="min-h-screen bg-[#0e0e10]">
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-4 border-b border-[#29292e] bg-[#18181b] px-4">
-        <Link href="/" className="grid h-8 w-8 place-items-center rounded-md bg-[#9147ff] text-sm font-black">S</Link>
-        <span className="font-black">Creator Dashboard</span>
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-[#29292e] bg-[#18181b] px-3 sm:gap-4 sm:px-4">
+        <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded hover:bg-[#303038] lg:hidden" aria-label="Open creator navigation"><MenuIcon className="h-5 w-5" /></button>
+        <Link href="/" className="grid h-8 w-8 place-items-center rounded-md bg-[#9147ff] text-sm font-black">A</Link>
+        <span className="truncate font-black"><span className="hidden sm:inline">Creator </span>Dashboard</span>
         <Link href="/" className="ml-auto rounded bg-[#2f2f35] px-3 py-2 text-xs font-bold hover:bg-[#3b3b44]">Exit</Link>
       </header>
-      <aside className={`${collapsed ? "w-[60px]" : "w-[220px]"} fixed bottom-0 left-0 top-14 border-r border-[#29292e] bg-[#1f1f23] transition-[width]`}>
+      {mobileOpen && <button onClick={() => setMobileOpen(false)} className="fixed inset-0 top-14 z-30 bg-black/60 lg:hidden" aria-label="Close creator navigation" />}
+      <aside className={`${collapsed ? "lg:w-[60px]" : "lg:w-[220px]"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed bottom-0 left-0 top-14 z-30 w-[min(280px,85vw)] border-r border-[#29292e] bg-[#1f1f23] transition-[transform,width] lg:translate-x-0`}>
         <div className="flex h-12 items-center px-3">
           {!collapsed && <p className="truncate text-xs font-bold uppercase text-[#adadb8]">Creator tools</p>}
-          <button onClick={() => setCollapsed(!collapsed)} className="ml-auto rounded p-2 hover:bg-[#303038]"><ChevronIcon className={`h-4 w-4 ${collapsed ? "rotate-180" : ""}`} /></button>
+          <button onClick={() => setMobileOpen(false)} className="ml-auto rounded p-2 hover:bg-[#303038] lg:hidden" aria-label="Close creator navigation">×</button>
+          <button onClick={() => setCollapsed(!collapsed)} className="ml-auto hidden rounded p-2 hover:bg-[#303038] lg:block" aria-label="Toggle creator navigation"><ChevronIcon className={`h-4 w-4 ${collapsed ? "rotate-180" : ""}`} /></button>
         </div>
         {items.map(({ label, href, icon: Icon }) => {
           const path = `${base}${href}`;
           const active = pathname === path;
-          return <Link key={label} href={path} className={`flex h-11 items-center gap-3 px-5 text-sm font-semibold ${active ? "bg-[#303038] text-white" : "text-[#adadb8] hover:bg-[#29292e] hover:text-white"}`}><Icon className="h-4 w-4 shrink-0" />{!collapsed && label}</Link>;
+          return <Link key={label} href={path} onClick={() => setMobileOpen(false)} className={`flex h-11 items-center gap-3 px-5 text-sm font-semibold ${active ? "bg-[#303038] text-white" : "text-[#adadb8] hover:bg-[#29292e] hover:text-white"}`}><Icon className="h-4 w-4 shrink-0" />{!collapsed && label}</Link>;
         })}
       </aside>
-      <main className={`${collapsed ? "ml-[60px]" : "ml-[220px]"} pt-14 transition-[margin]`}>{children}</main>
+      <main className={`${collapsed ? "lg:ml-[60px]" : "lg:ml-[220px]"} pt-14 transition-[margin]`}>{children}</main>
     </div>
   );
 }

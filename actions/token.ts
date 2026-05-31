@@ -48,6 +48,7 @@ export async function createViewerToken(hostIdentity: string) {
   }
 
   const isHost = viewer.id === host.id;
+  const participantIdentity = isHost ? `${viewer.id}-viewer-${randomUUID()}` : viewer.id;
   const isFollowing = isHost || Boolean(
     await db.follow.findUnique({
       where: {
@@ -61,7 +62,7 @@ export async function createViewerToken(hostIdentity: string) {
   const canChat = stream.isChatEnabled && (!stream.isChatFollowersOnly || isFollowing);
 
   const token = new AccessToken(apiKey, apiSecret, {
-    identity: viewer.id,
+    identity: participantIdentity,
     name: viewer.username,
   });
 
@@ -76,6 +77,7 @@ export async function createViewerToken(hostIdentity: string) {
   return {
     token: await token.toJwt(),
     identity: viewer.id,
+    participantIdentity,
     name: viewer.username,
     canChat,
     isChatDelayed: stream.isChatDelayed,

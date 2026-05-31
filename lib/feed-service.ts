@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getSelf } from "@/lib/auth-service";
 
 const publicStreamSelect = {
   id: true,
@@ -9,12 +10,24 @@ const publicStreamSelect = {
     select: {
       id: true,
       username: true,
+      imageUrl: true,
+      bio: true,
     },
   },
 } as const;
 
-export function getFeed() {
+async function getVisibilityFilter() {
+  try {
+    const self = await getSelf();
+    return { user: { blocking: { none: { blockedId: self.id } } } };
+  } catch {
+    return {};
+  }
+}
+
+export async function getFeed() {
   return db.stream.findMany({
+    where: await getVisibilityFilter(),
     orderBy: [
       { isLive: "desc" },
       { updatedAt: "desc" },
@@ -23,12 +36,17 @@ export function getFeed() {
   });
 }
 
-export function searchStreams(term: string) {
+export async function searchStreams(term: string) {
+  const visibility = await getVisibilityFilter();
+
   return db.stream.findMany({
     where: {
-      OR: [
-        { name: { contains: term } },
-        { user: { username: { contains: term } } },
+      AND: [
+        visibility,
+        { OR: [
+          { name: { contains: term } },
+          { user: { username: { contains: term } } },
+        ] },
       ],
     },
     orderBy: [

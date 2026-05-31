@@ -430,6 +430,7 @@ export type BlockCreateOrConnectWithoutBlockerInput = {
 
 export type BlockCreateManyBlockerInputEnvelope = {
   data: Prisma.BlockCreateManyBlockerInput | Prisma.BlockCreateManyBlockerInput[]
+  skipDuplicates?: boolean
 }
 
 export type BlockCreateWithoutBlockedInput = {
@@ -453,6 +454,7 @@ export type BlockCreateOrConnectWithoutBlockedInput = {
 
 export type BlockCreateManyBlockedInputEnvelope = {
   data: Prisma.BlockCreateManyBlockedInput | Prisma.BlockCreateManyBlockedInput[]
+  skipDuplicates?: boolean
 }
 
 export type BlockUpsertWithWhereUniqueWithoutBlockerInput = {
@@ -1284,6 +1286,7 @@ export type BlockCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * The data used to create many Blocks.
    */
   data: Prisma.BlockCreateManyInput | Prisma.BlockCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1302,6 +1305,7 @@ export type BlockCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extension
    * The data used to create many Blocks.
    */
   data: Prisma.BlockCreateManyInput | Prisma.BlockCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

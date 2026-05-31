@@ -23,3 +23,20 @@ export async function getSelf() {
 
   return self;
 }
+
+export async function isSelfUser(userId: string) {
+  try {
+    return (await getSelf()).id === userId;
+  } catch {
+    return false;
+  }
+}
+
+export async function hasSelf() {
+  try {
+    await getSelf();
+    return true;
+  } catch {
+    return false;
+  }
+}

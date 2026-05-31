@@ -5,12 +5,15 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/search(.*)",
   "/api/webhooks(.*)",
   "/api/uploadthing(.*)",
 ]);
 
 const configuredClerkMiddleware = clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
+  const isPublicProfile = /^\/[^/]+$/.test(request.nextUrl.pathname);
+
+  if (!isPublicRoute(request) && !isPublicProfile) {
     await auth.protect();
   }
 });

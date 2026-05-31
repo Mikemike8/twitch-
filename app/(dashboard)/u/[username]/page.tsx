@@ -1,5 +1,6 @@
 import { DashboardSettings } from "@/components/dashboard-settings";
 import { isClerkConfigured } from "@/lib/clerk-config";
+import { getSelf } from "@/lib/auth-service";
 import { getSelfStream } from "@/lib/stream-service";
 
 export default async function CreatorPage({
@@ -15,10 +16,12 @@ export default async function CreatorPage({
     isChatDelayed: false,
     isChatFollowersOnly: false,
   };
+  let bio = "";
 
   if (isClerkConfigured) {
     stream = (await getSelfStream()) ?? stream;
+    bio = (await getSelf()).bio ?? "";
   }
 
-  return <DashboardSettings username={username} persistChanges={isClerkConfigured} stream={stream} uploadConfigured={Boolean(process.env.UPLOADTHING_TOKEN)} />;
+  return <DashboardSettings username={username} bio={bio} persistChanges={isClerkConfigured} stream={stream} uploadConfigured={Boolean(process.env.UPLOADTHING_TOKEN)} />;
 }

@@ -1,4 +1,4 @@
-# StreamHub
+# Argus
 
 A Twitch-inspired live streaming application built from the provided tutorial
 transcript.
@@ -20,10 +20,14 @@ uploads.
 See [BUILD_PROMPT.md](./BUILD_PROMPT.md) for the continuous implementation guide and
 remaining transcript milestones.
 
+See [RESPONSIVE_DESIGN.md](./RESPONSIVE_DESIGN.md) for the all-device responsive
+layout specification, acceptance criteria, and test matrix.
+
 ## Configuration
 
 Create `.env` from `.env.example`. The template includes tutorial timestamps for each
-provider key. Local development uses SQLite by default.
+provider key. Database access uses Neon Postgres with a pooled runtime URL and a
+direct migration URL.
 
 Configure provider callbacks during development with a tunnel such as ngrok:
 

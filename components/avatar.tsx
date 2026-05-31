@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Channel } from "@/lib/channels";
 
 export function Avatar({ channel, size = "md" }: { channel: Channel; size?: "sm" | "md" | "lg" }) {
@@ -7,7 +8,7 @@ export function Avatar({ channel, size = "md" }: { channel: Channel; size?: "sm"
       className={`${dimensions} grid shrink-0 place-items-center rounded-full border-2 border-[#303038] font-black text-white`}
       style={{ background: `linear-gradient(135deg, ${channel.colors[0]}, ${channel.colors[1]})` }}
     >
-      {channel.initials}
+      {channel.imageUrl ? <Image src={channel.imageUrl} alt="" width={64} height={64} unoptimized className="h-full w-full rounded-full object-cover" /> : channel.initials}
     </div>
   );
 }

@@ -430,6 +430,7 @@ export type FollowCreateOrConnectWithoutFollowerInput = {
 
 export type FollowCreateManyFollowerInputEnvelope = {
   data: Prisma.FollowCreateManyFollowerInput | Prisma.FollowCreateManyFollowerInput[]
+  skipDuplicates?: boolean
 }
 
 export type FollowCreateWithoutFollowingInput = {
@@ -453,6 +454,7 @@ export type FollowCreateOrConnectWithoutFollowingInput = {
 
 export type FollowCreateManyFollowingInputEnvelope = {
   data: Prisma.FollowCreateManyFollowingInput | Prisma.FollowCreateManyFollowingInput[]
+  skipDuplicates?: boolean
 }
 
 export type FollowUpsertWithWhereUniqueWithoutFollowerInput = {
@@ -1284,6 +1286,7 @@ export type FollowCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * The data used to create many Follows.
    */
   data: Prisma.FollowCreateManyInput | Prisma.FollowCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1302,6 +1305,7 @@ export type FollowCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensio
    * The data used to create many Follows.
    */
   data: Prisma.FollowCreateManyInput | Prisma.FollowCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

@@ -17,15 +17,15 @@ const initialMessages = [
   ["orbit", "chat is moving fast tonight"],
 ];
 
-export function ChannelPage({ channel, onBack, initialFollowing = false }: { channel: Channel; onBack?: () => void; initialFollowing?: boolean }) {
+export function ChannelPage({ channel, onBack, initialFollowing = false, canFollow = true, authenticated = false }: { channel: Channel; onBack?: () => void; initialFollowing?: boolean; canFollow?: boolean; authenticated?: boolean }) {
   if (channel.hostIdentity && channel.live) {
-    return <LiveKitSession hostIdentity={channel.hostIdentity}><ChannelContent channel={channel} onBack={onBack} initialFollowing={initialFollowing} /></LiveKitSession>;
+    return <LiveKitSession hostIdentity={channel.hostIdentity}><ChannelContent channel={channel} onBack={onBack} initialFollowing={initialFollowing} canFollow={canFollow} authenticated={authenticated} /></LiveKitSession>;
   }
 
-  return <ChannelContent channel={channel} onBack={onBack} initialFollowing={initialFollowing} />;
+  return <ChannelContent channel={channel} onBack={onBack} initialFollowing={initialFollowing} canFollow={canFollow} authenticated={authenticated} />;
 }
 
-function ChannelContent({ channel, onBack, initialFollowing }: { channel: Channel; onBack?: () => void; initialFollowing: boolean }) {
+function ChannelContent({ channel, onBack, initialFollowing, canFollow, authenticated }: { channel: Channel; onBack?: () => void; initialFollowing: boolean; canFollow: boolean; authenticated: boolean }) {
   const [chatOpen, setChatOpen] = useState(true);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(initialMessages);
@@ -55,22 +55,22 @@ function ChannelContent({ channel, onBack, initialFollowing }: { channel: Channe
             <FullscreenIcon className="ml-auto h-5 w-5" />
           </div>}
         </div>
-        <div className="p-5">
+        <div className="p-4 sm:p-5">
           {onBack ? (
             <button onClick={onBack} className="mb-4 text-xs font-bold text-[#bf94ff] hover:underline">← Back to browse</button>
           ) : (
             <Link href="/" className="mb-4 block text-xs font-bold text-[#bf94ff] hover:underline">← Back to browse</Link>
           )}
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-3 sm:gap-4">
             <Avatar channel={channel} size="lg" />
             <div className="min-w-0 flex-1"><h1 className="text-lg font-black">{channel.displayName}</h1><p className="mt-1 truncate text-sm font-semibold">{channel.title}</p><p className="mt-1 text-sm text-[#bf94ff]">{channel.category}</p></div>
-            <div className="flex items-start gap-2">
-              <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} />
+            <div className="flex w-full items-start gap-2 sm:w-auto">
+              {canFollow && <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
               <button className="rounded bg-[#2f2f35] p-2"><BellIcon className="h-5 w-5" /></button>
               <button className="rounded p-2 hover:bg-[#2f2f35]"><MoreIcon className="h-5 w-5" /></button>
             </div>
           </div>
-          <div className="mt-6 rounded-md bg-[#18181b] p-5"><h2 className="font-black">About {channel.displayName}</h2><p className="mt-3 text-sm leading-6 text-[#adadb8]">Welcome to the stream. Follow along for regular broadcasts, live chat, and community events.</p></div>
+          <div className="mt-6 rounded-md bg-[#18181b] p-5"><h2 className="font-black">About {channel.displayName}</h2>{typeof channel.followerCount === "number" && <p className="mt-1 text-xs font-semibold text-[#adadb8]">{channel.followerCount} followers</p>}<p className="mt-3 text-sm leading-6 text-[#adadb8]">{channel.bio || "Welcome to the stream. Follow along for regular broadcasts, live chat, and community events."}</p></div>
         </div>
       </section>
       {channel.hostIdentity && channel.live ? <LiveChatPanel hostIdentity={channel.hostIdentity} /> : <aside className={`${chatOpen ? "w-[340px]" : "w-12"} hidden shrink-0 border-l border-[#29292f] bg-[#18181b] transition-[width] md:flex md:flex-col`}>

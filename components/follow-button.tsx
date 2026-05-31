@@ -1,18 +1,22 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { onFollow, onUnfollow } from "@/actions/follow";
 import { HeartIcon } from "@/components/icons";
 
 export function FollowButton({
   userId,
   initialFollowing,
+  authenticated = false,
 }: {
   userId?: string;
   initialFollowing: boolean;
+  authenticated?: boolean;
 }) {
   const [following, setFollowing] = useState(initialFollowing);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const toggle = () => {
     if (!userId) {
@@ -20,10 +24,18 @@ export function FollowButton({
       return;
     }
 
+    if (!authenticated) {
+      window.alert("Sign in to follow this channel.");
+      return;
+    }
+
     startTransition(() => {
       const action = following ? onUnfollow(userId) : onFollow(userId);
       action
-        .then(() => setFollowing(!following))
+        .then(() => {
+          setFollowing(!following);
+          router.refresh();
+        })
         .catch(() => window.alert("Sign in with a different account to change this follow."));
     });
   };

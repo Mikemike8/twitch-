@@ -9,18 +9,31 @@ import { onKickParticipant } from "@/actions/participant";
 import { useLiveKitSession, type ViewerToken } from "@/components/livekit-session";
 
 export function LiveChatPanel({ hostIdentity }: { hostIdentity: string }) {
-  const [open, setOpen] = useState(true);
+  const [desktopOpen, setDesktopOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { viewer, error, ready } = useLiveKitSession();
+  const content = !ready || !viewer ? <ChatNotice>{error || "Connecting to chat..."}</ChatNotice> : <RealtimeChat viewer={viewer} hostIdentity={hostIdentity} />;
 
   return (
-    <aside className={`${open ? "w-[340px]" : "w-12"} hidden shrink-0 border-l border-[#29292f] bg-[#18181b] transition-[width] md:flex md:flex-col`}>
-      <div className="flex h-12 items-center justify-between border-b border-[#29292f] px-3">
-        {open && <span className="text-xs font-black uppercase">Stream chat</span>}
-        <button onClick={() => setOpen(!open)} className="ml-auto rounded p-1 text-[#adadb8] hover:bg-[#2f2f35]">{open ? "→" : "←"}</button>
-      </div>
-      {open && (!ready || !viewer ? <ChatNotice>{error || "Connecting to chat..."}</ChatNotice> : <RealtimeChat viewer={viewer} hostIdentity={hostIdentity} />)}
-    </aside>
+    <>
+      <aside className={`${desktopOpen ? "w-[340px]" : "w-12"} hidden shrink-0 border-l border-[#29292f] bg-[#18181b] transition-[width] md:flex md:flex-col`}>
+        <ChatHeader open={desktopOpen} onToggle={() => setDesktopOpen(!desktopOpen)} />
+        {desktopOpen && content}
+      </aside>
+      <button onClick={() => setMobileOpen(true)} className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-20 rounded-full bg-[#9147ff] px-4 py-3 text-sm font-black shadow-lg md:hidden" aria-label="Open stream chat">Chat</button>
+      {mobileOpen && <>
+        <button onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-black/60 md:hidden" aria-label="Close stream chat" />
+        <aside className="fixed inset-x-0 bottom-0 z-50 flex h-[min(72vh,620px)] flex-col rounded-t-xl border-t border-[#3f3f46] bg-[#18181b] pb-[env(safe-area-inset-bottom)] md:hidden">
+          <ChatHeader open onToggle={() => setMobileOpen(false)} />
+          {content}
+        </aside>
+      </>}
+    </>
   );
+}
+
+function ChatHeader({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  return <div className="flex h-12 shrink-0 items-center justify-between border-b border-[#29292f] px-3"><span className="text-xs font-black uppercase">Stream chat</span><button onClick={onToggle} className="grid h-10 w-10 place-items-center rounded text-[#adadb8] hover:bg-[#2f2f35]" aria-label={open ? "Close stream chat" : "Open stream chat"}>{open ? "×" : "←"}</button></div>;
 }
 
 function RealtimeChat({ viewer, hostIdentity }: { viewer: ViewerToken; hostIdentity: string }) {
@@ -68,7 +81,7 @@ function Community({ participants, viewer, hostIdentity }: { participants: Retur
   const visible = participants.filter((participant) => (participant.name ?? participant.identity).toLowerCase().includes(filter.toLowerCase()));
   const isHost = viewer.identity === hostIdentity;
 
-  return <div className="flex-1 overflow-y-auto p-3"><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Search participants" className="mb-3 w-full rounded border border-[#3f3f46] bg-[#242429] px-3 py-2 text-xs outline-none" />{visible.map((participant) => { const name = participant.name ?? participant.identity; return <div key={participant.identity} className="flex items-center gap-2 border-b border-[#29292f] py-3 text-xs"><i className="h-2 w-2 rounded-full" style={{ backgroundColor: stringToColor(name) }} /><span className="min-w-0 flex-1 truncate font-bold">{name}</span>{isHost && participant.identity !== viewer.identity && <button onClick={() => { onBlock(participant.identity).catch(() => onKickParticipant(participant.identity)); }} className="text-[#bf94ff] hover:underline">Block</button>}</div>; })}</div>;
+  return <div className="flex-1 overflow-y-auto p-3"><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Search participants" className="mb-3 w-full rounded border border-[#3f3f46] bg-[#242429] px-3 py-2 text-xs outline-none" />{visible.map((participant) => { const name = participant.name ?? participant.identity; return <div key={participant.identity} className="flex items-center gap-2 border-b border-[#29292f] py-3 text-xs"><i className="h-2 w-2 rounded-full" style={{ backgroundColor: stringToColor(name) }} /><span className="min-w-0 flex-1 truncate font-bold">{name}</span>{isHost && participant.identity !== viewer.participantIdentity && participant.identity !== hostIdentity && <button onClick={() => { onBlock(participant.identity).catch(() => onKickParticipant(participant.identity)); }} className="text-[#bf94ff] hover:underline">Block</button>}</div>; })}</div>;
 }
 
 function stringToColor(value: string) {

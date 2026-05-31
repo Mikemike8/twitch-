@@ -11,6 +11,9 @@ export type Channel = {
   initials: string;
   hostIdentity?: string;
   thumbnailUrl?: string | null;
+  imageUrl?: string | null;
+  bio?: string | null;
+  followerCount?: number;
 };
 
 export const channels: Channel[] = [

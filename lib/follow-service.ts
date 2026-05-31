@@ -68,6 +68,12 @@ export async function getFollowedUsers() {
         blocking: { none: { blockedId: self.id } },
       },
     },
-    include: { following: true },
+    include: {
+      following: {
+        include: {
+          stream: true,
+        },
+      },
+    },
   });
 }

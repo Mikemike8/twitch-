@@ -40,21 +40,21 @@ behavior, but use current stable package APIs where the old setup is obsolete.
 - [x] Add Prisma and the database client singleton.
 - [x] Add the `User` model, Clerk webhook synchronization, and webhook API route.
 - [x] Add authenticated user lookup and username-based profile routes.
-- [ ] Build the responsive browse navbar and sidebar stores using persisted user data.
+- [x] Build the responsive browse navbar and sidebar stores using persisted user data.
 - [x] Add follow services, actions, followed channels, and recommendation filtering.
 - [x] Add block services, actions, filtering, and profile visibility rules.
 - [x] Add the creator dashboard route group and creator sidebar.
 - [x] Add the `Stream` model and stream settings forms.
 - [x] Add LiveKit ingress generation for RTMP and WHIP.
 - [x] Add LiveKit webhook processing and online/offline stream state.
-- [ ] Build the real LiveKit video player, controls, and viewer count.
-- [ ] Add real-time chat, participant colors, slow mode, followers-only chat, and
+- [x] Build the real LiveKit video player, controls, and viewer count.
+- [x] Add real-time chat, participant colors, slow mode, followers-only chat, and
       disabled-chat handling.
-- [ ] Disconnect blocked participants from active sessions.
-- [ ] Add thumbnail upload support.
-- [ ] Add browse ordering, search results, empty states, loading states, and final
+- [x] Disconnect blocked participants from active sessions.
+- [x] Add thumbnail upload support.
+- [x] Add browse ordering, search results, empty states, loading states, and final
       responsive polish.
-- [ ] Run final lint, production build, and document deployment configuration.
+- [x] Run final lint, production build, and document deployment configuration.
 
 ## Credential Boundaries
 

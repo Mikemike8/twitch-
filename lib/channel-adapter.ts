@@ -8,6 +8,8 @@ export type PublicStream = {
   user: {
     id: string;
     username: string;
+    imageUrl: string;
+    bio: string | null;
   };
 };
 
@@ -24,6 +26,8 @@ export function streamToChannel(stream: PublicStream): Channel {
     initials: stream.user.username.slice(0, 2).toUpperCase(),
     hostIdentity: stream.user.id,
     thumbnailUrl: stream.thumbnailUrl,
+    imageUrl: stream.user.imageUrl,
+    bio: stream.user.bio,
   };
 }
 
