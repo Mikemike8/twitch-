@@ -26,5 +26,5 @@ export default async function SearchPage({
     }
   }
 
-  return <BrowseApp persistedChannels={streams.map(streamToChannel)} demoFallback={false} initialQuery={term} clerkConfigured={isClerkConfigured} viewerIdentity={viewerIdentity} viewerUsername={viewerUsername} />;
+  return <BrowseApp persistedChannels={streams.map(streamToChannel)} demoFallback={false} forceDemoData initialQuery={term} clerkConfigured={isClerkConfigured} viewerIdentity={viewerIdentity} viewerUsername={viewerUsername} />;
 }

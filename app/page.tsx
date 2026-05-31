@@ -25,5 +25,5 @@ export default async function Home() {
     }
   }
 
-  return <BrowseApp persistedChannels={streams.map(streamToChannel)} followedChannels={followedChannels} clerkConfigured={isClerkConfigured} viewerIdentity={viewerIdentity} viewerUsername={viewerUsername} />;
+  return <BrowseApp persistedChannels={streams.map(streamToChannel)} followedChannels={followedChannels} forceDemoData clerkConfigured={isClerkConfigured} viewerIdentity={viewerIdentity} viewerUsername={viewerUsername} />;
 }

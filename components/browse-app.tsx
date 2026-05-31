@@ -95,12 +95,12 @@ function StreamCard({ channel, onOpen }: { channel: Channel; onOpen: () => void 
   );
 }
 
-export function BrowseApp({ persistedChannels = [], followedChannels = [], demoFallback = true, initialQuery = "", clerkConfigured = false, viewerIdentity, viewerUsername }: { persistedChannels?: Channel[]; followedChannels?: Channel[]; demoFallback?: boolean; initialQuery?: string; clerkConfigured?: boolean; viewerIdentity?: string; viewerUsername?: string }) {
+export function BrowseApp({ persistedChannels = [], followedChannels = [], demoFallback = true, forceDemoData = false, initialQuery = "", clerkConfigured = false, viewerIdentity, viewerUsername }: { persistedChannels?: Channel[]; followedChannels?: Channel[]; demoFallback?: boolean; forceDemoData?: boolean; initialQuery?: string; clerkConfigured?: boolean; viewerIdentity?: string; viewerUsername?: string }) {
   const [query, setQuery] = useState(initialQuery);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [selected, setSelected] = useState<Channel | null>(null);
-  const availableChannels = persistedChannels.length || !demoFallback ? persistedChannels : channels;
+  const availableChannels = forceDemoData ? channels : persistedChannels.length || !demoFallback ? persistedChannels : channels;
   const filtered = useMemo(() => availableChannels.filter((channel) => `${channel.displayName} ${channel.title} ${channel.category}`.toLowerCase().includes(query.toLowerCase())), [availableChannels, query]);
 
   return (
