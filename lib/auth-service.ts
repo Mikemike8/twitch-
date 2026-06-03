@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { isClerkConfigured } from "@/lib/clerk-config";
 
@@ -7,12 +8,16 @@ export async function getSelf() {
     throw new Error("Authentication is not configured");
   }
 
+  const self = await getOptionalSelf();
+
+  if (!self) throw new Error("Unauthorized");
+  return self;
+}
+
+export const getOptionalSelf = cache(async () => {
+  if (!isClerkConfigured) return null;
   const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
+  if (!userId) return null;
   const self = await db.user.findUnique({
     where: { externalUserId: userId },
   });
@@ -22,7 +27,7 @@ export async function getSelf() {
   }
 
   return self;
-}
+});
 
 export async function isSelfUser(userId: string) {
   try {

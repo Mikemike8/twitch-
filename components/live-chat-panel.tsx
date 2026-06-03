@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useChat, useParticipants } from "@livekit/components-react";
 import { SendIcon } from "@/components/icons";
 import { onBlock } from "@/actions/block";
+import { onSendChatMessage } from "@/actions/chat";
 import { onKickParticipant } from "@/actions/participant";
 
 import { useLiveKitSession, type ViewerToken } from "@/components/livekit-session";
+import { inputLimits } from "@/lib/validation";
 
-export function LiveChatPanel({ hostIdentity }: { hostIdentity: string }) {
+export function LiveChatPanel({ hostIdentity, creatorHeader }: { hostIdentity: string; creatorHeader?: React.ReactNode }) {
   const [desktopOpen, setDesktopOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { viewer, error, ready } = useLiveKitSession();
@@ -16,7 +18,8 @@ export function LiveChatPanel({ hostIdentity }: { hostIdentity: string }) {
 
   return (
     <>
-      <aside className={`${desktopOpen ? "w-[340px]" : "w-12"} hidden shrink-0 border-l border-[#29292f] bg-[#18181b] transition-[width] md:flex md:flex-col`}>
+      <aside className={`${desktopOpen ? "w-[380px] xl:w-[460px] 2xl:w-[540px]" : "w-12"} hidden shrink-0 border-l border-[#29292f] bg-[#18181b] transition-[width] md:flex md:flex-col`}>
+        {desktopOpen && creatorHeader}
         <ChatHeader open={desktopOpen} onToggle={() => setDesktopOpen(!desktopOpen)} />
         {desktopOpen && content}
       </aside>
@@ -24,6 +27,7 @@ export function LiveChatPanel({ hostIdentity }: { hostIdentity: string }) {
       {mobileOpen && <>
         <button onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-black/60 md:hidden" aria-label="Close stream chat" />
         <aside className="fixed inset-x-0 bottom-0 z-50 flex h-[min(72vh,620px)] flex-col rounded-t-xl border-t border-[#3f3f46] bg-[#18181b] pb-[env(safe-area-inset-bottom)] md:hidden">
+          {creatorHeader}
           <ChatHeader open onToggle={() => setMobileOpen(false)} />
           {content}
         </aside>
@@ -37,40 +41,38 @@ function ChatHeader({ open, onToggle }: { open: boolean; onToggle: () => void })
 }
 
 function RealtimeChat({ viewer, hostIdentity }: { viewer: ViewerToken; hostIdentity: string }) {
-  const { chatMessages, send, isSending } = useChat();
+  const { chatMessages } = useChat();
   const participants = useParticipants();
   const [value, setValue] = useState("");
-  const [sendingDelayed, setSendingDelayed] = useState(false);
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
   const [variant, setVariant] = useState<"chat" | "community">("chat");
-  const disabled = !viewer.canChat || isSending || sendingDelayed;
+  const disabled = !viewer.canChat || sending;
 
   const submit = () => {
     if (!value.trim() || disabled) return;
     const message = value.trim();
     setValue("");
-
-    if (viewer.isChatDelayed) {
-      setSendingDelayed(true);
-      window.setTimeout(() => {
-        send(message).finally(() => setSendingDelayed(false));
-      }, 3000);
-      return;
-    }
-
-    void send(message);
+    setError("");
+    setSending(true);
+    onSendChatMessage(hostIdentity, message)
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to send chat message"))
+      .finally(() => setSending(false));
   };
 
   return <>
     <div className="flex items-center border-b border-[#29292f] px-3 py-2 text-[11px] text-[#adadb8]"><span>{participants.length} connected</span><button onClick={() => setVariant(variant === "chat" ? "community" : "chat")} className="ml-auto font-bold text-[#bf94ff]">{variant === "chat" ? "Community" : "Chat"}</button></div>
     {variant === "chat" ? <><div className="flex-1 space-y-4 overflow-y-auto p-3 text-sm">
       {chatMessages.length === 0 && <p className="text-center text-xs text-[#adadb8]">Welcome to the chat room.</p>}
-      {chatMessages.map((message) => { const name = message.from?.name ?? message.from?.identity ?? "guest"; return <p key={`${message.timestamp}-${message.from?.identity}`}><strong className="mr-2" style={{ color: stringToColor(name) }}>{name}:</strong><span className="text-[#dedee3]">{message.message}</span></p>; })}
+      {chatMessages.map((message) => { const serverMessage = message as typeof message & { senderName?: string }; const name = message.from?.name ?? message.from?.identity ?? serverMessage.senderName ?? "guest"; return <p key={`${message.timestamp}-${message.from?.identity ?? serverMessage.senderName ?? "server"}`}><strong className="mr-2" style={{ color: stringToColor(name) }}>{name}:</strong><span className="text-[#dedee3]">{message.message}</span></p>; })}
     </div>
     <div className="border-t border-[#29292f] p-3">
-      <div className="flex rounded-md border border-[#3f3f46] bg-[#242429] focus-within:border-[#9147ff]"><input value={value} disabled={disabled} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => event.key === "Enter" && submit()} placeholder={viewer.canChat ? "Send a message" : "Chat is restricted"} className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none disabled:opacity-60" /><button onClick={submit} disabled={disabled} className="px-3 text-[#bf94ff] disabled:opacity-40"><SendIcon className="h-4 w-4" /></button></div>
+      <div className="flex rounded-md border border-[#3f3f46] bg-[#242429] focus-within:border-[#9147ff]"><input value={value} maxLength={inputLimits.chatMessage} disabled={disabled} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => event.key === "Enter" && submit()} placeholder={viewer.canChat ? "Send a message" : "Chat is restricted"} className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none disabled:opacity-60" /><button onClick={submit} disabled={disabled} className="px-3 text-[#bf94ff] disabled:opacity-40"><SendIcon className="h-4 w-4" /></button></div>
       {!viewer.isChatEnabled && <p className="mt-2 text-[11px] text-[#adadb8]">Chat is disabled.</p>}
+      {!viewer.isAuthenticated && <p className="mt-2 text-[11px] text-[#adadb8]">Sign in to send chat messages.</p>}
       {viewer.isChatFollowersOnly && !viewer.isFollowing && <p className="mt-2 text-[11px] text-[#adadb8]">Followers only chat is enabled.</p>}
-      {viewer.isChatDelayed && <p className="mt-2 text-[11px] text-[#adadb8]">Messages are delayed by 3 seconds.</p>}
+      {viewer.isChatDelayed && <p className="mt-2 text-[11px] text-[#adadb8]">Slow mode is enabled. You can send one message every 15 seconds.</p>}
+      {error && <p className="mt-2 text-[11px] text-red-300">{error}</p>}
     </div>
     </> : <Community participants={participants} viewer={viewer} hostIdentity={hostIdentity} />}
   </>;

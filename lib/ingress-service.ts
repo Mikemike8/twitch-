@@ -2,6 +2,7 @@ import { IngressInput } from "livekit-server-sdk";
 import { db } from "@/lib/db";
 import { getSelf } from "@/lib/auth-service";
 import { getIngressClient } from "@/lib/livekit";
+import { secretStorage } from "@/lib/secret-storage";
 
 export type IngressType = "RTMP_INPUT" | "WHIP_INPUT";
 
@@ -40,7 +41,7 @@ export async function createIngress(inputType: IngressType) {
     data: {
       ingressId: ingress.ingressId,
       serverUrl: ingress.url,
-      streamKey: ingress.streamKey,
+      streamKey: secretStorage.encrypt(ingress.streamKey),
     },
   });
 

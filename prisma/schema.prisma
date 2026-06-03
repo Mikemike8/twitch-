@@ -20,6 +20,21 @@ model User {
   stream         Stream?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String
+  action    String
+  targetId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model Stream {
@@ -37,6 +52,9 @@ model Stream {
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+
+  @@index([isLive, updatedAt])
+  @@index([name])
 }
 
 model Follow {

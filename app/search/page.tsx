@@ -1,30 +1,38 @@
 import { BrowseApp } from "@/components/browse-app";
-import { redirect } from "next/navigation";
 import { streamToChannel } from "@/lib/channel-adapter";
-import { searchStreams } from "@/lib/feed-service";
+import { getFeed, searchStreams } from "@/lib/feed-service";
 import { isClerkConfigured } from "@/lib/clerk-config";
 import { getSelf } from "@/lib/auth-service";
+import { getFollowedUsers } from "@/lib/follow-service";
+import { boundedPage, boundedSearchTerm } from "@/lib/validation";
+import type { Channel } from "@/lib/channels";
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ term?: string }>;
+  searchParams: Promise<{ page?: string; term?: string }>;
 }) {
-  const { term = "" } = await searchParams;
-  if (!term) redirect("/");
-  const streams = await searchStreams(term);
-  let viewerIdentity: string | undefined;
-  let viewerUsername: string | undefined;
+  const params = await searchParams;
+  const term = boundedSearchTerm(params.term ?? "");
+  const page = boundedPage(params.page);
+  const [{ streams, hasNext }, viewer] = await Promise.all([
+    term ? searchStreams(term, page) : getFeed(page),
+    getViewerContext(),
+  ]);
 
-  if (isClerkConfigured) {
-    try {
-      const self = await getSelf();
-      viewerIdentity = self.id;
-      viewerUsername = self.username;
-    } catch {
-      viewerIdentity = undefined;
-    }
+  return <BrowseApp key={term} persistedChannels={streams.map(streamToChannel)} followedChannels={viewer.followedChannels} demoFallback={process.env.NODE_ENV !== "production"} initialQuery={term} clerkConfigured={isClerkConfigured} viewerIdentity={viewer.identity} viewerUsername={viewer.username} mobileBrowse pagination={{ page, hasNext, baseHref: `/search?term=${encodeURIComponent(term)}&page=` }} />;
+}
+
+async function getViewerContext() {
+  if (!isClerkConfigured) return { followedChannels: [] as Channel[] };
+
+  try {
+    const self = await getSelf();
+    const followedChannels = (await getFollowedUsers()).flatMap(({ following }) =>
+      following.stream ? [streamToChannel({ ...following.stream, user: following })] : [],
+    );
+    return { identity: self.id, username: self.username, followedChannels };
+  } catch {
+    return { followedChannels: [] as Channel[] };
   }
-
-  return <BrowseApp persistedChannels={streams.map(streamToChannel)} demoFallback={false} initialQuery={term} clerkConfigured={isClerkConfigured} viewerIdentity={viewerIdentity} viewerUsername={viewerUsername} />;
 }

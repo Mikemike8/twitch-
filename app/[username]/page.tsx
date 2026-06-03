@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
-import { ChannelPage } from "@/components/channel-page";
+import { DesktopChannelPage } from "@/components/desktop-channel-page";
+import { MobileProfilePage } from "@/components/mobile-profile-page";
 import { channels, type Channel } from "@/lib/channels";
 import { isBlockedByUser } from "@/lib/block-service";
 import { getUserByUsername } from "@/lib/user-service";
 import { isFollowingUser } from "@/lib/follow-service";
 import { hasSelf, isSelfUser } from "@/lib/auth-service";
+import { publicUsername, redactPrivateIdentity } from "@/lib/public-identity";
 
 export default async function UserPage({
   params,
@@ -12,10 +14,21 @@ export default async function UserPage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
-  const demoChannel = channels.find((channel) => channel.username === username);
+  const demoChannel = process.env.NODE_ENV !== "production"
+    ? channels.find((channel) => channel.username === username)
+    : undefined;
   const user = await getUserByUsername(username);
 
-  if (user && (await isBlockedByUser(user.id))) {
+  const [blocked, selfProfile, initialFollowing, authenticated] = user
+    ? await Promise.all([
+        isBlockedByUser(user.id),
+        isSelfUser(user.id),
+        isFollowingUser(user.id),
+        hasSelf(),
+      ])
+    : [false, false, false, await hasSelf()];
+
+  if (blocked) {
     notFound();
   }
 
@@ -25,12 +38,13 @@ export default async function UserPage({
     notFound();
   }
 
-  return <ChannelPage channel={channel} initialFollowing={user ? await isFollowingUser(user.id) : false} canFollow={user ? !(await isSelfUser(user.id)) : true} authenticated={await hasSelf()} />;
+  return <><MobileProfilePage channel={channel} isSelf={selfProfile} /><DesktopChannelPage channel={channel} initialFollowing={initialFollowing} canFollow={!selfProfile} authenticated={authenticated} /></>;
 }
 
 function toChannel(user: {
   id: string;
   username: string;
+  externalUserId: string;
   imageUrl: string;
   bio: string | null;
   followedBy: unknown[];
@@ -40,16 +54,17 @@ function toChannel(user: {
     thumbnailUrl: string | null;
   } | null;
 }): Channel {
+  const username = publicUsername(user.username, user.externalUserId);
   return {
-    username: user.username,
-    displayName: user.username,
-    title: user.stream?.name ?? `${user.username}'s stream`,
+    username,
+    displayName: username,
+    title: redactPrivateIdentity(user.stream?.name ?? `${username}'s stream`, username),
     category: "Just Chatting",
     viewers: 0,
     live: user.stream?.isLive ?? false,
     tags: ["New creator"],
     colors: ["#9147ff", "#1f1f23"],
-    initials: user.username.slice(0, 2).toUpperCase(),
+    initials: username.slice(0, 2).toUpperCase(),
     hostIdentity: user.id,
     thumbnailUrl: user.stream?.thumbnailUrl,
     imageUrl: user.imageUrl,

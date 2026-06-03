@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 import { ChevronIcon, MenuIcon, UsersIcon, VideoIcon } from "@/components/icons";
 
 const items = [
@@ -28,7 +29,7 @@ export function DashboardShell({
     <div className="min-h-screen bg-[#0e0e10]">
       <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-[#29292e] bg-[#18181b] px-3 sm:gap-4 sm:px-4">
         <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded hover:bg-[#303038] lg:hidden" aria-label="Open creator navigation"><MenuIcon className="h-5 w-5" /></button>
-        <Link href="/" className="grid h-8 w-8 place-items-center rounded-md bg-[#9147ff] text-sm font-black">A</Link>
+        <Link href="/" aria-label="Argus home"><BrandLogo /></Link>
         <span className="truncate font-black"><span className="hidden sm:inline">Creator </span>Dashboard</span>
         <Link href="/" className="ml-auto rounded bg-[#2f2f35] px-3 py-2 text-xs font-bold hover:bg-[#3b3b44]">Exit</Link>
       </header>

@@ -1,25 +1,13 @@
 import { db } from "@/lib/db";
-import { getSelf } from "@/lib/auth-service";
+import { getOptionalSelf, getSelf } from "@/lib/auth-service";
+import { clearBlockFlag, isBlockedWithFailClosedFallback, setBlockFlag } from "@/lib/block-flag";
 
 export async function isBlockedByUser(userId: string) {
-  try {
-    const self = await getSelf();
+  const self = await getOptionalSelf();
 
-    if (self.id === userId) return false;
+  if (!self || self.id === userId) return false;
 
-    return Boolean(
-      await db.block.findUnique({
-        where: {
-          blockerId_blockedId: {
-            blockerId: userId,
-            blockedId: self.id,
-          },
-        },
-      }),
-    );
-  } catch {
-    return false;
-  }
+  return isBlockedWithFailClosedFallback(db, userId, self.id);
 }
 
 export async function blockUser(userId: string) {
@@ -27,13 +15,22 @@ export async function blockUser(userId: string) {
 
   if (self.id === userId) throw new Error("Cannot block yourself");
 
-  return db.block.create({
-    data: {
+  const block = await db.block.upsert({
+    where: {
+      blockerId_blockedId: {
+        blockerId: self.id,
+        blockedId: userId,
+      },
+    },
+    update: {},
+    create: {
       blockerId: self.id,
       blockedId: userId,
     },
     include: { blocked: true },
   });
+  await setBlockFlag(self.id, userId);
+  return block;
 }
 
 export async function unblockUser(userId: string) {
@@ -52,10 +49,12 @@ export async function unblockUser(userId: string) {
 
   if (!existingBlock) throw new Error("Block does not exist");
 
-  return db.block.delete({
+  const block = await db.block.delete({
     where: { id: existingBlock.id },
     include: { blocked: true },
   });
+  await clearBlockFlag(self.id, userId);
+  return block;
 }
 
 export async function getBlockedUsers() {

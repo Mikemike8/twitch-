@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build",
+    "build": "npm run check-env && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.ts",
+    "check-env": "node scripts/check-env.mjs",
+    "audit": "npm audit --audit-level=high",
+    "audit:fix": "npm audit fix",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -35,5 +39,10 @@
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@hono/node-server": "^1.19.13",
+    "effect": "^3.20.0",
+    "postcss": "^8.5.10"
   }
 }

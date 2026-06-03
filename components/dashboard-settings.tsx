@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { onUpdateStream } from "@/actions/stream";
 import { onUpdateBio } from "@/actions/user";
 import { ThumbnailUpload } from "@/components/thumbnail-upload";
+import { inputLimits } from "@/lib/validation";
 
 export function DashboardSettings({ username, bio: initialBio, persistChanges, stream, uploadConfigured }: { username: string; bio: string; persistChanges: boolean; stream: { name: string; thumbnailUrl: string | null; isChatEnabled: boolean; isChatDelayed: boolean; isChatFollowersOnly: boolean }; uploadConfigured: boolean }) {
   const [settings, setSettings] = useState({
@@ -24,7 +25,10 @@ export function DashboardSettings({ username, bio: initialBio, persistChanges, s
       startTransition(() => {
         onUpdateStream({ [key]: enabled })
           .then(() => setStatus("Chat settings updated"))
-          .catch(() => setStatus("Unable to update chat settings"));
+          .catch(() => {
+            setSettings((current) => ({ ...current, [key]: !enabled }));
+            setStatus("Unable to update chat settings");
+          });
       });
     }
   };
@@ -65,10 +69,10 @@ export function DashboardSettings({ username, bio: initialBio, persistChanges, s
       <section className="rounded-lg border border-[#303038] bg-[#18181b] p-5">
         <h2 className="font-black">Stream information</h2>
         <label className="mt-4 block text-xs font-bold text-[#adadb8]">Title</label>
-        <input value={title} onChange={(event) => setTitle(event.target.value)} className="mt-2 w-full rounded-md border border-[#3f3f46] bg-[#242429] px-3 py-2 text-sm outline-none focus:border-[#9147ff]" />
+        <input value={title} maxLength={inputLimits.streamName} onChange={(event) => setTitle(event.target.value)} className="mt-2 w-full rounded-md border border-[#3f3f46] bg-[#242429] px-3 py-2 text-sm outline-none focus:border-[#9147ff]" />
         <button onClick={saveTitle} disabled={isPending} className="mt-3 rounded bg-[#9147ff] px-3 py-2 text-xs font-bold hover:bg-[#a970ff] disabled:opacity-50">Save title</button>
         <label className="mt-5 block text-xs font-bold text-[#adadb8]">Creator bio</label>
-        <textarea value={bio} onChange={(event) => setBio(event.target.value)} rows={3} className="mt-2 w-full rounded-md border border-[#3f3f46] bg-[#242429] px-3 py-2 text-sm outline-none focus:border-[#9147ff]" />
+        <textarea value={bio} maxLength={inputLimits.bio} onChange={(event) => setBio(event.target.value)} rows={3} className="mt-2 w-full rounded-md border border-[#3f3f46] bg-[#242429] px-3 py-2 text-sm outline-none focus:border-[#9147ff]" />
         <button onClick={saveBio} disabled={isPending} className="mt-3 rounded bg-[#2f2f35] px-3 py-2 text-xs font-bold hover:bg-[#3b3b44] disabled:opacity-50">Save bio</button>
         {status && <p className="mt-3 text-xs text-[#adadb8]">{status}</p>}
         <div className="mt-5">
@@ -80,7 +84,7 @@ export function DashboardSettings({ username, bio: initialBio, persistChanges, s
         <h2 className="font-black">Chat settings</h2>
         <div className="mt-4 divide-y divide-[#303038]">
           <Setting label="Enable chat" description="Allow viewers to send messages." enabled={settings.isChatEnabled} disabled={isPending} onToggle={() => toggle("isChatEnabled")} />
-          <Setting label="Slow mode" description="Delay messages by three seconds." enabled={settings.isChatDelayed} disabled={isPending} onToggle={() => toggle("isChatDelayed")} />
+          <Setting label="Slow mode" description="Allow one server-validated message per viewer every 15 seconds." enabled={settings.isChatDelayed} disabled={isPending} onToggle={() => toggle("isChatDelayed")} />
           <Setting label="Followers only" description="Only followers can send messages." enabled={settings.isChatFollowersOnly} disabled={isPending} onToggle={() => toggle("isChatFollowersOnly")} />
         </div>
       </section>

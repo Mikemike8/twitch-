@@ -1,25 +1,22 @@
 import { db } from "@/lib/db";
-import { getSelf } from "@/lib/auth-service";
+import { getOptionalSelf, getSelf } from "@/lib/auth-service";
 
 export async function isFollowingUser(userId: string) {
-  try {
-    const self = await getSelf();
+  const self = await getOptionalSelf();
 
-    if (self.id === userId) return true;
+  if (!self) return false;
+  if (self.id === userId) return true;
 
-    return Boolean(
-      await db.follow.findUnique({
-        where: {
-          followerId_followingId: {
-            followerId: self.id,
-            followingId: userId,
-          },
+  return Boolean(
+    await db.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId: self.id,
+          followingId: userId,
         },
-      }),
-    );
-  } catch {
-    return false;
-  }
+      },
+    }),
+  );
 }
 
 export async function followUser(userId: string) {
@@ -27,8 +24,15 @@ export async function followUser(userId: string) {
 
   if (self.id === userId) throw new Error("Cannot follow yourself");
 
-  return db.follow.create({
-    data: {
+  return db.follow.upsert({
+    where: {
+      followerId_followingId: {
+        followerId: self.id,
+        followingId: userId,
+      },
+    },
+    update: {},
+    create: {
       followerId: self.id,
       followingId: userId,
     },
@@ -68,10 +72,22 @@ export async function getFollowedUsers() {
         blocking: { none: { blockedId: self.id } },
       },
     },
-    include: {
+    select: {
       following: {
-        include: {
-          stream: true,
+        select: {
+          id: true,
+          username: true,
+          imageUrl: true,
+          bio: true,
+          externalUserId: true,
+          stream: {
+            select: {
+              id: true,
+              name: true,
+              thumbnailUrl: true,
+              isLive: true,
+            },
+          },
         },
       },
     },

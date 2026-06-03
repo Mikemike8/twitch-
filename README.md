@@ -23,6 +23,12 @@ remaining transcript milestones.
 See [RESPONSIVE_DESIGN.md](./RESPONSIVE_DESIGN.md) for the all-device responsive
 layout specification, acceptance criteria, and test matrix.
 
+See [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) for the current production
+scorecard, launch blockers, and the update protocol used as hardening work lands.
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for the production configuration, verification,
+stream-key migration, and rollback runbook.
+
 ## Configuration
 
 Create `.env` from `.env.example`. The template includes tutorial timestamps for each

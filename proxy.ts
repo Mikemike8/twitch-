@@ -6,12 +6,14 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/search(.*)",
+  "/live",
+  "/api/health",
   "/api/webhooks(.*)",
   "/api/uploadthing(.*)",
 ]);
 
 const configuredClerkMiddleware = clerkMiddleware(async (auth, request) => {
-  const isPublicProfile = /^\/[^/]+$/.test(request.nextUrl.pathname);
+  const isPublicProfile = /^\/(?!clerk_)[^/]+$/.test(request.nextUrl.pathname);
 
   if (!isPublicRoute(request) && !isPublicProfile) {
     await auth.protect();
@@ -20,6 +22,9 @@ const configuredClerkMiddleware = clerkMiddleware(async (auth, request) => {
 
 export default function proxy(request: NextRequest) {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY) {
+    if (process.env.NODE_ENV === "production") {
+      return new NextResponse("Authentication is not configured", { status: 503 });
+    }
     return NextResponse.next();
   }
 

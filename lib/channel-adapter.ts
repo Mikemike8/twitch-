@@ -1,4 +1,5 @@
 import type { Channel } from "@/lib/channels";
+import { publicUsername, redactPrivateIdentity } from "@/lib/public-identity";
 
 export type PublicStream = {
   id: string;
@@ -10,20 +11,22 @@ export type PublicStream = {
     username: string;
     imageUrl: string;
     bio: string | null;
+    externalUserId: string;
   };
 };
 
 export function streamToChannel(stream: PublicStream): Channel {
+  const username = publicUsername(stream.user.username, stream.user.externalUserId);
   return {
-    username: stream.user.username,
-    displayName: stream.user.username,
-    title: stream.name,
+    username,
+    displayName: username,
+    title: redactPrivateIdentity(stream.name, username),
     category: "Just Chatting",
     viewers: 0,
     live: stream.isLive,
     tags: stream.isLive ? ["Live"] : ["Offline"],
-    colors: colorsFor(stream.user.username),
-    initials: stream.user.username.slice(0, 2).toUpperCase(),
+    colors: colorsFor(username),
+    initials: username.slice(0, 2).toUpperCase(),
     hostIdentity: stream.user.id,
     thumbnailUrl: stream.thumbnailUrl,
     imageUrl: stream.user.imageUrl,

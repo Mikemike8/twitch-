@@ -1,6 +1,7 @@
 import type { Stream } from "@/lib/generated/prisma/client";
 import { db } from "@/lib/db";
 import { getSelf } from "@/lib/auth-service";
+import { secretStorage } from "@/lib/secret-storage";
 
 export function getStreamByUserId(userId: string) {
   return db.stream.findUnique({
@@ -10,9 +11,10 @@ export function getStreamByUserId(userId: string) {
 
 export async function getSelfStream() {
   const self = await getSelf();
-  return db.stream.findUnique({
+  const stream = await db.stream.findUnique({
     where: { userId: self.id },
   });
+  return stream ? { ...stream, streamKey: secretStorage.decrypt(stream.streamKey) ?? null } : null;
 }
 
 export async function updateStream(values: Partial<Pick<
