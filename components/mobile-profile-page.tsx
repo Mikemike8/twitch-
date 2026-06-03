@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SignOutButton } from "@clerk/nextjs";
 import { useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { FollowButton } from "@/components/follow-button";
@@ -71,6 +72,16 @@ export function MobileProfilePage({
               <span>Yes, I would like to receive stream updates, community activity, and ARGUS creator notifications.</span>
             </label>
           </ProfileRow>
+
+          {isSelf && <ProfileRow title="Account">
+            <div className="sm:col-span-3">
+              <SignOutButton>
+                <button type="button" className="min-h-12 rounded-md border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm font-black uppercase tracking-wide text-red-100">
+                  Log out
+                </button>
+              </SignOutButton>
+            </div>
+          </ProfileRow>}
         </section>
       </main>
 
