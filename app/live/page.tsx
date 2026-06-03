@@ -8,7 +8,7 @@ import { getFollowedUsers } from "@/lib/follow-service";
 
 export default async function LivePage() {
   const [{ streams }, viewer] = await Promise.all([getLiveFeed(), getViewerContext()]);
-  return <LiveDiscoveryApp liveChannels={streams.map(streamToChannel)} followedChannels={viewer.followedChannels} viewerUsername={viewer.username} />;
+  return <LiveDiscoveryApp liveChannels={streams.map(streamToChannel)} followedChannels={viewer.followedChannels} clerkConfigured={isClerkConfigured} viewerUsername={viewer.username} />;
 }
 
 async function getViewerContext() {

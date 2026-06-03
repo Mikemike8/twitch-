@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { SignInButton } from "@clerk/nextjs";
 import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
 import MuxPlayer from "@mux/mux-player-react";
 import { useEffect, useMemo, useState } from "react";
@@ -79,7 +80,7 @@ function CatalogArtwork({ channel, className = "" }: { channel: Channel; classNa
   );
 }
 
-function MobileBottomNav({ viewerUsername, active = "home" }: { viewerUsername?: string; active?: "home" | "search" | "live" | "profile" }) {
+function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "home" }: { viewerUsername?: string; clerkConfigured?: boolean; active?: "home" | "search" | "live" | "profile" }) {
   const itemClass = "flex min-h-[74px] flex-col items-center justify-center gap-1.5 px-1 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
   const color = (item: typeof active) => item === active ? "text-white" : "text-white/55";
   return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/5 bg-[#111113]/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl lg:hidden">
@@ -87,7 +88,15 @@ function MobileBottomNav({ viewerUsername, active = "home" }: { viewerUsername?:
     <Link href="/search" className={`${itemClass} ${color("search")}`}><BrowseIcon className="h-7 w-7" />Search</Link>
     <Link href="/search" className={`${itemClass} text-white/55`}><ClipsIcon className="h-7 w-7" />Clips</Link>
     <Link href="/live" className={`${itemClass} ${color("live")}`}><LiveTvIcon className="h-7 w-7" />Live TV</Link>
-    <Link href={viewerUsername ? `/${viewerUsername}` : "/sign-in"} className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
+    {viewerUsername ? (
+      <Link href={`/${viewerUsername}`} className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
+    ) : clerkConfigured ? (
+      <SignInButton mode="modal" fallbackRedirectUrl="/">
+        <button type="button" className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</button>
+      </SignInButton>
+    ) : (
+      <Link href="/sign-in" className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
+    )}
   </nav>;
 }
 
@@ -133,7 +142,7 @@ function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channe
   );
 }
 
-function MobileStreamingHome({ channels: mobileChannels, onOpen, viewerUsername }: { channels: Channel[]; onOpen: (channel: Channel) => void; viewerUsername?: string }) {
+function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured, viewerUsername }: { channels: Channel[]; onOpen: (channel: Channel) => void; clerkConfigured: boolean; viewerUsername?: string }) {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [listed, setListed] = useState(false);
   const featured = mobileChannels.slice(0, 4);
@@ -189,7 +198,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, viewerUsername 
           <MobilePosterRail title="Most-Watched Classics" channels={[...mobileChannels].reverse()} onOpen={onOpen} />
         </div>
       </div>
-      <MobileBottomNav viewerUsername={viewerUsername} />
+      <MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} />
     </section>
   );
 }
@@ -478,7 +487,7 @@ function EpisodeHoverChatFallback({ episode, chatOpen, setChatOpen, error }: { e
   );
 }
 
-function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channel; onBack: () => void; viewerUsername?: string }) {
+function SeriesDetailPage({ channel, onBack, clerkConfigured, viewerUsername }: { channel: Channel; onBack: () => void; clerkConfigured: boolean; viewerUsername?: string }) {
   const [listed, setListed] = useState(false);
   const [playingEpisode, setPlayingEpisode] = useState<SeriesEpisode | null>(null);
   const title = channel.catalogTitle ?? channel.displayName;
@@ -548,7 +557,7 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
 
       {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} viewerUsername={viewerUsername} onClose={() => setPlayingEpisode(null)} />}
 
-      <MobileBottomNav viewerUsername={viewerUsername} />
+      <MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} />
     </div>
   );
 }
@@ -602,10 +611,10 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
   const spotlightChannel = animeChannels[0];
 
   if (selected && !selected.hostIdentity) {
-    return <SeriesDetailPage channel={selected} onBack={() => setSelected(null)} viewerUsername={viewerUsername} />;
+    return <SeriesDetailPage channel={selected} onBack={() => setSelected(null)} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />;
   }
 
-  if (selected) return <div className="min-h-screen bg-black"><ChannelPage channel={selected} initialFollowing={followedUsernames.has(selected.username)} canFollow={!selected.hostIdentity || selected.hostIdentity !== viewerIdentity} authenticated={Boolean(viewerIdentity)} /><MobileBottomNav viewerUsername={viewerUsername} /></div>;
+  if (selected) return <div className="min-h-screen bg-black"><ChannelPage channel={selected} initialFollowing={followedUsernames.has(selected.username)} canFollow={!selected.hostIdentity || selected.hostIdentity !== viewerIdentity} authenticated={Boolean(viewerIdentity)} /><MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} /></div>;
 
   return (
     <div className="min-h-screen bg-[#07070a] text-[#f1f1f3]">
@@ -613,7 +622,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
       <div>
         <div className="px-4 pb-24 pt-4 lg:px-7 lg:pb-6">
           <main className="min-w-0">
-            {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={trendingChannels.length ? trendingChannels : displayChannels} onOpen={setSelected} searchable /> : <MobileStreamingHome channels={animeChannels} onOpen={setSelected} viewerUsername={viewerUsername} />}
+            {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={trendingChannels.length ? trendingChannels : displayChannels} onOpen={setSelected} searchable /> : <MobileStreamingHome channels={animeChannels} onOpen={setSelected} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
             <Hero channel={spotlightChannel} onOpen={setSelected} />
             <ContentRail title="Recommended for you" channels={recommendedDisplayChannels.slice(0, 12)} onOpen={setSelected} horizontal />
             <div id="live-streamers"><ContentRail title={mode === "following" ? "Your followed channels" : "Live streamers"} channels={(mode === "following" ? followedChannels : liveStreamerChannels).slice(0, 12)} onOpen={setSelected} horizontal /></div>
@@ -623,7 +632,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
           </main>
         </div>
       </div>
-      {mobileBrowse && <MobileBottomNav viewerUsername={viewerUsername} active="search" />}
+      {mobileBrowse && <MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} active="search" />}
     </div>
   );
 }

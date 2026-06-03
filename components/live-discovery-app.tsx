@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SignInButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Avatar } from "@/components/avatar";
 import { FullscreenIcon, HeartIcon, SearchIcon, VolumeIcon } from "@/components/icons";
@@ -12,7 +13,7 @@ type DiscoveryFilter = "All" | "Following" | "Gaming" | "Music" | "Art" | "IRL" 
 
 const filters: DiscoveryFilter[] = ["All", "Following", "Gaming", "Music", "Art", "IRL", "New Creators", "Hidden Gems"];
 
-export function LiveDiscoveryApp({ liveChannels, followedChannels, viewerUsername }: { liveChannels: Channel[]; followedChannels: Channel[]; viewerUsername?: string }) {
+export function LiveDiscoveryApp({ liveChannels, followedChannels, clerkConfigured, viewerUsername }: { liveChannels: Channel[]; followedChannels: Channel[]; clerkConfigured: boolean; viewerUsername?: string }) {
   const discoveryChannels = useMemo(() => {
     const usernames = new Set(liveChannels.map((channel) => channel.username));
     return [...liveChannels, ...demoStreamers.filter((channel) => !usernames.has(channel.username))];
@@ -61,7 +62,7 @@ export function LiveDiscoveryApp({ liveChannels, followedChannels, viewerUsernam
 
   return (
     <>
-      {!desktop && <MobileLiveTv selected={selected} channels={visibleChannels} viewerUsername={viewerUsername} onSelect={setSelected} />}
+      {!desktop && <MobileLiveTv selected={selected} channels={visibleChannels} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} onSelect={setSelected} />}
       {desktop && <div className="relative min-h-screen overflow-hidden bg-black text-white" onMouseMove={handleMouseMove} onMouseLeave={() => { setChromeVisible(false); setGuideVisible(false); setNavVisible(false); }}>
         <StreamerBackdrop channel={selected} />
         <div className={`absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/30 transition-opacity duration-300 ${chromeVisible ? "opacity-100" : "opacity-0"}`} />
@@ -92,7 +93,7 @@ export function LiveDiscoveryApp({ liveChannels, followedChannels, viewerUsernam
   );
 }
 
-function MobileLiveTv({ selected, channels, viewerUsername, onSelect }: { selected: Channel; channels: Channel[]; viewerUsername?: string; onSelect: (channel: Channel) => void }) {
+function MobileLiveTv({ selected, channels, clerkConfigured, viewerUsername, onSelect }: { selected: Channel; channels: Channel[]; clerkConfigured: boolean; viewerUsername?: string; onSelect: (channel: Channel) => void }) {
   return <div className="min-h-[100svh] bg-[#0c0c0d] pb-[78px] text-white lg:hidden landscape:fixed landscape:inset-0 landscape:z-50 landscape:min-h-0 landscape:pb-0">
     <section className="relative aspect-video w-full overflow-hidden bg-black landscape:h-full landscape:aspect-auto">
       <StreamerBackdrop channel={selected} />
@@ -108,7 +109,7 @@ function MobileLiveTv({ selected, channels, viewerUsername, onSelect }: { select
         {["All", "Gaming", "Music", "Art", "IRL"].map((item, index) => <span key={item} className={`shrink-0 pb-1 ${index === 0 ? "border-b-2 border-white text-white" : ""}`}>{item}</span>)}
       </nav>
       <div>{channels.map((channel, index) => <MobileLiveRow key={channel.username} channel={channel} selected={channel.username === selected.username} index={index} onSelect={() => onSelect(channel)} />)}</div>
-      <MobileLiveBottomNav viewerUsername={viewerUsername} />
+      <MobileLiveBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} />
     </div>
   </div>;
 }
@@ -117,9 +118,18 @@ function MobileLiveRow({ channel, selected, index, onSelect }: { channel: Channe
   return <button type="button" onClick={onSelect} className={`flex min-h-24 w-full items-center gap-4 border-b border-white/5 px-5 py-4 text-left ${selected ? "bg-white/[0.07]" : ""}`}><Avatar channel={channel} size="md" /><span className="min-w-0 flex-1"><strong className="block truncate text-base font-semibold">{channel.displayName}</strong><span className="mt-1 block truncate text-xs text-white/50">{channel.category} · {formatViewers(channel.viewers || 40 + index * 9)} watching</span></span>{selected && <span className="rounded-full bg-red-600 px-3 py-2 text-[10px] font-black uppercase tracking-wide">Watching</span>}<span className="text-xl text-white/65">☷</span></button>;
 }
 
-function MobileLiveBottomNav({ viewerUsername }: { viewerUsername?: string }) {
+function MobileLiveBottomNav({ viewerUsername, clerkConfigured }: { viewerUsername?: string; clerkConfigured: boolean }) {
   const itemClass = "flex min-h-[74px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
-  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/5 bg-[#111113]/95 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 backdrop-blur-2xl"><Link href="/" className={itemClass}><HomeIcon />Home</Link><Link href="/search" className={itemClass}><SearchIcon className="h-7 w-7" />Search</Link><Link href="/search" className={itemClass}><ClipsIcon />Clips</Link><span className={`${itemClass} text-white`}><LiveTvIcon />Live TV</span><Link href={viewerUsername ? `/${viewerUsername}` : "/sign-in"} className={itemClass}><ProfileIcon />Profile</Link></nav>;
+  const profileItem = viewerUsername ? (
+    <Link href={`/${viewerUsername}`} className={itemClass}><ProfileIcon />Profile</Link>
+  ) : clerkConfigured ? (
+    <SignInButton mode="modal" fallbackRedirectUrl="/">
+      <button type="button" className={itemClass}><ProfileIcon />Profile</button>
+    </SignInButton>
+  ) : (
+    <Link href="/sign-in" className={itemClass}><ProfileIcon />Profile</Link>
+  );
+  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/5 bg-[#111113]/95 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 backdrop-blur-2xl"><Link href="/" className={itemClass}><HomeIcon />Home</Link><Link href="/search" className={itemClass}><SearchIcon className="h-7 w-7" />Search</Link><Link href="/search" className={itemClass}><ClipsIcon />Clips</Link><span className={`${itemClass} text-white`}><LiveTvIcon />Live TV</span>{profileItem}</nav>;
 }
 
 function CastIcon({ className = "h-5 w-5" }: { className?: string }) {
