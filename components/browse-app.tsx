@@ -40,10 +40,12 @@ function ProfileIcon({ className = "h-5 w-5" }: { className?: string }) {
 }
 
 function ChannelArtwork({ channel, className = "" }: { channel: Channel; className?: string }) {
+  const thumbnailUrl = channel.hostIdentity ? null : channel.thumbnailUrl;
+
   return (
     <div className={className}>
       <div className="relative h-full w-full overflow-hidden bg-[#171720]" style={{ position: "relative" }}>
-        {channel.thumbnailUrl ? <Image src={channel.thumbnailUrl} alt="" fill sizes="(max-width: 1023px) 100vw, 33vw" className="object-cover" /> : (
+        {thumbnailUrl ? <Image src={thumbnailUrl} alt="" fill sizes="(max-width: 1023px) 100vw, 33vw" className="object-cover" /> : (
           <>
             <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${channel.colors[0]}, ${channel.colors[1]})` }} />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_18%,rgba(255,255,255,0.3),transparent_17%),radial-gradient(circle_at_74%_64%,rgba(255,255,255,0.18),transparent_20%)]" />
@@ -63,7 +65,7 @@ function ChannelArtwork({ channel, className = "" }: { channel: Channel; classNa
 }
 
 function CatalogArtwork({ channel, className = "" }: { channel: Channel; className?: string }) {
-  const artworkUrl = channel.posterUrl ?? channel.thumbnailUrl;
+  const artworkUrl = channel.posterUrl ?? (channel.hostIdentity ? null : channel.thumbnailUrl);
   if (!artworkUrl) return <ChannelArtwork channel={channel} className={className} />;
 
   return (
