@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { DesktopChannelPage } from "@/components/desktop-channel-page";
 import { MobileProfilePage } from "@/components/mobile-profile-page";
 import { channels, type Channel } from "@/lib/channels";
 import { isBlockedByUser } from "@/lib/block-service";
@@ -38,7 +37,7 @@ export default async function UserPage({
     notFound();
   }
 
-  return <><MobileProfilePage channel={channel} isSelf={selfProfile} /><DesktopChannelPage channel={channel} initialFollowing={initialFollowing} canFollow={!selfProfile} authenticated={authenticated} /></>;
+  return <MobileProfilePage channel={channel} isSelf={selfProfile} initialFollowing={initialFollowing} authenticated={authenticated} />;
 }
 
 function toChannel(user: {
