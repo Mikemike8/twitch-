@@ -439,6 +439,7 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
           playbackId={playingEpisode.muxPlaybackId}
           metadata={{ video_title: `${title} ${playingEpisode.code} ${playingEpisode.name}` }}
           streamType="on-demand"
+          autoPlay
           onCanPlay={() => setPlayerLoading(false)}
           onPlaying={() => setPlayerLoading(false)}
           onWaiting={() => setPlayerLoading(true)}
