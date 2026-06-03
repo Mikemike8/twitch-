@@ -267,6 +267,112 @@ function ContentRail({ title, channels: railChannels, onOpen, horizontal = false
   return <section className="relative mt-8 hidden lg:block"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9147ff]">Explore ARGUS</p><h2 className="mt-1 text-xl font-black">{title}</h2></div><button type="button" className="text-xs font-bold text-[#adadb8] transition hover:text-white">See all</button></div><div className={`grid grid-flow-col gap-3 overflow-x-auto pb-5 ${horizontal ? "auto-cols-[260px] xl:auto-cols-[310px]" : "auto-cols-[180px] xl:auto-cols-[205px]"}`}>{railChannels.map((channel, index) => <RailCard key={`${title}-${channel.username}`} channel={channel} index={index} onOpen={() => onOpen(channel)} horizontal={horizontal} />)}</div></section>;
 }
 
+const seriesDescriptions: Record<string, string> = {
+  "Solo Leveling": "A hunter at the edge of death awakens a forbidden power and begins climbing through gates no one else can survive.",
+  "Demon Slayer": "A young swordsman enters a haunted mountain war where demons, grief, and family bonds collide beneath moonlit blades.",
+  "Jujutsu Kaisen": "Cursed energy turns a quiet school into a battlefield as students face monsters born from human fear.",
+  "Attack on Titan": "Humanity fights from behind broken walls while soldiers uncover the brutal truth hidden beyond the battlefield.",
+  "My Hero Academia": "Young heroes train under impossible pressure as villains force them to decide what power is worth.",
+  "Chainsaw Man": "A desperate fighter merges with a devil and is pulled into a violent world of contracts, blood, and ambition.",
+  "One Piece": "A fearless crew crosses dangerous seas in search of freedom, treasure, and legends older than empires.",
+  "Black Clover": "A magicless fighter challenges a kingdom of mages with stubborn will, brutal training, and an impossible dream.",
+};
+
+function seriesEpisodes(channel: Channel) {
+  const title = channel.catalogTitle ?? channel.displayName;
+  const episodeNames = [
+    "Awakening",
+    "Zone of Shadows",
+    "Road to Nowhere",
+    "The Gathering Storm",
+    "Lost Oath",
+    "Broken Gate",
+    "Red Moon Trial",
+    "The Last Command",
+  ];
+  const thumbnails = channels.map((item) => item.posterUrl ?? item.thumbnailUrl).filter(Boolean) as string[];
+
+  return episodeNames.map((name, index) => ({
+    code: `S1 E${index + 1}`,
+    name,
+    date: `Mar ${1 + index * 7}, 2026`,
+    duration: `${42 + (index % 3)}M`,
+    description: index === 0
+      ? `${title} begins as the hero steps into a first battle that changes the entire season.`
+      : `The conflict expands as ${title} pushes its heroes into a darker and more dangerous mission.`,
+    thumbnailUrl: thumbnails[index % thumbnails.length],
+    viewers: Math.max(120, Math.round(channel.viewers * (1 - index * 0.085))),
+  }));
+}
+
+function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channel; onBack: () => void; viewerUsername?: string }) {
+  const [listed, setListed] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const title = channel.catalogTitle ?? channel.displayName;
+  const episodes = seriesEpisodes(channel);
+  const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
+
+  return (
+    <div className="min-h-screen bg-[#09090b] pb-24 text-white">
+      <section className="relative min-h-[620px] overflow-hidden bg-black">
+        <CatalogArtwork channel={channel} className="absolute inset-0 opacity-55" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#09090b] via-[#09090b]/82 to-[#09090b]/25" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/30 to-black/30" />
+        <header className="relative z-10 flex items-center gap-6 px-5 py-5 text-sm font-bold text-white/72 sm:px-8 lg:px-14">
+          <button type="button" onClick={onBack} className="text-white">ARGUS</button>
+          <span className="text-white">{title}</span>
+          <a href="#episodes" className="hover:text-white">Episodes</a>
+          <a href="#about" className="hover:text-white">About</a>
+        </header>
+        <div className="relative z-10 flex min-h-[520px] max-w-4xl flex-col justify-end px-5 pb-16 sm:px-8 lg:px-14">
+          <h1 className="max-w-3xl text-5xl font-black uppercase leading-none tracking-tight sm:text-7xl lg:text-8xl">{title}</h1>
+          <div className="mt-9 flex flex-wrap gap-x-8 gap-y-3 text-sm font-black uppercase tracking-wide text-white">
+            <span>{channel.category}</span>
+            <span>2026</span>
+            <span>1 Season</span>
+            <span>TV-14</span>
+          </div>
+          <p className="mt-6 text-lg font-black uppercase text-[#4ade80]">All episodes streaming live watch sessions</p>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-[#f1f1f3] sm:text-xl">{description}</p>
+          <p className="mt-5 max-w-3xl text-sm leading-6 text-[#b9b9c2]">Featuring: elite hunters, cursed warriors, rival clans, and a season-long battle for survival.</p>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <button type="button" className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1</button>
+            <button type="button" onClick={() => setListed(!listed)} className="grid h-14 w-14 place-items-center rounded-full border border-white/40 text-4xl leading-none">{listed ? "✓" : "+"}</button>
+            <span className="text-sm font-black uppercase tracking-wide">My List</span>
+            <button type="button" className="ml-0 grid h-14 w-14 place-items-center rounded-full border border-white/40 lg:ml-5" aria-label="Notify"><BellIcon className="h-6 w-6" /></button>
+            <span className="text-sm font-black uppercase tracking-wide">Notify</span>
+          </div>
+        </div>
+        <button type="button" onClick={() => setMuted(!muted)} className="absolute bottom-16 right-5 z-10 grid h-14 w-14 place-items-center rounded-full border border-white/40 text-xl font-black sm:right-8 lg:right-14" aria-label={muted ? "Unmute preview" : "Mute preview"}>{muted ? "x" : "!"}</button>
+      </section>
+
+      <section id="episodes" className="px-5 pb-12 sm:px-8 lg:px-14">
+        <div className="mb-5 flex items-end gap-8">
+          <h2 className="text-3xl font-black">Full Episodes</h2>
+          <span className="pb-1 text-base text-white/75">Season 1</span>
+        </div>
+        <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+          {episodes.map((episode) => (
+            <button key={episode.code} type="button" className="group text-left">
+              <span className="relative block aspect-video overflow-hidden rounded-md bg-white/5">
+                <Image src={episode.thumbnailUrl} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw" className="object-cover transition duration-500 group-hover:scale-105" />
+                <span className="absolute left-2 top-2 rounded bg-red-600 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white">Live</span>
+                <span className="absolute bottom-2 left-2 rounded bg-black/80 px-2 py-1 text-xs font-bold text-white">{formatViewers(episode.viewers)} watching</span>
+                <span className="absolute inset-0 grid place-items-center bg-black/0 opacity-0 transition group-hover:bg-black/35 group-hover:opacity-100"><PlayIcon className="h-10 w-10" /></span>
+              </span>
+              <h3 className="mt-4 text-lg font-black"><span>{episode.code}</span> <span className="font-medium">{episode.name}</span></h3>
+              <p className="mt-2 line-clamp-2 min-h-[44px] text-sm leading-6 text-[#a1a1aa]">{episode.description}</p>
+              <p className="mt-2 text-sm font-bold text-[#8f8f99]">{episode.duration}  {episode.date}  ·  {formatViewers(episode.viewers)} live</p>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <MobileBottomNav viewerUsername={viewerUsername} />
+    </div>
+  );
+}
+
 export function BrowseApp({ persistedChannels = [], followedChannels = [], recommendedChannels = [], demoFallback = true, initialQuery = "", clerkConfigured = false, viewerIdentity, viewerUsername, mobileBrowse = false, pagination }: BrowseAppProps) {
   const [query, setQuery] = useState(initialQuery);
   const [selected, setSelected] = useState<Channel | null>(null);
@@ -292,6 +398,10 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
     .filter((channel) => !query.trim() || channel.catalogTitle?.toLowerCase().includes(query.trim().toLowerCase()))
     .sort((left, right) => right.viewers - left.viewers);
   const spotlightChannel = animeChannels[0];
+
+  if (selected && !selected.hostIdentity) {
+    return <SeriesDetailPage channel={selected} onBack={() => setSelected(null)} viewerUsername={viewerUsername} />;
+  }
 
   if (selected) return <div className="min-h-screen bg-black"><ChannelPage channel={selected} initialFollowing={followedUsernames.has(selected.username)} canFollow={!selected.hostIdentity || selected.hostIdentity !== viewerIdentity} authenticated={Boolean(viewerIdentity)} /><MobileBottomNav viewerUsername={viewerUsername} /></div>;
 
