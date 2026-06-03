@@ -19,23 +19,23 @@ async function availableUsername(preferred: string, externalUserId: string) {
 export async function syncCurrentClerkUser(externalUserId: string) {
   const clerkUser = await currentUser();
 
-  if (!clerkUser || clerkUser.id !== externalUserId) {
-    throw new Error("Authenticated user could not be loaded from Clerk");
+  if (clerkUser && clerkUser.id !== externalUserId) {
+    throw new Error("Authenticated Clerk user mismatch");
   }
 
-  const preferredUsername = publicUsername(clerkUser.username, clerkUser.id);
-  const existingUser = await db.user.findUnique({ where: { externalUserId: clerkUser.id } });
+  const preferredUsername = publicUsername(clerkUser?.username, externalUserId);
+  const existingUser = await db.user.findUnique({ where: { externalUserId } });
   const shouldUpdateUsername = !existingUser || (isGeneratedPublicUsername(existingUser.username) && preferredUsername !== existingUser.username);
   const username = shouldUpdateUsername
-    ? await availableUsername(preferredUsername, clerkUser.id)
+    ? await availableUsername(preferredUsername, externalUserId)
     : existingUser.username;
 
   const user = await db.user.upsert({
-    where: { externalUserId: clerkUser.id },
+    where: { externalUserId },
     create: {
-      externalUserId: clerkUser.id,
+      externalUserId,
       username,
-      imageUrl: clerkUser.imageUrl,
+      imageUrl: clerkUser?.imageUrl ?? "",
       stream: {
         create: {
           name: `${username}'s stream`,
@@ -44,7 +44,7 @@ export async function syncCurrentClerkUser(externalUserId: string) {
     },
     update: {
       ...(shouldUpdateUsername ? { username } : {}),
-      imageUrl: clerkUser.imageUrl,
+      ...(clerkUser?.imageUrl ? { imageUrl: clerkUser.imageUrl } : {}),
     },
   });
 
