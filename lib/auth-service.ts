@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { isClerkConfigured } from "@/lib/clerk-config";
+import { syncCurrentClerkUser } from "@/lib/clerk-user-sync";
 
 export async function getSelf() {
   if (!isClerkConfigured) {
@@ -23,7 +24,7 @@ export const getOptionalSelf = cache(async () => {
   });
 
   if (!self) {
-    throw new Error("User synchronization is incomplete");
+    return syncCurrentClerkUser(userId);
   }
 
   return self;
