@@ -6,7 +6,7 @@ export default function SignInPage() {
     return <ConfigurationNotice action="sign in" />;
   }
 
-  return <SignIn />;
+  return <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" fallbackRedirectUrl="/" />;
 }
 
 function ConfigurationNotice({ action }: { action: string }) {
