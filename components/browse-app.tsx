@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Show, SignInButton, SignOutButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import MuxPlayer from "@mux/mux-player-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/brand-logo";
@@ -317,8 +318,15 @@ const trailerSources: Record<string, { embedId?: string; url: string; label: str
   },
 };
 
+const muxEpisodePlaybackIds: Record<string, string[]> = {
+  // Add real Mux playback IDs after uploads, in episode order.
+  // Example:
+  // "Solo Leveling": ["PLAYBACK_ID_FOR_S1_E1", "PLAYBACK_ID_FOR_S1_E2"],
+};
+
 function seriesEpisodes(channel: Channel) {
   const title = channel.catalogTitle ?? channel.displayName;
+  const playbackIds = muxEpisodePlaybackIds[title] ?? [];
   const trailer = trailerSources[title] ?? {
     url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} official trailer episode`)}`,
     label: "Watch trailer",
@@ -345,15 +353,19 @@ function seriesEpisodes(channel: Channel) {
       : `The conflict expands as ${title} pushes its heroes into a darker and more dangerous mission.`,
     thumbnailUrl: thumbnails[index % thumbnails.length],
     viewers: Math.max(120, Math.round(channel.viewers * (1 - index * 0.085))),
+    muxPlaybackId: playbackIds[index],
     trailerUrl: trailer.embedId
       ? `https://www.youtube.com/watch?v=${trailer.embedId}`
       : trailer.url,
   }));
 }
 
+type SeriesEpisode = ReturnType<typeof seriesEpisodes>[number];
+
 function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channel; onBack: () => void; viewerUsername?: string }) {
   const [listed, setListed] = useState(false);
   const [muted, setMuted] = useState(true);
+  const [playingEpisode, setPlayingEpisode] = useState<SeriesEpisode | null>(null);
   const title = channel.catalogTitle ?? channel.displayName;
   const episodes = seriesEpisodes(channel);
   const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
@@ -384,7 +396,7 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[#f1f1f3] sm:text-xl">{description}</p>
           <p className="mt-5 max-w-3xl text-sm leading-6 text-[#b9b9c2]">Featuring: elite hunters, cursed warriors, rival clans, and a season-long battle for survival.</p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1 Trailer</a>
+            {episodes[0]?.muxPlaybackId ? <button type="button" onClick={() => setPlayingEpisode(episodes[0])} className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1</button> : <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1 Trailer</a>}
             <button type="button" onClick={() => setListed(!listed)} className="grid h-14 w-14 place-items-center rounded-full border border-white/40 text-4xl leading-none">{listed ? "✓" : "+"}</button>
             <span className="text-sm font-black uppercase tracking-wide">My List</span>
             <button type="button" className="ml-0 grid h-14 w-14 place-items-center rounded-full border border-white/40 lg:ml-5" aria-label="Notify"><BellIcon className="h-6 w-6" /></button>
@@ -401,7 +413,37 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
           </div>
           <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             {episodes.map((episode) => (
-              <a key={episode.code} href={episode.trailerUrl} target="_blank" rel="noreferrer" className="group text-left">
+              <EpisodeCard key={episode.code} episode={episode} onPlay={() => setPlayingEpisode(episode)} />
+            ))}
+          </div>
+      </section>
+
+      {playingEpisode?.muxPlaybackId && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4">
+        <button type="button" onClick={() => setPlayingEpisode(null)} className="absolute inset-0" aria-label="Close episode player" />
+        <section className="relative z-10 w-full max-w-5xl overflow-hidden rounded-lg border border-white/10 bg-[#111113] shadow-2xl">
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <div className="min-w-0">
+              <h2 className="truncate text-sm font-black">{playingEpisode.code} {playingEpisode.name}</h2>
+              <p className="mt-1 text-xs text-[#a1a1aa]">{formatViewers(playingEpisode.viewers)} watching</p>
+            </div>
+            <button type="button" onClick={() => setPlayingEpisode(null)} className="grid h-9 w-9 place-items-center rounded-full text-2xl text-white/80 hover:bg-white/10" aria-label="Close player">×</button>
+          </div>
+          <MuxPlayer
+            playbackId={playingEpisode.muxPlaybackId}
+            metadata={{ video_title: `${title} ${playingEpisode.code} ${playingEpisode.name}` }}
+            className="aspect-video w-full bg-black"
+          />
+        </section>
+      </div>}
+
+      <MobileBottomNav viewerUsername={viewerUsername} />
+    </div>
+  );
+}
+
+function EpisodeCard({ episode, onPlay }: { episode: SeriesEpisode; onPlay: () => void }) {
+  const cardBody = (
+    <>
                 <span className="relative block aspect-video overflow-hidden rounded-md bg-white/5">
                   <Image src={episode.thumbnailUrl} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw" className="object-cover transition duration-500 group-hover:scale-105" />
                   <span className="absolute left-2 top-2 rounded bg-red-600 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white">Live</span>
@@ -411,14 +453,14 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
                 <h3 className="mt-4 text-lg font-black"><span>{episode.code}</span> <span className="font-medium">{episode.name}</span></h3>
                 <p className="mt-2 line-clamp-2 min-h-[44px] text-sm leading-6 text-[#a1a1aa]">{episode.description}</p>
                 <p className="mt-2 text-sm font-bold text-[#8f8f99]">{episode.duration}  {episode.date}  ·  {formatViewers(episode.viewers)} live</p>
-              </a>
-            ))}
-          </div>
-      </section>
-
-      <MobileBottomNav viewerUsername={viewerUsername} />
-    </div>
+    </>
   );
+
+  if (episode.muxPlaybackId) {
+    return <button type="button" onClick={onPlay} className="group text-left">{cardBody}</button>;
+  }
+
+  return <a href={episode.trailerUrl} target="_blank" rel="noreferrer" className="group text-left">{cardBody}</a>;
 }
 
 export function BrowseApp({ persistedChannels = [], followedChannels = [], recommendedChannels = [], demoFallback = true, initialQuery = "", clerkConfigured = false, viewerIdentity, viewerUsername, mobileBrowse = false, pagination }: BrowseAppProps) {
