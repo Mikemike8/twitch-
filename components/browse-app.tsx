@@ -3,9 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Show, SignInButton, SignOutButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
 import MuxPlayer from "@mux/mux-player-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createEpisodeChatToken } from "@/actions/episode-token";
 import { BrandLogo } from "@/components/brand-logo";
 import { ChannelPage } from "@/components/channel-page";
 import { BellIcon, MoreIcon, SearchIcon } from "@/components/icons";
@@ -362,30 +364,156 @@ function seriesEpisodes(channel: Channel) {
 }
 
 type SeriesEpisode = ReturnType<typeof seriesEpisodes>[number];
+type EpisodeChatToken = Awaited<ReturnType<typeof createEpisodeChatToken>>;
+
+function episodeSlug(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48) || "series";
+}
+
+function episodeNumber(episode: SeriesEpisode) {
+  const match = episode.code.match(/E(\d+)/i);
+  return match?.[1] ?? "1";
+}
+
+function episodeRoomName(title: string, episode: SeriesEpisode) {
+  return `anime:${episodeSlug(title)}:s1:e${episodeNumber(episode)}`;
+}
+
+function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { title: string; episode: SeriesEpisode; viewerUsername?: string; onClose: () => void }) {
+  const [chatOpen, setChatOpen] = useState(false);
+  const [session, setSession] = useState<EpisodeChatToken | null>(null);
+  const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_WS_URL;
+  const [error, setError] = useState(() => serverUrl ? "" : "Live chat is not configured");
+  const roomName = useMemo(() => episodeRoomName(title, episode), [title, episode]);
+
+  useEffect(() => {
+    if (!serverUrl) return;
+
+    createEpisodeChatToken(roomName)
+      .then(setSession)
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to join live chat"));
+  }, [roomName, serverUrl]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black text-white">
+      <MuxPlayer
+        playbackId={episode.muxPlaybackId}
+        metadata={{ video_title: `${title} ${episode.code} ${episode.name}` }}
+        streamType="on-demand"
+        autoPlay
+        className="absolute inset-0 h-full w-full bg-black"
+        style={{
+          width: "100vw",
+          height: "100vh",
+          ["--media-object-fit" as string]: "contain",
+          ["--media-object-position" as string]: "center",
+        }}
+      />
+      {serverUrl && session ? (
+        <LiveKitRoom token={session.token} serverUrl={serverUrl} connect video={false} audio={false} className="contents">
+          <EpisodeHoverChat episode={episode} session={session} chatOpen={chatOpen} setChatOpen={setChatOpen} viewerUsername={viewerUsername} error={error} />
+        </LiveKitRoom>
+      ) : (
+        <EpisodeHoverChatFallback episode={episode} chatOpen={chatOpen} setChatOpen={setChatOpen} error={error} />
+      )}
+      <button type="button" onClick={onClose} className="absolute right-4 top-4 z-40 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-xl text-white/75 backdrop-blur hover:text-white" aria-label="Close video">×</button>
+    </div>
+  );
+}
+
+function EpisodeChatShell({ chatOpen, setChatOpen, children }: { chatOpen: boolean; setChatOpen: (open: boolean) => void; children: React.ReactNode }) {
+  return (
+    <>
+      <div
+        className="absolute inset-y-0 right-0 z-20 flex w-8 items-center justify-end"
+        onMouseEnter={() => setChatOpen(true)}
+        onClick={() => setChatOpen(true)}
+        aria-hidden={!chatOpen}
+      >
+        <span className="mr-1 h-24 w-1 rounded-full bg-white/15 opacity-40" />
+      </div>
+      <aside
+        className={`absolute right-0 top-0 z-30 flex h-full w-[min(340px,82vw)] flex-col border-l border-white/10 bg-black/35 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 ${chatOpen ? "translate-x-0" : "translate-x-[calc(100%-10px)]"}`}
+        onMouseEnter={() => setChatOpen(true)}
+        onMouseLeave={() => setChatOpen(false)}
+      >
+        {children}
+      </aside>
+    </>
+  );
+}
+
+function EpisodeHoverChat({ episode, session, chatOpen, setChatOpen, viewerUsername, error }: { episode: SeriesEpisode; session: EpisodeChatToken; chatOpen: boolean; setChatOpen: (open: boolean) => void; viewerUsername?: string; error: string }) {
+  const [chatMessage, setChatMessage] = useState("");
+  const participants = useParticipants();
+  const { chatMessages, send, isSending } = useChat();
+  const viewerCount = participants.length || episode.viewers;
+  const displayMessages = chatMessages.slice(-40);
+  const canSend = session.canChat && chatMessage.trim().length > 0 && !isSending;
+
+  const sendChatMessage = async () => {
+    const nextMessage = chatMessage.trim();
+    if (!canSend || !nextMessage) return;
+    await send(nextMessage);
+    setChatMessage("");
+  };
+
+  return (
+    <EpisodeChatShell chatOpen={chatOpen} setChatOpen={setChatOpen}>
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
+          <p className="mt-1 text-[11px] text-white/60">{formatViewers(viewerCount)} watching</p>
+        </div>
+        <button type="button" onClick={() => setChatOpen(false)} className="text-xl text-white/70 md:hidden" aria-label="Hide chat">×</button>
+      </div>
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 text-xs leading-5">
+        {displayMessages.length ? displayMessages.map((message) => (
+          <p key={message.id}>
+            <strong className="mr-2 text-[#bf94ff]">{message.from?.name ?? viewerUsername ?? "viewer"}:</strong>
+            <span className="text-white/85">{message.message}</span>
+          </p>
+        )) : (
+          <p className="text-white/55">Chat is live.</p>
+        )}
+        {error && <p className="text-white/55">{error}</p>}
+      </div>
+      <div className="border-t border-white/10 p-3">
+        <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#9147ff]">
+          <input value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void sendChatMessage()} disabled={!session.canChat} placeholder={session.canChat ? "Chat" : "Sign in to chat"} className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-white/40 disabled:cursor-not-allowed disabled:text-white/35" />
+          <button type="button" onClick={() => void sendChatMessage()} disabled={!canSend} className="px-3 text-xs font-black text-[#bf94ff] disabled:cursor-not-allowed disabled:text-white/25">Send</button>
+        </div>
+      </div>
+    </EpisodeChatShell>
+  );
+}
+
+function EpisodeHoverChatFallback({ episode, chatOpen, setChatOpen, error }: { episode: SeriesEpisode; chatOpen: boolean; setChatOpen: (open: boolean) => void; error: string }) {
+  return (
+    <EpisodeChatShell chatOpen={chatOpen} setChatOpen={setChatOpen}>
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
+          <p className="mt-1 text-[11px] text-white/60">{formatViewers(episode.viewers)} watching</p>
+        </div>
+        <button type="button" onClick={() => setChatOpen(false)} className="text-xl text-white/70 md:hidden" aria-label="Hide chat">×</button>
+      </div>
+      <div className="min-h-0 flex-1 px-4 py-4 text-xs leading-5 text-white/60">
+        {error || "Joining live chat..."}
+      </div>
+    </EpisodeChatShell>
+  );
+}
 
 function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channel; onBack: () => void; viewerUsername?: string }) {
   const [listed, setListed] = useState(false);
   const [playingEpisode, setPlayingEpisode] = useState<SeriesEpisode | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    ["akira", "This scene is starting"],
-    ["mika", "Watching live"],
-    ["orbit", "No spoilers"],
-  ]);
   const title = channel.catalogTitle ?? channel.displayName;
   const episodes = seriesEpisodes(channel);
   const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
   const totalWatching = episodes.reduce((sum, episode) => sum + episode.viewers, 0);
   const openEpisode = (episode: SeriesEpisode) => {
     setPlayingEpisode(episode);
-    setChatOpen(false);
-  };
-  const sendChatMessage = () => {
-    const nextMessage = chatMessage.trim();
-    if (!nextMessage) return;
-    setChatMessages((current) => [...current.slice(-25), [viewerUsername ?? "you", nextMessage]]);
-    setChatMessage("");
   };
 
   useEffect(() => {
@@ -445,51 +573,7 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
           </div>
       </section>
 
-      {playingEpisode?.muxPlaybackId && <div className="fixed inset-0 z-50 bg-black text-white">
-        <MuxPlayer
-          playbackId={playingEpisode.muxPlaybackId}
-          metadata={{ video_title: `${title} ${playingEpisode.code} ${playingEpisode.name}` }}
-          streamType="on-demand"
-          autoPlay
-          className="absolute inset-0 h-full w-full bg-black"
-          style={{
-            width: "100vw",
-            height: "100vh",
-            ["--media-object-fit" as string]: "contain",
-            ["--media-object-position" as string]: "center",
-          }}
-        />
-        <div
-          className="absolute inset-y-0 right-0 z-20 flex w-8 items-center justify-end"
-          onMouseEnter={() => setChatOpen(true)}
-          onClick={() => setChatOpen(true)}
-          aria-hidden={!chatOpen}
-        >
-          <span className="mr-1 h-24 w-1 rounded-full bg-white/15 opacity-40" />
-        </div>
-        <aside
-          className={`absolute right-0 top-0 z-30 flex h-full w-[min(340px,82vw)] flex-col border-l border-white/10 bg-black/35 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 ${chatOpen ? "translate-x-0" : "translate-x-[calc(100%-10px)]"}`}
-          onMouseEnter={() => setChatOpen(true)}
-          onMouseLeave={() => setChatOpen(false)}
-        >
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
-              <p className="mt-1 text-[11px] text-white/60">{formatViewers(playingEpisode.viewers)} watching</p>
-            </div>
-            <button type="button" onClick={() => setChatOpen(false)} className="text-xl text-white/70 md:hidden" aria-label="Hide chat">×</button>
-          </div>
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 text-xs leading-5">
-            {chatMessages.map(([user, message], index) => <p key={`${user}-${index}`}><strong className="mr-2 text-[#bf94ff]">{user}:</strong><span className="text-white/85">{message}</span></p>)}
-          </div>
-          <div className="border-t border-white/10 p-3">
-            <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#9147ff]">
-              <input value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={(event) => event.key === "Enter" && sendChatMessage()} placeholder="Chat" className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-white/40" />
-              <button type="button" onClick={sendChatMessage} className="px-3 text-xs font-black text-[#bf94ff]">Send</button>
-            </div>
-          </div>
-        </aside>
-      </div>}
+      {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} viewerUsername={viewerUsername} onClose={() => setPlayingEpisode(null)} />}
 
       <MobileBottomNav viewerUsername={viewerUsername} />
     </div>
