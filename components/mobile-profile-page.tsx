@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { FollowButton } from "@/components/follow-button";
 import { SearchIcon, VideoIcon } from "@/components/icons";
+import { SiteTopbar } from "@/components/site-topbar";
 import type { Channel } from "@/lib/channels";
 
 export function MobileProfilePage({
@@ -13,18 +14,23 @@ export function MobileProfilePage({
   isSelf,
   initialFollowing = false,
   authenticated = false,
+  clerkConfigured = false,
 }: {
   channel: Channel;
   isSelf: boolean;
   initialFollowing?: boolean;
   authenticated?: boolean;
+  clerkConfigured?: boolean;
 }) {
   const [updatesEnabled, setUpdatesEnabled] = useState(true);
 
   return (
     <div className="min-h-screen bg-[#07070a] pb-24 text-[#f4f4f5]">
+      <div className="hidden lg:block">
+        <SiteTopbar clerkConfigured={clerkConfigured} viewerUsername={isSelf ? channel.username : undefined} active="profile" />
+      </div>
       <main className="mx-auto w-full max-w-[1180px] px-5 py-6 sm:px-8 sm:py-10 lg:px-10">
-        <div className="mb-8 flex items-center justify-between gap-4">
+        <div className="mb-8 flex items-center justify-between gap-4 lg:hidden">
           <Link href="/" className="text-sm font-bold text-[#a970ff]">Back</Link>
           {isSelf ? <Link href={`/u/${channel.username}`} className="rounded-md border border-white/20 px-4 py-2 text-sm font-bold text-[#bf94ff]">Creator Dashboard</Link> : <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
         </div>

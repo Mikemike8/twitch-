@@ -5,6 +5,7 @@ import { isBlockedByUser } from "@/lib/block-service";
 import { getUserByUsername } from "@/lib/user-service";
 import { isFollowingUser } from "@/lib/follow-service";
 import { hasSelf, isSelfUser } from "@/lib/auth-service";
+import { isClerkConfigured } from "@/lib/clerk-config";
 import { publicUsername, redactPrivateIdentity } from "@/lib/public-identity";
 
 export default async function UserPage({
@@ -37,7 +38,7 @@ export default async function UserPage({
     notFound();
   }
 
-  return <MobileProfilePage channel={channel} isSelf={selfProfile} initialFollowing={initialFollowing} authenticated={authenticated} />;
+  return <MobileProfilePage channel={channel} isSelf={selfProfile} initialFollowing={initialFollowing} authenticated={authenticated} clerkConfigured={isClerkConfigured} />;
 }
 
 function toChannel(user: {

@@ -2,19 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Show, SignInButton, SignOutButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
 import MuxPlayer from "@mux/mux-player-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createEpisodeChatToken } from "@/actions/episode-token";
-import { BrandLogo } from "@/components/brand-logo";
 import { ChannelPage } from "@/components/channel-page";
 import { BellIcon, MoreIcon, SearchIcon } from "@/components/icons";
+import { SiteTopbar, type SiteTopbarMode } from "@/components/site-topbar";
 import { channels, formatViewers, type Channel } from "@/lib/channels";
 import { inputLimits } from "@/lib/validation";
 
-type BrowseMode = "browse" | "following";
+type BrowseMode = SiteTopbarMode;
 
 type BrowseAppProps = {
   persistedChannels?: Channel[];
@@ -77,32 +76,6 @@ function CatalogArtwork({ channel, className = "" }: { channel: Channel; classNa
         <Image src={artworkUrl} alt="" fill sizes="(max-width: 1023px) 100vw, 33vw" className="object-cover" />
       </div>
     </div>
-  );
-}
-
-function Topbar({ query, onQuery, clerkConfigured, viewerUsername, mode, onMode }: { query: string; onQuery: (value: string) => void; clerkConfigured: boolean; viewerUsername?: string; mode: BrowseMode; onMode: (mode: BrowseMode) => void }) {
-  const router = useRouter();
-  return (
-    <header className="sticky top-0 z-30 flex h-[60px] items-center gap-3 border-b border-white/5 bg-black/95 px-4 text-[#f1f1f3] backdrop-blur-xl lg:h-[76px] lg:px-8">
-      <Link href="/" className="flex items-center gap-3">
-        <BrandLogo className="h-10 w-10 rounded-xl" />
-        <span className="hidden text-xl font-black tracking-tight sm:block">ARGUS</span>
-      </Link>
-      <nav className="ml-5 hidden items-center gap-6 text-sm font-black uppercase tracking-wide lg:flex">
-        <Link href="/" className="text-white">Home</Link>
-        <Link href="/live" className="text-[#d8d8df] transition hover:text-white">Live</Link>
-        <a href="#live-anime" className="text-[#d8d8df] transition hover:text-white">Anime</a>
-        <Link href="/search" className="text-[#d8d8df] transition hover:text-white">Browse</Link>
-        <button type="button" onClick={() => onMode(mode === "following" ? "browse" : "following")} className={mode === "following" ? "text-[#bf94ff]" : "text-[#d8d8df] transition hover:text-white"}>Following</button>
-      </nav>
-      <form onSubmit={(event) => { event.preventDefault(); const term = query.trim(); router.push(term ? `/search?term=${encodeURIComponent(term)}` : "/search"); }} className="ml-auto hidden h-10 min-w-0 flex-1 overflow-hidden rounded-full border border-white/15 bg-white/[0.06] transition focus-within:border-[#8b3cff] focus-within:bg-white/10 lg:flex lg:max-w-xs xl:max-w-md">
-        <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search ARGUS" className="min-w-0 flex-1 bg-transparent px-4 text-sm outline-none placeholder:text-[#858590]" />
-        <button type="submit" className="grid w-12 place-items-center text-[#a8a8b3]" aria-label="Search"><SearchIcon className="h-5 w-5" /></button>
-      </form>
-      <Link href="/search" className="ml-auto grid h-10 w-10 place-items-center rounded-full text-[#c8c8d0] hover:bg-white/5 lg:hidden" aria-label="Search"><SearchIcon className="h-6 w-6" /></Link>
-      <button type="button" className="relative grid h-10 w-10 place-items-center rounded-full text-[#c8c8d0] hover:bg-white/5" aria-label="Notifications"><BellIcon className="h-5 w-5" /><span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#a855f7]" /></button>
-      {clerkConfigured ? <><Show when="signed-out"><div className="flex items-center gap-2"><SignInButton><button className="rounded-lg bg-[#2f2f35] px-3 py-2 text-xs font-bold hover:bg-[#3b3b44]">Log in</button></SignInButton><SignUpButton><button className="rounded-lg bg-[#8b3cff] px-3 py-2 text-xs font-bold hover:bg-[#a45cff]">Sign up</button></SignUpButton></div></Show><Show when="signed-in"><div className="flex items-center gap-2">{viewerUsername && <><Link href={`/${viewerUsername}`} className="hidden rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-[#d4d4dd] hover:bg-white/5 xl:block">Profile</Link><Link href={`/u/${viewerUsername}`} className="hidden rounded-lg bg-[#8b3cff] px-3 py-2 text-xs font-bold hover:bg-[#a45cff] xl:block">Creator Dashboard</Link></>}<SignOutButton><button className="hidden rounded-lg bg-[#2f2f35] px-3 py-2 text-xs font-bold hover:bg-[#3b3b44] sm:block">Log out</button></SignOutButton><UserButton /></div></Show></> : <div className="flex items-center gap-2"><Link href="/sign-in" className="rounded-lg bg-[#2f2f35] px-3 py-2 text-xs font-bold hover:bg-[#3b3b44]">Log in</Link><Link href="/sign-up" className="hidden rounded-lg bg-[#8b3cff] px-3 py-2 text-xs font-bold hover:bg-[#a45cff] sm:block">Sign up</Link></div>}
-    </header>
   );
 }
 
@@ -324,7 +297,7 @@ const muxEpisodePlaybackIds: Record<string, string[]> = {
   // Add real Mux playback IDs after uploads, in episode order.
   // Example:
   // "Solo Leveling": ["PLAYBACK_ID_FOR_S1_E1", "PLAYBACK_ID_FOR_S1_E2"],
-  "Solo Leveling": ["vGVPge2z02gzlCUDH8RAmcj542Z02ITHJ3y9EGcD8002o00"],
+  "Solo Leveling": ["vGVPge2z02gzlCUDH8RAmcj542Z02ITHJ3y9EGcD8002o00", "Ughp4MfIu01Nvt602FFsOLRiJ8Yo01rx7AXzE1TrL8DKZQ"],
 };
 
 function seriesEpisodes(channel: Channel) {
@@ -356,7 +329,7 @@ function seriesEpisodes(channel: Channel) {
       : `The conflict expands as ${title} pushes its heroes into a darker and more dangerous mission.`,
     thumbnailUrl: thumbnails[index % thumbnails.length],
     viewers: Math.max(120, Math.round(channel.viewers * (1 - index * 0.085))),
-    muxPlaybackId: playbackIds[index],
+    muxPlaybackId: index === 0 ? playbackIds[1] ?? playbackIds[0] : playbackIds[index],
     trailerUrl: trailer.embedId
       ? `https://www.youtube.com/watch?v=${trailer.embedId}`
       : trailer.url,
@@ -636,7 +609,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
 
   return (
     <div className="min-h-screen bg-[#07070a] text-[#f1f1f3]">
-      <div className="hidden lg:block"><Topbar query={query} onQuery={setQuery} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} mode={mode} onMode={setMode} /></div>
+      <div className="hidden lg:block"><SiteTopbar query={query} onQuery={setQuery} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} mode={mode} onMode={setMode} /></div>
       <div>
         <div className="px-4 pb-24 pt-4 lg:px-7 lg:pb-6">
           <main className="min-w-0">
