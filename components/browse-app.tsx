@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Show, SignInButton, SignOutButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import MuxPlayer from "@mux/mux-player-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/brand-logo";
 import { ChannelPage } from "@/components/channel-page";
@@ -365,12 +365,28 @@ type SeriesEpisode = ReturnType<typeof seriesEpisodes>[number];
 
 function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channel; onBack: () => void; viewerUsername?: string }) {
   const [listed, setListed] = useState(false);
-  const [muted, setMuted] = useState(true);
   const [playingEpisode, setPlayingEpisode] = useState<SeriesEpisode | null>(null);
+  const [playerLoading, setPlayerLoading] = useState(false);
   const title = channel.catalogTitle ?? channel.displayName;
   const episodes = seriesEpisodes(channel);
   const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
   const totalWatching = episodes.reduce((sum, episode) => sum + episode.viewers, 0);
+  const openEpisode = (episode: SeriesEpisode) => {
+    setPlayingEpisode(episode);
+    setPlayerLoading(Boolean(episode.muxPlaybackId));
+  };
+
+  useEffect(() => {
+    if (!playingEpisode) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPlayingEpisode(null);
+        setPlayerLoading(false);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [playingEpisode]);
 
   return (
     <div className="min-h-screen bg-[#09090b] pb-24 text-white">
@@ -397,14 +413,13 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[#f1f1f3] sm:text-xl">{description}</p>
           <p className="mt-5 max-w-3xl text-sm leading-6 text-[#b9b9c2]">Featuring: elite hunters, cursed warriors, rival clans, and a season-long battle for survival.</p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            {episodes[0]?.muxPlaybackId ? <button type="button" onClick={() => setPlayingEpisode(episodes[0])} className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1</button> : <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1 Trailer</a>}
+            {episodes[0]?.muxPlaybackId ? <button type="button" onClick={() => openEpisode(episodes[0])} className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1</button> : <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1 Trailer</a>}
             <button type="button" onClick={() => setListed(!listed)} className="grid h-14 w-14 place-items-center rounded-full border border-white/40 text-4xl leading-none">{listed ? "✓" : "+"}</button>
             <span className="text-sm font-black uppercase tracking-wide">My List</span>
             <button type="button" className="ml-0 grid h-14 w-14 place-items-center rounded-full border border-white/40 lg:ml-5" aria-label="Notify"><BellIcon className="h-6 w-6" /></button>
             <span className="text-sm font-black uppercase tracking-wide">Notify</span>
           </div>
         </div>
-        <button type="button" onClick={() => setMuted(!muted)} className="absolute bottom-16 right-5 z-10 grid h-14 w-14 place-items-center rounded-full border border-white/40 text-xl font-black sm:right-8 lg:right-14" aria-label={muted ? "Unmute preview" : "Mute preview"}>{muted ? "x" : "!"}</button>
       </section>
 
       <section id="episodes" className="px-5 pb-12 sm:px-8 lg:px-14">
@@ -414,7 +429,7 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
           </div>
           <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             {episodes.map((episode) => (
-              <EpisodeCard key={episode.code} episode={episode} onPlay={() => setPlayingEpisode(episode)} />
+              <EpisodeCard key={episode.code} episode={episode} onPlay={() => openEpisode(episode)} />
             ))}
           </div>
       </section>
@@ -424,6 +439,9 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
           playbackId={playingEpisode.muxPlaybackId}
           metadata={{ video_title: `${title} ${playingEpisode.code} ${playingEpisode.name}` }}
           streamType="on-demand"
+          onCanPlay={() => setPlayerLoading(false)}
+          onPlaying={() => setPlayerLoading(false)}
+          onWaiting={() => setPlayerLoading(true)}
           className="absolute inset-0 h-full w-full bg-black"
           style={{
             width: "100vw",
@@ -432,20 +450,12 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
             ["--media-object-position" as string]: "center",
           }}
         />
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/70 to-transparent px-6 py-6 sm:px-10">
-          <p className="text-2xl font-black sm:text-3xl">ARGUS</p>
-          <p className="mt-2 text-lg text-white/90">{title}: {playingEpisode.code} {playingEpisode.name}</p>
-        </div>
-        <button type="button" onClick={() => setPlayingEpisode(null)} className="absolute right-5 top-5 z-30 grid h-12 w-12 place-items-center rounded-full bg-black/60 text-3xl text-white backdrop-blur hover:bg-white/10" aria-label="Close player">×</button>
-        <button type="button" className="absolute right-6 top-24 z-30 grid h-12 w-12 place-items-center text-white/90" aria-label="Captions">
-          <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path d="M4 5h16v12H8l-4 3V5Z" /><path d="M8 10h4M14 10h2M8 14h2M12 14h5" /></svg>
-        </button>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/55 to-transparent px-6 pb-8 pt-20 sm:px-10">
-          <div className="mb-3 flex items-center justify-between text-lg text-white/90">
-            <span>Live · {formatViewers(playingEpisode.viewers)} watching</span>
-            <span>{playingEpisode.duration}</span>
+        {playerLoading && <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-black/35">
+          <div className="text-center">
+            <span className="mx-auto block h-20 w-20 animate-spin rounded-full border-[7px] border-white/30 border-t-white" />
+            <p className="mt-5 text-lg text-white/90">Optimizing your video playback experience</p>
           </div>
-        </div>
+        </div>}
       </div>}
 
       <MobileBottomNav viewerUsername={viewerUsername} />
