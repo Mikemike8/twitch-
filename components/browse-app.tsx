@@ -319,6 +319,10 @@ const trailerSources: Record<string, { embedId?: string; url: string; label: str
 
 function seriesEpisodes(channel: Channel) {
   const title = channel.catalogTitle ?? channel.displayName;
+  const trailer = trailerSources[title] ?? {
+    url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} official trailer episode`)}`,
+    label: "Watch trailer",
+  };
   const episodeNames = [
     "Awakening",
     "Zone of Shadows",
@@ -341,33 +345,19 @@ function seriesEpisodes(channel: Channel) {
       : `The conflict expands as ${title} pushes its heroes into a darker and more dangerous mission.`,
     thumbnailUrl: thumbnails[index % thumbnails.length],
     viewers: Math.max(120, Math.round(channel.viewers * (1 - index * 0.085))),
+    trailerUrl: trailer.embedId
+      ? `https://www.youtube.com/watch?v=${trailer.embedId}`
+      : trailer.url,
   }));
 }
 
 function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channel; onBack: () => void; viewerUsername?: string }) {
   const [listed, setListed] = useState(false);
   const [muted, setMuted] = useState(true);
-  const [chatMessage, setChatMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    ["akira", "S1 E1 is starting now"],
-    ["mika", "This opening scene is clean"],
-    ["orbit", "Who else is watching live?"],
-    ["kai", "The animation looks wild tonight"],
-  ]);
   const title = channel.catalogTitle ?? channel.displayName;
   const episodes = seriesEpisodes(channel);
   const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
-  const trailer = trailerSources[title] ?? {
-    url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} official trailer`)}`,
-    label: "Find official trailer",
-  };
   const totalWatching = episodes.reduce((sum, episode) => sum + episode.viewers, 0);
-  const sendChatMessage = () => {
-    const nextMessage = chatMessage.trim();
-    if (!nextMessage) return;
-    setChatMessages((current) => [...current.slice(-30), [viewerUsername ?? "you", nextMessage]]);
-    setChatMessage("");
-  };
 
   return (
     <div className="min-h-screen bg-[#09090b] pb-24 text-white">
@@ -394,8 +384,7 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[#f1f1f3] sm:text-xl">{description}</p>
           <p className="mt-5 max-w-3xl text-sm leading-6 text-[#b9b9c2]">Featuring: elite hunters, cursed warriors, rival clans, and a season-long battle for survival.</p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <button type="button" className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1</button>
-            <a href={trailer.url} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-md bg-white px-6 text-sm font-black uppercase tracking-wide text-black"><PlayIcon />Trailer</a>
+            <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1 Trailer</a>
             <button type="button" onClick={() => setListed(!listed)} className="grid h-14 w-14 place-items-center rounded-full border border-white/40 text-4xl leading-none">{listed ? "✓" : "+"}</button>
             <span className="text-sm font-black uppercase tracking-wide">My List</span>
             <button type="button" className="ml-0 grid h-14 w-14 place-items-center rounded-full border border-white/40 lg:ml-5" aria-label="Notify"><BellIcon className="h-6 w-6" /></button>
@@ -405,49 +394,16 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
         <button type="button" onClick={() => setMuted(!muted)} className="absolute bottom-16 right-5 z-10 grid h-14 w-14 place-items-center rounded-full border border-white/40 text-xl font-black sm:right-8 lg:right-14" aria-label={muted ? "Unmute preview" : "Mute preview"}>{muted ? "x" : "!"}</button>
       </section>
 
-      <section id="episodes" className="grid gap-8 px-5 pb-12 sm:px-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:px-14 xl:grid-cols-[minmax(0,1fr)_430px]">
-        <div>
-          <section className="mb-10">
-            <div className="mb-5 flex items-end justify-between gap-4">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9147ff]">Preview</p>
-                <h2 className="mt-1 text-3xl font-black">Official Trailer</h2>
-              </div>
-              <a href={trailer.url} target="_blank" rel="noreferrer" className="text-sm font-bold text-[#bf94ff]">{trailer.label}</a>
-            </div>
-            <div className="relative aspect-video overflow-hidden rounded-lg border border-white/10 bg-[#15151a]">
-              {trailer.embedId ? (
-                <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${trailer.embedId}`}
-                  title={`${title} official trailer`}
-                  className="h-full w-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              ) : (
-                <>
-                  <CatalogArtwork channel={channel} className="absolute inset-0 opacity-70" />
-                  <div className="absolute inset-0 bg-black/60" />
-                  <div className="absolute inset-0 grid place-items-center p-6 text-center">
-                    <span>
-                      <strong className="block text-2xl font-black">Trailer opens from official source</strong>
-                      <a href={trailer.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-12 items-center gap-3 rounded-md bg-white px-5 text-sm font-black uppercase tracking-wide text-black"><PlayIcon />Open trailer</a>
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-          </section>
-
+      <section id="episodes" className="px-5 pb-12 sm:px-8 lg:px-14">
           <div className="mb-5 flex items-end gap-8">
             <h2 className="text-3xl font-black">Full Episodes</h2>
             <span className="pb-1 text-base text-white/75">Season 1</span>
           </div>
-          <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             {episodes.map((episode) => (
-              <button key={episode.code} type="button" className="group text-left">
+              <a key={episode.code} href={episode.trailerUrl} target="_blank" rel="noreferrer" className="group text-left">
                 <span className="relative block aspect-video overflow-hidden rounded-md bg-white/5">
-                  <Image src={episode.thumbnailUrl} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover transition duration-500 group-hover:scale-105" />
+                  <Image src={episode.thumbnailUrl} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw" className="object-cover transition duration-500 group-hover:scale-105" />
                   <span className="absolute left-2 top-2 rounded bg-red-600 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white">Live</span>
                   <span className="absolute bottom-2 left-2 rounded bg-black/80 px-2 py-1 text-xs font-bold text-white">{formatViewers(episode.viewers)} watching</span>
                   <span className="absolute inset-0 grid place-items-center bg-black/0 opacity-0 transition group-hover:bg-black/35 group-hover:opacity-100"><PlayIcon className="h-10 w-10" /></span>
@@ -455,30 +411,9 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
                 <h3 className="mt-4 text-lg font-black"><span>{episode.code}</span> <span className="font-medium">{episode.name}</span></h3>
                 <p className="mt-2 line-clamp-2 min-h-[44px] text-sm leading-6 text-[#a1a1aa]">{episode.description}</p>
                 <p className="mt-2 text-sm font-bold text-[#8f8f99]">{episode.duration}  {episode.date}  ·  {formatViewers(episode.viewers)} live</p>
-              </button>
+              </a>
             ))}
           </div>
-        </div>
-        <aside className="sticky top-6 h-fit rounded-lg border border-white/10 bg-[#15151a]">
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
-            <div>
-              <h2 className="text-sm font-black uppercase tracking-wide">Live Watch Chat</h2>
-              <p className="mt-1 text-xs text-[#a1a1aa]">{formatViewers(totalWatching)} watching across Season 1</p>
-            </div>
-            <span className="rounded bg-red-600 px-2 py-1 text-[10px] font-black uppercase">Live</span>
-          </div>
-          <div className="h-[360px] space-y-4 overflow-y-auto px-4 py-4 text-sm">
-            {chatMessages.map(([user, message], index) => (
-              <p key={`${user}-${index}`} className="leading-6"><strong className="mr-2 text-[#bf94ff]">{user}:</strong><span className="text-[#e4e4e7]">{message}</span></p>
-            ))}
-          </div>
-          <div className="border-t border-white/10 p-3">
-            <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#9147ff]">
-              <input value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={(event) => event.key === "Enter" && sendChatMessage()} placeholder="Chat with viewers" className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm outline-none placeholder:text-[#71717a]" />
-              <button type="button" onClick={sendChatMessage} className="px-4 text-sm font-black text-[#bf94ff]">Send</button>
-            </div>
-          </div>
-        </aside>
       </section>
 
       <MobileBottomNav viewerUsername={viewerUsername} />
