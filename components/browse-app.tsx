@@ -366,12 +366,26 @@ type SeriesEpisode = ReturnType<typeof seriesEpisodes>[number];
 function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channel; onBack: () => void; viewerUsername?: string }) {
   const [listed, setListed] = useState(false);
   const [playingEpisode, setPlayingEpisode] = useState<SeriesEpisode | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessage, setChatMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState([
+    ["akira", "This scene is starting"],
+    ["mika", "Watching live"],
+    ["orbit", "No spoilers"],
+  ]);
   const title = channel.catalogTitle ?? channel.displayName;
   const episodes = seriesEpisodes(channel);
   const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
   const totalWatching = episodes.reduce((sum, episode) => sum + episode.viewers, 0);
   const openEpisode = (episode: SeriesEpisode) => {
     setPlayingEpisode(episode);
+    setChatOpen(false);
+  };
+  const sendChatMessage = () => {
+    const nextMessage = chatMessage.trim();
+    if (!nextMessage) return;
+    setChatMessages((current) => [...current.slice(-25), [viewerUsername ?? "you", nextMessage]]);
+    setChatMessage("");
   };
 
   useEffect(() => {
@@ -445,6 +459,36 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
             ["--media-object-position" as string]: "center",
           }}
         />
+        <div
+          className="absolute inset-y-0 right-0 z-20 flex w-8 items-center justify-end"
+          onMouseEnter={() => setChatOpen(true)}
+          onClick={() => setChatOpen(true)}
+          aria-hidden={!chatOpen}
+        >
+          <span className="mr-1 h-24 w-1 rounded-full bg-white/15 opacity-40" />
+        </div>
+        <aside
+          className={`absolute right-0 top-0 z-30 flex h-full w-[min(340px,82vw)] flex-col border-l border-white/10 bg-black/35 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 ${chatOpen ? "translate-x-0" : "translate-x-[calc(100%-10px)]"}`}
+          onMouseEnter={() => setChatOpen(true)}
+          onMouseLeave={() => setChatOpen(false)}
+        >
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
+              <p className="mt-1 text-[11px] text-white/60">{formatViewers(playingEpisode.viewers)} watching</p>
+            </div>
+            <button type="button" onClick={() => setChatOpen(false)} className="text-xl text-white/70 md:hidden" aria-label="Hide chat">×</button>
+          </div>
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 text-xs leading-5">
+            {chatMessages.map(([user, message], index) => <p key={`${user}-${index}`}><strong className="mr-2 text-[#bf94ff]">{user}:</strong><span className="text-white/85">{message}</span></p>)}
+          </div>
+          <div className="border-t border-white/10 p-3">
+            <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#9147ff]">
+              <input value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={(event) => event.key === "Enter" && sendChatMessage()} placeholder="Chat" className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-white/40" />
+              <button type="button" onClick={sendChatMessage} className="px-3 text-xs font-black text-[#bf94ff]">Send</button>
+            </div>
+          </div>
+        </aside>
       </div>}
 
       <MobileBottomNav viewerUsername={viewerUsername} />
