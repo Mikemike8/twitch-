@@ -91,7 +91,7 @@ function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "ho
     {viewerUsername ? (
       <Link href={`/${viewerUsername}`} className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
     ) : clerkConfigured ? (
-      <SignInButton mode="modal" fallbackRedirectUrl="/">
+      <SignInButton>
         <button type="button" className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</button>
       </SignInButton>
     ) : (

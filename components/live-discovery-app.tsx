@@ -123,7 +123,7 @@ function MobileLiveBottomNav({ viewerUsername, clerkConfigured }: { viewerUserna
   const profileItem = viewerUsername ? (
     <Link href={`/${viewerUsername}`} className={itemClass}><ProfileIcon />Profile</Link>
   ) : clerkConfigured ? (
-    <SignInButton mode="modal" fallbackRedirectUrl="/">
+    <SignInButton>
       <button type="button" className={itemClass}><ProfileIcon />Profile</button>
     </SignInButton>
   ) : (
