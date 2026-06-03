@@ -1,10 +1,15 @@
 import { SignIn } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { isClerkConfigured } from "@/lib/clerk-config";
 
-export default function SignInPage() {
+export default async function SignInPage() {
   if (!isClerkConfigured) {
     return <ConfigurationNotice action="sign in" />;
   }
+
+  const { userId } = await auth();
+  if (userId) redirect("/");
 
   return <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" fallbackRedirectUrl="/" />;
 }

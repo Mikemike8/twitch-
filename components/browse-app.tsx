@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
 import MuxPlayer from "@mux/mux-player-react";
 import { useEffect, useMemo, useState } from "react";
@@ -88,12 +88,17 @@ function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "ho
     <Link href="/search" className={`${itemClass} ${color("search")}`}><BrowseIcon className="h-7 w-7" />Search</Link>
     <Link href="/search" className={`${itemClass} text-white/55`}><ClipsIcon className="h-7 w-7" />Clips</Link>
     <Link href="/live" className={`${itemClass} ${color("live")}`}><LiveTvIcon className="h-7 w-7" />Live TV</Link>
-    {viewerUsername ? (
-      <Link href={`/${viewerUsername}`} className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
-    ) : clerkConfigured ? (
-      <SignInButton>
-        <button type="button" className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</button>
-      </SignInButton>
+    {clerkConfigured ? (
+      <>
+        <SignedIn>
+          <Link href={viewerUsername ? `/${viewerUsername}` : "/"} className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
+        </SignedIn>
+        <SignedOut>
+          <SignInButton>
+            <button type="button" className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</button>
+          </SignInButton>
+        </SignedOut>
+      </>
     ) : (
       <Link href="/sign-in" className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
     )}

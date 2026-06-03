@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SignInButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Avatar } from "@/components/avatar";
 import { FullscreenIcon, HeartIcon, SearchIcon, VolumeIcon } from "@/components/icons";
@@ -120,12 +120,17 @@ function MobileLiveRow({ channel, selected, index, onSelect }: { channel: Channe
 
 function MobileLiveBottomNav({ viewerUsername, clerkConfigured }: { viewerUsername?: string; clerkConfigured: boolean }) {
   const itemClass = "flex min-h-[74px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
-  const profileItem = viewerUsername ? (
-    <Link href={`/${viewerUsername}`} className={itemClass}><ProfileIcon />Profile</Link>
-  ) : clerkConfigured ? (
-    <SignInButton>
-      <button type="button" className={itemClass}><ProfileIcon />Profile</button>
-    </SignInButton>
+  const profileItem = clerkConfigured ? (
+    <>
+      <SignedIn>
+        <Link href={viewerUsername ? `/${viewerUsername}` : "/"} className={itemClass}><ProfileIcon />Profile</Link>
+      </SignedIn>
+      <SignedOut>
+        <SignInButton>
+          <button type="button" className={itemClass}><ProfileIcon />Profile</button>
+        </SignInButton>
+      </SignedOut>
+    </>
   ) : (
     <Link href="/sign-in" className={itemClass}><ProfileIcon />Profile</Link>
   );
