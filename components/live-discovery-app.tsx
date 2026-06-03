@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { Show, SignInButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Avatar } from "@/components/avatar";
 import { FullscreenIcon, HeartIcon, SearchIcon, VolumeIcon } from "@/components/icons";
@@ -122,14 +122,14 @@ function MobileLiveBottomNav({ viewerUsername, clerkConfigured }: { viewerUserna
   const itemClass = "flex min-h-[74px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
   const profileItem = clerkConfigured ? (
     <>
-      <SignedIn>
+      <Show when="signed-in">
         <Link href={viewerUsername ? `/${viewerUsername}` : "/"} className={itemClass}><ProfileIcon />Profile</Link>
-      </SignedIn>
-      <SignedOut>
+      </Show>
+      <Show when="signed-out">
         <SignInButton>
           <button type="button" className={itemClass}><ProfileIcon />Profile</button>
         </SignInButton>
-      </SignedOut>
+      </Show>
     </>
   ) : (
     <Link href="/sign-in" className={itemClass}><ProfileIcon />Profile</Link>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { Show, SignInButton } from "@clerk/nextjs";
 import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
 import MuxPlayer from "@mux/mux-player-react";
 import { useEffect, useMemo, useState } from "react";
@@ -90,14 +90,14 @@ function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "ho
     <Link href="/live" className={`${itemClass} ${color("live")}`}><LiveTvIcon className="h-7 w-7" />Live TV</Link>
     {clerkConfigured ? (
       <>
-        <SignedIn>
+        <Show when="signed-in">
           <Link href={viewerUsername ? `/${viewerUsername}` : "/"} className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
-        </SignedIn>
-        <SignedOut>
+        </Show>
+        <Show when="signed-out">
           <SignInButton>
             <button type="button" className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</button>
           </SignInButton>
-        </SignedOut>
+        </Show>
       </>
     ) : (
       <Link href="/sign-in" className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
