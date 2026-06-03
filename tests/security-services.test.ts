@@ -4,7 +4,7 @@ import { createParticipantIdentity, getUserIdFromParticipantIdentity } from "../
 import { publicUsername, redactPrivateIdentity } from "../lib/public-identity.ts";
 import { createMemoryRateLimiter, RateLimitError } from "../lib/rate-limit.ts";
 import { createSecretStorage } from "../lib/secret-storage.ts";
-import { boundedPage, boundedSearchTerm, inputLimits, requireBoundedText, requireUuid } from "../lib/validation.ts";
+import { boundedPage, boundedSearchTerm, inputLimits, requireBoundedText, requireUsername, requireUuid } from "../lib/validation.ts";
 
 test("participant identities isolate sessions and preserve the user id", () => {
   const userId = "11111111-1111-4111-8111-111111111111";
@@ -65,6 +65,13 @@ test("pagination accepts bounded positive integers and rejects invalid input", (
 test("uuid validation rejects malformed identifiers", () => {
   assert.equal(requireUuid("11111111-1111-4111-8111-111111111111"), "11111111-1111-4111-8111-111111111111");
   assert.throws(() => requireUuid("not-an-id"), /id is invalid/);
+});
+
+test("username validation normalizes readable handles", () => {
+  assert.equal(requireUsername("  Argus_Creator-7  "), "argus_creator-7");
+  assert.throws(() => requireUsername("ab"), /3 to 24/);
+  assert.throws(() => requireUsername("bad name"), /letters, numbers/);
+  assert.throws(() => requireUsername("api"), /reserved/);
 });
 
 test("public usernames never expose Clerk user ids", () => {

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { resetIngresses } from "@/lib/ingress-service";
 import { clientRateLimitKey, RateLimitError, rateLimiter } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-import { publicUsername } from "@/lib/public-identity";
+import { isGeneratedPublicUsername, publicUsername } from "@/lib/public-identity";
 import { corsHeaders, preflight, validateOrigin } from "@/lib/cors";
 import { assertFreshWebhookEvent } from "@/lib/webhook-idempotency";
 
@@ -66,6 +66,8 @@ export async function POST(request: Request) {
 
   if (event.type === "user.created" || event.type === "user.updated") {
     const username = publicUsername(event.data.username, event.data.id);
+    const existingUser = await db.user.findUnique({ where: { externalUserId: event.data.id } });
+    const shouldUpdateUsername = !existingUser || (isGeneratedPublicUsername(existingUser.username) && username !== existingUser.username);
 
     const user = await db.user.upsert({
       where: { externalUserId: event.data.id },
@@ -80,7 +82,7 @@ export async function POST(request: Request) {
         },
       },
       update: {
-        username,
+        ...(shouldUpdateUsername ? { username } : {}),
         imageUrl: event.data.image_url,
       },
     });

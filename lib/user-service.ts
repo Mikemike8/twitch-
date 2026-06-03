@@ -25,3 +25,29 @@ export async function updateUserBio(bio: string) {
     data: { bio },
   });
 }
+
+export async function updateUsername(username: string) {
+  const self = await getSelf();
+  const existing = await db.user.findUnique({ where: { username } });
+
+  if (existing && existing.id !== self.id) {
+    throw new Error("Username is already taken");
+  }
+
+  const user = await db.user.update({
+    where: { id: self.id },
+    data: { username },
+  });
+
+  await db.stream.updateMany({
+    where: {
+      userId: self.id,
+      name: `${self.username}'s stream`,
+    },
+    data: {
+      name: `${username}'s stream`,
+    },
+  });
+
+  return user;
+}

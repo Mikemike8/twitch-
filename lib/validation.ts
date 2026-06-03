@@ -3,6 +3,7 @@ const limits = {
   chatMessage: 500,
   searchTerm: 100,
   streamName: 120,
+  username: 24,
 } as const;
 
 export function requireBoundedText(value: string, field: keyof typeof limits, allowEmpty = false) {
@@ -26,6 +27,16 @@ export function requireUuid(value: string, field = "id") {
     throw new Error(`${field} is invalid`);
   }
   return value;
+}
+
+const reservedUsernames = new Set(["api", "live", "search", "sign-in", "sign-up", "u"]);
+
+export function requireUsername(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.length < 3 || normalized.length > limits.username) throw new Error("Username must be 3 to 24 characters");
+  if (!/^[a-z0-9][a-z0-9_-]*$/.test(normalized)) throw new Error("Username can only use letters, numbers, underscores, and hyphens");
+  if (reservedUsernames.has(normalized)) throw new Error("Username is reserved");
+  return normalized;
 }
 
 export const inputLimits = limits;

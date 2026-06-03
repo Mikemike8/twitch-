@@ -8,6 +8,10 @@ export function publicUsername(username: string | null | undefined, seed: string
     : `creator-${stableHash(seed)}`;
 }
 
+export function isGeneratedPublicUsername(username: string) {
+  return /^creator-[0-9a-f]{7}$/.test(username);
+}
+
 export function redactPrivateIdentity(value: string, replacement: string) {
   return value.replace(embeddedPrivateIdentityPattern, replacement);
 }
