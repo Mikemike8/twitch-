@@ -419,22 +419,33 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
           </div>
       </section>
 
-      {playingEpisode?.muxPlaybackId && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4">
-        <button type="button" onClick={() => setPlayingEpisode(null)} className="absolute inset-0" aria-label="Close episode player" />
-        <section className="relative z-10 w-full max-w-5xl overflow-hidden rounded-lg border border-white/10 bg-[#111113] shadow-2xl">
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-            <div className="min-w-0">
-              <h2 className="truncate text-sm font-black">{playingEpisode.code} {playingEpisode.name}</h2>
-              <p className="mt-1 text-xs text-[#a1a1aa]">{formatViewers(playingEpisode.viewers)} watching</p>
-            </div>
-            <button type="button" onClick={() => setPlayingEpisode(null)} className="grid h-9 w-9 place-items-center rounded-full text-2xl text-white/80 hover:bg-white/10" aria-label="Close player">×</button>
+      {playingEpisode?.muxPlaybackId && <div className="fixed inset-0 z-50 bg-black text-white">
+        <MuxPlayer
+          playbackId={playingEpisode.muxPlaybackId}
+          metadata={{ video_title: `${title} ${playingEpisode.code} ${playingEpisode.name}` }}
+          streamType="on-demand"
+          className="absolute inset-0 h-full w-full bg-black"
+          style={{
+            width: "100vw",
+            height: "100vh",
+            ["--media-object-fit" as string]: "contain",
+            ["--media-object-position" as string]: "center",
+          }}
+        />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/70 to-transparent px-6 py-6 sm:px-10">
+          <p className="text-2xl font-black sm:text-3xl">ARGUS</p>
+          <p className="mt-2 text-lg text-white/90">{title}: {playingEpisode.code} {playingEpisode.name}</p>
+        </div>
+        <button type="button" onClick={() => setPlayingEpisode(null)} className="absolute right-5 top-5 z-30 grid h-12 w-12 place-items-center rounded-full bg-black/60 text-3xl text-white backdrop-blur hover:bg-white/10" aria-label="Close player">×</button>
+        <button type="button" className="absolute right-6 top-24 z-30 grid h-12 w-12 place-items-center text-white/90" aria-label="Captions">
+          <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path d="M4 5h16v12H8l-4 3V5Z" /><path d="M8 10h4M14 10h2M8 14h2M12 14h5" /></svg>
+        </button>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/55 to-transparent px-6 pb-8 pt-20 sm:px-10">
+          <div className="mb-3 flex items-center justify-between text-lg text-white/90">
+            <span>Live · {formatViewers(playingEpisode.viewers)} watching</span>
+            <span>{playingEpisode.duration}</span>
           </div>
-          <MuxPlayer
-            playbackId={playingEpisode.muxPlaybackId}
-            metadata={{ video_title: `${title} ${playingEpisode.code} ${playingEpisode.name}` }}
-            className="aspect-video w-full bg-black"
-          />
-        </section>
+        </div>
       </div>}
 
       <MobileBottomNav viewerUsername={viewerUsername} />
