@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Show, SignInButton } from "@clerk/nextjs";
 import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
 import MuxPlayer from "@mux/mux-player-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createEpisodeChatToken } from "@/actions/episode-token";
 import { ChannelPage } from "@/components/channel-page";
@@ -422,7 +422,6 @@ function EpisodeChatShell({ chatOpen, setChatOpen, children }: { chatOpen: boole
       <aside
         className={`absolute right-0 top-0 z-30 flex h-full w-[min(340px,82vw)] flex-col border-l border-white/10 bg-black/35 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 ${chatOpen ? "translate-x-0" : "translate-x-[calc(100%-10px)]"}`}
         onMouseEnter={() => setChatOpen(true)}
-        onMouseLeave={() => setChatOpen(false)}
       >
         {children}
       </aside>
@@ -443,6 +442,11 @@ function EpisodeHoverChat({ episode, session, chatOpen, setChatOpen, viewerUsern
     if (!canSend || !nextMessage) return;
     await send(nextMessage);
     setChatMessage("");
+  };
+  const sendOnEnter = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    void sendChatMessage();
   };
 
   return (
@@ -465,12 +469,16 @@ function EpisodeHoverChat({ episode, session, chatOpen, setChatOpen, viewerUsern
         )}
         {error && <p className="text-white/55">{error}</p>}
       </div>
-      <div className="border-t border-white/10 p-3">
-        <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#9147ff]">
-          <input value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={(event) => event.key === "Enter" && void sendChatMessage()} disabled={!session.canChat} placeholder={session.canChat ? "Chat" : "Sign in to chat"} className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-white/40 disabled:cursor-not-allowed disabled:text-white/35" />
-          <button type="button" onClick={() => void sendChatMessage()} disabled={!canSend} className="px-3 text-xs font-black text-[#bf94ff] disabled:cursor-not-allowed disabled:text-white/25">Send</button>
-        </div>
-      </div>
+      <form className="border-t border-white/10 p-3" onSubmit={(event) => { event.preventDefault(); void sendChatMessage(); }}>
+        {session.canChat ? (
+          <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#9147ff]">
+            <input type="text" enterKeyHint="send" value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={sendOnEnter} placeholder="Chat" className="min-w-0 flex-1 bg-transparent px-3 py-3 text-base outline-none placeholder:text-white/40 md:py-2 md:text-xs" />
+            <button type="submit" disabled={!canSend} className="px-3 text-xs font-black text-[#bf94ff] disabled:cursor-not-allowed disabled:text-white/25">Send</button>
+          </div>
+        ) : (
+          <div className="rounded-md border border-white/15 bg-black/35 p-3 text-xs text-white/60">Sign in to chat.</div>
+        )}
+      </form>
     </EpisodeChatShell>
   );
 }

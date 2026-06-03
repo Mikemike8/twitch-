@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useState, type KeyboardEvent } from "react";
 import { useChat, useParticipants } from "@livekit/components-react";
 import { SendIcon } from "@/components/icons";
 import { onBlock } from "@/actions/block";
@@ -59,6 +60,12 @@ function RealtimeChat({ viewer, hostIdentity }: { viewer: ViewerToken; hostIdent
       .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to send chat message"))
       .finally(() => setSending(false));
   };
+  const submitOnEnter = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    submit();
+  };
+  const restriction = getChatRestriction(viewer);
 
   return <>
     <div className="flex items-center border-b border-[#29292f] px-3 py-2 text-[11px] text-[#adadb8]"><span>{participants.length} connected</span><button onClick={() => setVariant(variant === "chat" ? "community" : "chat")} className="ml-auto font-bold text-[#bf94ff]">{variant === "chat" ? "Community" : "Chat"}</button></div>
@@ -66,16 +73,30 @@ function RealtimeChat({ viewer, hostIdentity }: { viewer: ViewerToken; hostIdent
       {chatMessages.length === 0 && <p className="text-center text-xs text-[#adadb8]">Welcome to the chat room.</p>}
       {chatMessages.map((message) => { const serverMessage = message as typeof message & { senderName?: string }; const name = message.from?.name ?? message.from?.identity ?? serverMessage.senderName ?? "guest"; return <p key={`${message.timestamp}-${message.from?.identity ?? serverMessage.senderName ?? "server"}`}><strong className="mr-2" style={{ color: stringToColor(name) }}>{name}:</strong><span className="text-[#dedee3]">{message.message}</span></p>; })}
     </div>
-    <div className="border-t border-[#29292f] p-3">
-      <div className="flex rounded-md border border-[#3f3f46] bg-[#242429] focus-within:border-[#9147ff]"><input value={value} maxLength={inputLimits.chatMessage} disabled={disabled} onChange={(event) => setValue(event.target.value)} onKeyDown={(event) => event.key === "Enter" && submit()} placeholder={viewer.canChat ? "Send a message" : "Chat is restricted"} className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none disabled:opacity-60" /><button onClick={submit} disabled={disabled} className="px-3 text-[#bf94ff] disabled:opacity-40"><SendIcon className="h-4 w-4" /></button></div>
-      {!viewer.isChatEnabled && <p className="mt-2 text-[11px] text-[#adadb8]">Chat is disabled.</p>}
-      {!viewer.isAuthenticated && <p className="mt-2 text-[11px] text-[#adadb8]">Sign in to send chat messages.</p>}
-      {viewer.isChatFollowersOnly && !viewer.isFollowing && <p className="mt-2 text-[11px] text-[#adadb8]">Followers only chat is enabled.</p>}
-      {viewer.isChatDelayed && <p className="mt-2 text-[11px] text-[#adadb8]">Slow mode is enabled. You can send one message every 15 seconds.</p>}
+    <form className="border-t border-[#29292f] p-3" onSubmit={(event) => { event.preventDefault(); submit(); }}>
+      {viewer.canChat ? (
+        <div className="flex rounded-md border border-[#3f3f46] bg-[#242429] focus-within:border-[#9147ff]">
+          <input type="text" enterKeyHint="send" value={value} maxLength={inputLimits.chatMessage} disabled={sending} onChange={(event) => setValue(event.target.value)} onKeyDown={submitOnEnter} placeholder="Send a message" className="min-w-0 flex-1 bg-transparent px-3 py-3 text-base outline-none placeholder:text-[#858590] disabled:opacity-60 md:py-2 md:text-sm" />
+          <button type="submit" disabled={disabled || !value.trim()} className="px-3 text-[#bf94ff] disabled:opacity-40" aria-label="Send chat message"><SendIcon className="h-4 w-4" /></button>
+        </div>
+      ) : (
+        <div className="rounded-md border border-[#3f3f46] bg-[#242429] p-3 text-xs text-[#adadb8]">
+          <p>{restriction}</p>
+          {!viewer.isAuthenticated && <Link href="/sign-in" className="mt-2 inline-flex rounded bg-[#9147ff] px-3 py-2 font-black text-white">Sign in to chat</Link>}
+        </div>
+      )}
+      {viewer.isChatDelayed && viewer.canChat && <p className="mt-2 text-[11px] text-[#adadb8]">Slow mode is enabled. You can send one message every 15 seconds.</p>}
       {error && <p className="mt-2 text-[11px] text-red-300">{error}</p>}
-    </div>
+    </form>
     </> : <Community participants={participants} viewer={viewer} hostIdentity={hostIdentity} />}
   </>;
+}
+
+function getChatRestriction(viewer: ViewerToken) {
+  if (!viewer.isChatEnabled) return "Chat is disabled for this stream.";
+  if (!viewer.isAuthenticated) return "Sign in to send chat messages.";
+  if (viewer.isChatFollowersOnly && !viewer.isFollowing) return "Followers only chat is enabled.";
+  return "Chat is restricted for this stream.";
 }
 
 function Community({ participants, viewer, hostIdentity }: { participants: ReturnType<typeof useParticipants>; viewer: ViewerToken; hostIdentity: string }) {
