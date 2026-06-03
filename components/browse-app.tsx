@@ -366,14 +366,12 @@ type SeriesEpisode = ReturnType<typeof seriesEpisodes>[number];
 function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channel; onBack: () => void; viewerUsername?: string }) {
   const [listed, setListed] = useState(false);
   const [playingEpisode, setPlayingEpisode] = useState<SeriesEpisode | null>(null);
-  const [playerLoading, setPlayerLoading] = useState(false);
   const title = channel.catalogTitle ?? channel.displayName;
   const episodes = seriesEpisodes(channel);
   const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
   const totalWatching = episodes.reduce((sum, episode) => sum + episode.viewers, 0);
   const openEpisode = (episode: SeriesEpisode) => {
     setPlayingEpisode(episode);
-    setPlayerLoading(Boolean(episode.muxPlaybackId));
   };
 
   useEffect(() => {
@@ -381,7 +379,6 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setPlayingEpisode(null);
-        setPlayerLoading(false);
       }
     };
     window.addEventListener("keydown", closeOnEscape);
@@ -440,9 +437,6 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
           metadata={{ video_title: `${title} ${playingEpisode.code} ${playingEpisode.name}` }}
           streamType="on-demand"
           autoPlay
-          onCanPlay={() => setPlayerLoading(false)}
-          onPlaying={() => setPlayerLoading(false)}
-          onWaiting={() => setPlayerLoading(true)}
           className="absolute inset-0 h-full w-full bg-black"
           style={{
             width: "100vw",
@@ -451,12 +445,6 @@ function SeriesDetailPage({ channel, onBack, viewerUsername }: { channel: Channe
             ["--media-object-position" as string]: "center",
           }}
         />
-        {playerLoading && <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-black/35">
-          <div className="text-center">
-            <span className="mx-auto block h-20 w-20 animate-spin rounded-full border-[7px] border-white/30 border-t-white" />
-            <p className="mt-5 text-lg text-white/90">Optimizing your video playback experience</p>
-          </div>
-        </div>}
       </div>}
 
       <MobileBottomNav viewerUsername={viewerUsername} />
