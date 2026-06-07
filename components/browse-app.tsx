@@ -432,7 +432,8 @@ function episodeRoomName(title: string, episode: SeriesEpisode) {
 }
 
 function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, onClose, onNext }: { title: string; episode: SeriesEpisode; nextEpisode?: SeriesEpisode; viewerUsername?: string; onClose: () => void; onNext?: (episode: SeriesEpisode) => void }) {
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(true);
+  const [chatExpanded, setChatExpanded] = useState(false);
   const [session, setSession] = useState<EpisodeChatToken | null>(null);
   const lastProgressSyncAt = useRef(0);
   const resumed = useRef(false);
@@ -520,11 +521,6 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
             }}
           />
           <button type="button" onClick={onClose} className="absolute left-4 top-4 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/55 text-2xl text-white/80 backdrop-blur hover:text-white" aria-label="Close video">×</button>
-          {!chatOpen && (
-            <button type="button" onClick={() => setChatOpen(true)} className="absolute bottom-5 right-5 z-30 rounded-full bg-[#2554e8] px-4 py-3 text-xs font-black uppercase tracking-wide text-white shadow-2xl md:bottom-4 md:right-4" aria-label="Open chat">
-              Chat
-            </button>
-          )}
           {nextEpisode?.muxPlaybackId && !chatOpen && (
             <button type="button" onClick={() => onNext?.(nextEpisode)} className="absolute bottom-5 left-5 z-30 flex items-center gap-2 rounded-full bg-white px-4 py-3 text-xs font-black uppercase tracking-wide text-black shadow-2xl md:bottom-4 md:left-4" aria-label={`Play ${nextEpisode.code}`}>
               <PlayIcon className="h-3.5 w-3.5" /> Next {nextEpisode.code}
@@ -533,20 +529,20 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
         </div>
         {serverUrl && session ? (
           <LiveKitRoom token={session.token} serverUrl={serverUrl} connect video={false} audio={false} className="contents">
-            <EpisodeHoverChat episode={episode} session={session} chatOpen={chatOpen} setChatOpen={setChatOpen} viewerUsername={viewerUsername} error={error} />
+            <EpisodeHoverChat episode={episode} session={session} chatOpen={chatOpen} chatExpanded={chatExpanded} setChatOpen={setChatOpen} setChatExpanded={setChatExpanded} viewerUsername={viewerUsername} error={error} />
           </LiveKitRoom>
         ) : (
-          <EpisodeHoverChatFallback episode={episode} chatOpen={chatOpen} setChatOpen={setChatOpen} error={error} />
+          <EpisodeHoverChatFallback episode={episode} chatOpen={chatOpen} chatExpanded={chatExpanded} setChatOpen={setChatOpen} setChatExpanded={setChatExpanded} error={error} />
         )}
       </div>
     </div>
   );
 }
 
-function EpisodeChatShell({ chatOpen, children }: { chatOpen: boolean; children: React.ReactNode }) {
+function EpisodeChatShell({ chatOpen, expanded, children }: { chatOpen: boolean; expanded: boolean; children: React.ReactNode }) {
   return (
     <aside
-      className={`fixed inset-x-0 bottom-0 z-50 flex h-[38vh] min-h-[260px] flex-col overflow-hidden rounded-t-2xl border-t border-white/10 bg-[#08080b]/95 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 md:static md:h-full md:min-h-0 md:shrink-0 md:rounded-none md:border-l md:border-t-0 md:transition-[width] ${chatOpen ? "translate-y-0 md:w-[360px]" : "translate-y-full md:w-0"}`}
+      className={`fixed inset-x-0 bottom-0 z-50 flex min-h-[260px] flex-col overflow-hidden rounded-t-2xl border-t border-white/10 bg-[#08080b]/95 text-white shadow-2xl backdrop-blur-md transition-[height,transform,width] duration-300 md:static md:h-full md:min-h-0 md:shrink-0 md:rounded-none md:border-l md:border-t-0 ${expanded ? "h-[72vh]" : "h-[38vh]"} ${chatOpen ? "translate-y-0 md:w-[360px]" : "translate-y-full md:w-0"}`}
       onClick={(event) => event.stopPropagation()}
       aria-hidden={!chatOpen}
     >
@@ -555,7 +551,7 @@ function EpisodeChatShell({ chatOpen, children }: { chatOpen: boolean; children:
   );
 }
 
-function EpisodeHoverChat({ episode, session, chatOpen, setChatOpen, viewerUsername, error }: { episode: SeriesEpisode; session: EpisodeChatToken; chatOpen: boolean; setChatOpen: (open: boolean) => void; viewerUsername?: string; error: string }) {
+function EpisodeHoverChat({ episode, session, chatOpen, chatExpanded, setChatOpen, setChatExpanded, viewerUsername, error }: { episode: SeriesEpisode; session: EpisodeChatToken; chatOpen: boolean; chatExpanded: boolean; setChatOpen: (open: boolean) => void; setChatExpanded: (expanded: boolean) => void; viewerUsername?: string; error: string }) {
   const [chatMessage, setChatMessage] = useState("");
   const participants = useParticipants();
   const { chatMessages, send, isSending } = useChat();
@@ -576,13 +572,16 @@ function EpisodeHoverChat({ episode, session, chatOpen, setChatOpen, viewerUsern
   };
 
   return (
-    <EpisodeChatShell chatOpen={chatOpen}>
+    <EpisodeChatShell chatOpen={chatOpen} expanded={chatExpanded}>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div>
           <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
           <p className="mt-1 text-[11px] text-white/60">{formatViewers(viewerCount)} watching</p>
         </div>
-        <button type="button" onClick={(event) => { event.stopPropagation(); setChatOpen(false); }} className="grid h-9 w-9 place-items-center rounded text-xl text-white/70 hover:bg-white/10" aria-label="Hide chat">×</button>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={(event) => { event.stopPropagation(); setChatExpanded(!chatExpanded); }} className="rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={chatExpanded ? "Show half chat" : "Show full chat"}>{chatExpanded ? "Half" : "Full"}</button>
+          <button type="button" onClick={(event) => { event.stopPropagation(); setChatOpen(false); }} className="grid h-9 w-9 place-items-center rounded text-xl text-white/70 hover:bg-white/10" aria-label="Hide chat">×</button>
+        </div>
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 text-xs leading-5">
         {displayMessages.length ? displayMessages.map((message) => (
@@ -614,15 +613,18 @@ function EpisodeHoverChat({ episode, session, chatOpen, setChatOpen, viewerUsern
   );
 }
 
-function EpisodeHoverChatFallback({ episode, chatOpen, setChatOpen, error }: { episode: SeriesEpisode; chatOpen: boolean; setChatOpen: (open: boolean) => void; error: string }) {
+function EpisodeHoverChatFallback({ episode, chatOpen, chatExpanded, setChatOpen, setChatExpanded, error }: { episode: SeriesEpisode; chatOpen: boolean; chatExpanded: boolean; setChatOpen: (open: boolean) => void; setChatExpanded: (expanded: boolean) => void; error: string }) {
   return (
-    <EpisodeChatShell chatOpen={chatOpen}>
+    <EpisodeChatShell chatOpen={chatOpen} expanded={chatExpanded}>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div>
           <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
           <p className="mt-1 text-[11px] text-white/60">{formatViewers(episode.viewers)} watching</p>
         </div>
-        <button type="button" onClick={(event) => { event.stopPropagation(); setChatOpen(false); }} className="grid h-9 w-9 place-items-center rounded text-xl text-white/70 hover:bg-white/10" aria-label="Hide chat">×</button>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={(event) => { event.stopPropagation(); setChatExpanded(!chatExpanded); }} className="rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={chatExpanded ? "Show half chat" : "Show full chat"}>{chatExpanded ? "Half" : "Full"}</button>
+          <button type="button" onClick={(event) => { event.stopPropagation(); setChatOpen(false); }} className="grid h-9 w-9 place-items-center rounded text-xl text-white/70 hover:bg-white/10" aria-label="Hide chat">×</button>
+        </div>
       </div>
       <div className="min-h-0 flex-1 px-4 py-4 text-xs leading-5 text-white/60">
         {error || "Joining live chat..."}
