@@ -161,6 +161,10 @@ function PlayIcon({ className = "h-4 w-4" }: { className?: string }) {
   return <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7Z" /></svg>;
 }
 
+function ForwardIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4"><path d="M5 6l8 6-8 6V6Z" fill="currentColor" stroke="none" /><path d="M16 6v12" strokeLinecap="round" /></svg>;
+}
+
 function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channel) => void }) {
   if (!channel) return null;
   return (
@@ -432,7 +436,6 @@ function episodeRoomName(title: string, episode: SeriesEpisode) {
 }
 
 function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, onNext }: { title: string; episode: SeriesEpisode; nextEpisode?: SeriesEpisode; viewerUsername?: string; onNext?: (episode: SeriesEpisode) => void }) {
-  const [chatExpanded, setChatExpanded] = useState(false);
   const [session, setSession] = useState<EpisodeChatToken | null>(null);
   const lastProgressSyncAt = useRef(0);
   const resumed = useRef(false);
@@ -518,28 +521,23 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
               ["--media-object-position" as string]: "center",
             }}
           />
-          {nextEpisode?.muxPlaybackId && (
-            <button type="button" onClick={() => onNext?.(nextEpisode)} className="absolute bottom-5 left-5 z-30 flex items-center gap-2 rounded-full bg-white px-4 py-3 text-xs font-black uppercase tracking-wide text-black shadow-2xl md:bottom-4 md:left-4" aria-label={`Play ${nextEpisode.code}`}>
-              <PlayIcon className="h-3.5 w-3.5" /> Next {nextEpisode.code}
-            </button>
-          )}
         </div>
         {serverUrl && session ? (
           <LiveKitRoom token={session.token} serverUrl={serverUrl} connect video={false} audio={false} className="contents">
-            <EpisodeHoverChat episode={episode} session={session} chatExpanded={chatExpanded} setChatExpanded={setChatExpanded} viewerUsername={viewerUsername} error={error} />
+            <EpisodeHoverChat episode={episode} nextEpisode={nextEpisode} onNext={onNext} session={session} viewerUsername={viewerUsername} error={error} />
           </LiveKitRoom>
         ) : (
-          <EpisodeHoverChatFallback episode={episode} chatExpanded={chatExpanded} setChatExpanded={setChatExpanded} error={error} />
+          <EpisodeHoverChatFallback episode={episode} nextEpisode={nextEpisode} onNext={onNext} error={error} />
         )}
       </div>
     </div>
   );
 }
 
-function EpisodeChatShell({ expanded, children }: { expanded: boolean; children: React.ReactNode }) {
+function EpisodeChatShell({ children }: { children: React.ReactNode }) {
   return (
     <aside
-      className={`flex min-h-[260px] shrink-0 flex-col overflow-hidden border-t border-white/10 bg-[#08080b] text-white transition-[height,width] duration-300 md:h-full md:min-h-0 md:w-[360px] md:border-l md:border-t-0 ${expanded ? "h-[58vh]" : "h-[40vh]"}`}
+      className="flex h-[40vh] min-h-[260px] shrink-0 flex-col overflow-hidden border-t border-white/10 bg-[#08080b] text-white md:h-full md:min-h-0 md:w-[360px] md:border-l md:border-t-0"
       onClick={(event) => event.stopPropagation()}
     >
       {children}
@@ -547,7 +545,7 @@ function EpisodeChatShell({ expanded, children }: { expanded: boolean; children:
   );
 }
 
-function EpisodeHoverChat({ episode, session, chatExpanded, setChatExpanded, viewerUsername, error }: { episode: SeriesEpisode; session: EpisodeChatToken; chatExpanded: boolean; setChatExpanded: (expanded: boolean) => void; viewerUsername?: string; error: string }) {
+function EpisodeHoverChat({ episode, nextEpisode, onNext, session, viewerUsername, error }: { episode: SeriesEpisode; nextEpisode?: SeriesEpisode; onNext?: (episode: SeriesEpisode) => void; session: EpisodeChatToken; viewerUsername?: string; error: string }) {
   const [chatMessage, setChatMessage] = useState("");
   const participants = useParticipants();
   const { chatMessages, send, isSending } = useChat();
@@ -568,14 +566,18 @@ function EpisodeHoverChat({ episode, session, chatExpanded, setChatExpanded, vie
   };
 
   return (
-    <EpisodeChatShell expanded={chatExpanded}>
+    <EpisodeChatShell>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div>
           <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
           <p className="mt-1 text-[11px] text-white/60">{formatViewers(viewerCount)} watching</p>
         </div>
         <div className="flex items-center gap-1">
-          <button type="button" onClick={(event) => { event.stopPropagation(); setChatExpanded(!chatExpanded); }} className="rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={chatExpanded ? "Show half chat" : "Show full chat"}>{chatExpanded ? "Half" : "Full"}</button>
+          {nextEpisode?.muxPlaybackId && (
+            <button type="button" onClick={(event) => { event.stopPropagation(); onNext?.(nextEpisode); }} className="flex items-center gap-1 rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={`Play ${nextEpisode.code}`}>
+              <ForwardIcon className="h-3.5 w-3.5" /> Next
+            </button>
+          )}
         </div>
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 text-xs leading-5">
@@ -608,16 +610,20 @@ function EpisodeHoverChat({ episode, session, chatExpanded, setChatExpanded, vie
   );
 }
 
-function EpisodeHoverChatFallback({ episode, chatExpanded, setChatExpanded, error }: { episode: SeriesEpisode; chatExpanded: boolean; setChatExpanded: (expanded: boolean) => void; error: string }) {
+function EpisodeHoverChatFallback({ episode, nextEpisode, onNext, error }: { episode: SeriesEpisode; nextEpisode?: SeriesEpisode; onNext?: (episode: SeriesEpisode) => void; error: string }) {
   return (
-    <EpisodeChatShell expanded={chatExpanded}>
+    <EpisodeChatShell>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div>
           <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
           <p className="mt-1 text-[11px] text-white/60">{formatViewers(episode.viewers)} watching</p>
         </div>
         <div className="flex items-center gap-1">
-          <button type="button" onClick={(event) => { event.stopPropagation(); setChatExpanded(!chatExpanded); }} className="rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={chatExpanded ? "Show half chat" : "Show full chat"}>{chatExpanded ? "Half" : "Full"}</button>
+          {nextEpisode?.muxPlaybackId && (
+            <button type="button" onClick={(event) => { event.stopPropagation(); onNext?.(nextEpisode); }} className="flex items-center gap-1 rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={`Play ${nextEpisode.code}`}>
+              <ForwardIcon className="h-3.5 w-3.5" /> Next
+            </button>
+          )}
         </div>
       </div>
       <div className="min-h-0 flex-1 px-4 py-4 text-xs leading-5 text-white/60">
