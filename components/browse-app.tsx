@@ -485,9 +485,9 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black text-white">
-      <div className="flex h-full min-h-0 flex-col md:flex-row">
-        <div className="relative h-[42vh] min-h-[260px] shrink-0 md:h-auto md:min-h-0 md:flex-1 md:basis-auto">
+    <div className="fixed inset-0 z-50 h-[100dvh] overflow-hidden bg-black text-white">
+      <div className="flex h-full min-h-0 flex-col overscroll-none md:flex-row">
+        <div className="relative min-h-0 flex-1 md:basis-auto">
           <MuxPlayer
             playbackId={episode.muxPlaybackId}
             metadata={{ video_title: `${title} ${episode.code} ${episode.name}` }}
@@ -592,7 +592,7 @@ function EpisodeHoverChat({ episode, session, chatExpanded, setChatExpanded, vie
       <form className="border-t border-white/10 p-3" onSubmit={(event) => { event.preventDefault(); void sendChatMessage(); }}>
         {session.canChat ? (
           <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#9147ff]">
-            <input type="text" enterKeyHint="send" value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={sendOnEnter} placeholder="Chat" className="min-w-0 flex-1 bg-transparent px-3 py-3 text-base outline-none placeholder:text-white/40 md:py-2 md:text-xs" />
+            <input type="text" enterKeyHint="send" value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={sendOnEnter} onPointerDown={(event) => { event.preventDefault(); event.currentTarget.focus({ preventScroll: true }); }} placeholder="Chat" className="min-w-0 flex-1 bg-transparent px-3 py-3 text-base outline-none placeholder:text-white/40 md:py-2 md:text-xs" />
             <button type="submit" disabled={!canSend} className="px-3 text-xs font-black text-[#bf94ff] disabled:cursor-not-allowed disabled:text-white/25">Send</button>
           </div>
         ) : (
