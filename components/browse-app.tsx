@@ -454,6 +454,31 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
       .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to join live chat"));
   }, [roomName, serverUrl]);
 
+  useEffect(() => {
+    const lockLandscapeOnFullscreen = () => {
+      const orientation = screen.orientation as ScreenOrientation & {
+        lock?: (orientation: OrientationLockType) => Promise<void>;
+        unlock?: () => void;
+      };
+
+      if (document.fullscreenElement) {
+        orientation.lock?.("landscape").catch(() => undefined);
+        return;
+      }
+
+      orientation.unlock?.();
+    };
+
+    document.addEventListener("fullscreenchange", lockLandscapeOnFullscreen);
+    document.addEventListener("webkitfullscreenchange", lockLandscapeOnFullscreen);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", lockLandscapeOnFullscreen);
+      document.removeEventListener("webkitfullscreenchange", lockLandscapeOnFullscreen);
+      (screen.orientation as ScreenOrientation & { unlock?: () => void }).unlock?.();
+    };
+  }, []);
+
   const syncProgress = (player: PlayerProgressTarget, eventType: "VIDEO_STARTED" | "VIDEO_PAUSED" | "VIDEO_COMPLETED" | "VIDEO_SEEKED" | "WATCH_TIME_UPDATED") => {
     const positionSeconds = Math.floor(player.currentTime || 0);
     const durationSeconds = Number.isFinite(player.duration) ? Math.floor(player.duration) : undefined;
