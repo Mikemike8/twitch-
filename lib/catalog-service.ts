@@ -1,0 +1,199 @@
+import { db } from "@/lib/db";
+import type { Channel } from "@/lib/channels";
+
+type CatalogTitleRow = {
+  firstEpisodeId: string | null;
+  slug: string;
+  title: string;
+  description: string | null;
+  category: string;
+  posterUrl: string | null;
+  tags: string[] | null;
+  episodeTitle: string | null;
+};
+
+export type ContinueWatchingItem = {
+  channel: Channel;
+  durationSeconds: number | null;
+  episodeCode: string;
+  episodeId: string;
+  episodeTitle: string;
+  positionSeconds: number;
+  progressPercent: number;
+};
+
+type ContinueWatchingRow = CatalogTitleRow & {
+  durationSeconds: number | null;
+  episodeId: string;
+  episodeNumber: number;
+  episodeTitle: string;
+  positionSeconds: number;
+};
+
+const pageSize = 24;
+
+export async function getCatalogTitles(page = 1) {
+  try {
+    const rows = await db.$queryRaw<CatalogTitleRow[]>`
+      SELECT
+        ct."slug",
+        ct."title",
+        ct."description",
+        ct."category",
+        ct."posterUrl",
+        COALESCE(array_remove(array_agg(DISTINCT tag."name"), NULL), ARRAY[]::TEXT[]) AS "tags",
+        MIN(ep."id") AS "firstEpisodeId",
+        MIN(ep."title") AS "episodeTitle"
+      FROM "CatalogTitle" ct
+      LEFT JOIN "CatalogTitleTag" ctt ON ctt."catalogTitleId" = ct."id"
+      LEFT JOIN "CatalogTag" tag ON tag."id" = ctt."tagId"
+      LEFT JOIN "Season" season ON season."catalogTitleId" = ct."id"
+      LEFT JOIN "Episode" ep ON ep."seasonId" = season."id"
+      WHERE ct."visibility" = 'PUBLIC'
+      GROUP BY ct."id"
+      ORDER BY ct."updatedAt" DESC
+      LIMIT ${pageSize + 1}
+      OFFSET ${(page - 1) * pageSize}
+    `;
+
+    return { channels: rows.slice(0, pageSize).map(rowToChannel), hasNext: rows.length > pageSize };
+  } catch {
+    return { channels: [] as Channel[], hasNext: false };
+  }
+}
+
+export async function searchCatalogTitles(query: string, page = 1) {
+  const term = `%${query}%`;
+
+  try {
+    const rows = await db.$queryRaw<CatalogTitleRow[]>`
+      SELECT
+        ct."slug",
+        ct."title",
+        ct."description",
+        ct."category",
+        ct."posterUrl",
+        COALESCE(array_remove(array_agg(DISTINCT tag."name"), NULL), ARRAY[]::TEXT[]) AS "tags",
+        MIN(ep."id") AS "firstEpisodeId",
+        MIN(ep."title") AS "episodeTitle"
+      FROM "CatalogTitle" ct
+      LEFT JOIN "CatalogTitleTag" ctt ON ctt."catalogTitleId" = ct."id"
+      LEFT JOIN "CatalogTag" tag ON tag."id" = ctt."tagId"
+      LEFT JOIN "Season" season ON season."catalogTitleId" = ct."id"
+      LEFT JOIN "Episode" ep ON ep."seasonId" = season."id"
+      WHERE ct."visibility" = 'PUBLIC'
+        AND (
+          ct."title" ILIKE ${term}
+          OR ct."category" ILIKE ${term}
+          OR tag."name" ILIKE ${term}
+        )
+      GROUP BY ct."id"
+      ORDER BY ct."updatedAt" DESC
+      LIMIT ${pageSize + 1}
+      OFFSET ${(page - 1) * pageSize}
+    `;
+
+    return { channels: rows.slice(0, pageSize).map(rowToChannel), hasNext: rows.length > pageSize };
+  } catch {
+    return { channels: [] as Channel[], hasNext: false };
+  }
+}
+
+export async function getContinueWatching(userId: string) {
+  try {
+    const rows = await db.$queryRaw<ContinueWatchingRow[]>`
+      SELECT
+        ct."slug",
+        ct."title",
+        ct."description",
+        ct."category",
+        ct."posterUrl",
+        COALESCE(array_remove(array_agg(DISTINCT tag."name"), NULL), ARRAY[]::TEXT[]) AS "tags",
+        (
+          SELECT first_ep."id"
+          FROM "Season" first_season
+          JOIN "Episode" first_ep ON first_ep."seasonId" = first_season."id"
+          WHERE first_season."catalogTitleId" = ct."id"
+          ORDER BY first_season."number" ASC, first_ep."number" ASC
+          LIMIT 1
+        ) AS "firstEpisodeId",
+        ep."id" AS "episodeId",
+        ep."number" AS "episodeNumber",
+        ep."title" AS "episodeTitle",
+        progress."positionSeconds",
+        progress."durationSeconds"
+      FROM "PlaybackProgress" progress
+      JOIN "Episode" ep ON ep."id" = progress."episodeId"
+      JOIN "Season" season ON season."id" = ep."seasonId"
+      JOIN "CatalogTitle" ct ON ct."id" = season."catalogTitleId"
+      LEFT JOIN "CatalogTitleTag" ctt ON ctt."catalogTitleId" = ct."id"
+      LEFT JOIN "CatalogTag" tag ON tag."id" = ctt."tagId"
+      WHERE progress."userId" = ${userId}
+        AND progress."completedAt" IS NULL
+        AND ct."visibility" = 'PUBLIC'
+      GROUP BY ct."id", ep."id", progress."positionSeconds", progress."durationSeconds", progress."updatedAt"
+      ORDER BY progress."updatedAt" DESC
+      LIMIT 12
+    `;
+
+    return rows.map(rowToContinueWatchingItem);
+  } catch {
+    return [] as ContinueWatchingItem[];
+  }
+}
+
+function rowToChannel(row: CatalogTitleRow): Channel {
+  return {
+    username: `catalog-${row.slug}`,
+    displayName: row.title,
+    title: row.episodeTitle ? `${row.title} - ${row.episodeTitle}` : row.title,
+    category: row.category,
+    viewers: viewersFor(row.slug),
+    live: true,
+    verified: true,
+    tags: row.tags?.length ? row.tags : [row.category],
+    colors: colorsFor(row.slug),
+    initials: initialsFor(row.title),
+    posterUrl: row.posterUrl,
+    catalogTitle: row.title,
+    bio: row.description,
+    firstEpisodeId: row.firstEpisodeId,
+  };
+}
+
+function rowToContinueWatchingItem(row: ContinueWatchingRow): ContinueWatchingItem {
+  const durationSeconds = row.durationSeconds ?? null;
+  const progressPercent = durationSeconds && durationSeconds > 0
+    ? Math.min(100, Math.max(0, Math.round((row.positionSeconds / durationSeconds) * 100)))
+    : 0;
+
+  return {
+    channel: rowToChannel(row),
+    durationSeconds,
+    episodeCode: `S1 E${row.episodeNumber}`,
+    episodeId: row.episodeId,
+    episodeTitle: row.episodeTitle,
+    positionSeconds: row.positionSeconds,
+    progressPercent,
+  };
+}
+
+function initialsFor(value: string) {
+  return value.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function viewersFor(value: string) {
+  return [...value].reduce((sum, character) => sum + character.charCodeAt(0), 0) * 17;
+}
+
+function colorsFor(value: string): [string, string] {
+  const palettes: [string, string][] = [
+    ["#0ea5e9", "#7c3aed"],
+    ["#22c55e", "#0f766e"],
+    ["#ef4444", "#be123c"],
+    ["#f59e0b", "#b45309"],
+    ["#6366f1", "#0891b2"],
+  ];
+  const index = [...value].reduce((sum, character) => sum + character.charCodeAt(0), 0) % palettes.length;
+  return palettes[index];
+}

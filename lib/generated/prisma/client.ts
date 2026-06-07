@@ -16,12 +16,12 @@ import { fileURLToPath } from 'node:url'
 globalThis['__dirname'] = path.dirname(fileURLToPath(import.meta.url))
 
 import * as runtime from "@prisma/client/runtime/client"
-import * as $Enums from "./enums"
-import * as $Class from "./internal/class"
-import * as Prisma from "./internal/prismaNamespace"
+import * as $Enums from "./enums.ts"
+import * as $Class from "./internal/class.ts"
+import * as Prisma from "./internal/prismaNamespace.ts"
 
-export * as $Enums from './enums'
-export * from "./enums"
+export * as $Enums from './enums.ts'
+export * from "./enums.ts"
 /**
  * ## Prisma Client
  *
@@ -46,6 +46,56 @@ export { Prisma }
  *
  */
 export type User = Prisma.UserModel
+/**
+ * Model CatalogTitle
+ *
+ */
+export type CatalogTitle = Prisma.CatalogTitleModel
+/**
+ * Model Season
+ *
+ */
+export type Season = Prisma.SeasonModel
+/**
+ * Model Episode
+ *
+ */
+export type Episode = Prisma.EpisodeModel
+/**
+ * Model VideoAsset
+ *
+ */
+export type VideoAsset = Prisma.VideoAssetModel
+/**
+ * Model CatalogTag
+ *
+ */
+export type CatalogTag = Prisma.CatalogTagModel
+/**
+ * Model CatalogTitleTag
+ *
+ */
+export type CatalogTitleTag = Prisma.CatalogTitleTagModel
+/**
+ * Model PlaybackProgress
+ *
+ */
+export type PlaybackProgress = Prisma.PlaybackProgressModel
+/**
+ * Model EpisodeComment
+ *
+ */
+export type EpisodeComment = Prisma.EpisodeCommentModel
+/**
+ * Model AnalyticsEvent
+ *
+ */
+export type AnalyticsEvent = Prisma.AnalyticsEventModel
+/**
+ * Model TokenIssuer
+ *
+ */
+export type TokenIssuer = Prisma.TokenIssuerModel
 /**
  * Model AuditLog
  *

@@ -18,9 +18,211 @@ model User {
   blocking       Block[]  @relation("Blocking")
   blockedBy      Block[]  @relation("BlockedBy")
   stream         Stream?
+  tokenIssuers   TokenIssuer[]
+  playbackProgress PlaybackProgress[]
+  episodeComments EpisodeComment[]
+  analyticsEvents AnalyticsEvent[]
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  @@index([createdAt])
+}
+
+enum CatalogVisibility {
+  DRAFT
+  PUBLIC
+  UNLISTED
+}
+
+enum MaturityRating {
+  G
+  PG
+  PG_13
+  TV_14
+  TV_MA
+  R
+}
+
+enum VideoAssetStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum AnalyticsEventType {
+  VIDEO_STARTED
+  VIDEO_PAUSED
+  VIDEO_COMPLETED
+  VIDEO_SEEKED
+  WATCH_TIME_UPDATED
+}
+
+model CatalogTitle {
+  id             String            @id @default(uuid())
+  slug           String            @unique
+  title          String
+  description    String?
+  category       String            @default("Anime")
+  posterUrl      String?
+  heroImageUrl   String?
+  visibility     CatalogVisibility @default(PUBLIC)
+  maturityRating MaturityRating    @default(TV_14)
+  allowedRegions String[]          @default([])
+  blockedRegions String[]          @default([])
+  seasons        Season[]
+  tags           CatalogTitleTag[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([visibility, updatedAt])
+  @@index([category])
+  @@index([title])
+}
+
+model Season {
+  id             String       @id @default(uuid())
+  catalogTitleId String
+  catalogTitle   CatalogTitle @relation(fields: [catalogTitleId], references: [id], onDelete: Cascade)
+  number         Int
+  title          String?
+  episodes       Episode[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([catalogTitleId, number])
+  @@index([catalogTitleId])
+}
+
+model Episode {
+  id               String             @id @default(uuid())
+  seasonId         String
+  season           Season             @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  number           Int
+  title            String
+  description      String?
+  durationSeconds  Int?
+  thumbnailUrl     String?
+  muxPlaybackId    String?
+  publishedAt      DateTime?
+  videoAssets      VideoAsset[]
+  comments         EpisodeComment[]
+  playbackProgress PlaybackProgress[]
+  analyticsEvents  AnalyticsEvent[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@unique([seasonId, number])
+  @@index([seasonId])
+  @@index([publishedAt])
+}
+
+model VideoAsset {
+  id           String           @id @default(uuid())
+  episodeId    String
+  episode      Episode          @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  provider     String           @default("mux")
+  sourceUrl    String?
+  playbackId   String?
+  status       VideoAssetStatus @default(PROCESSING)
+  codec        String?
+  resolution   String?
+  bitrateKbps  Int?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([episodeId, status])
+  @@index([provider, playbackId])
+}
+
+model CatalogTag {
+  id        String            @id @default(uuid())
+  name      String            @unique
+  titles    CatalogTitleTag[]
+  createdAt DateTime          @default(now())
+}
+
+model CatalogTitleTag {
+  catalogTitleId String
+  tagId          String
+  catalogTitle   CatalogTitle @relation(fields: [catalogTitleId], references: [id], onDelete: Cascade)
+  tag            CatalogTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([catalogTitleId, tagId])
+  @@index([tagId])
+}
+
+model PlaybackProgress {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episodeId       String
+  episode         Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  positionSeconds Int
+  durationSeconds Int?
+  completedAt     DateTime?
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, episodeId])
+  @@index([userId, updatedAt])
+  @@index([episodeId])
+}
+
+model EpisodeComment {
+  id        String   @id @default(uuid())
+  episodeId String
+  episode   Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([episodeId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model AnalyticsEvent {
+  id              String             @id @default(uuid())
+  type            AnalyticsEventType
+  userId          String?
+  user            User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  episodeId       String?
+  episode         Episode?           @relation(fields: [episodeId], references: [id], onDelete: SetNull)
+  positionSeconds Int?
+  metadata        Json?
+  createdAt       DateTime           @default(now())
+
+  @@index([type, createdAt])
+  @@index([userId, createdAt])
+  @@index([episodeId, createdAt])
+}
+
+enum TokenIssuerStatus {
+  ACTIVE
+  RETIRING
+  REVOKED
+}
+
+model TokenIssuer {
+  id                 String            @id @default(uuid())
+  provider           String            @default("livekit")
+  apiUrl             String?
+  apiKeyEncrypted    String
+  apiSecretEncrypted String
+  status             TokenIssuerStatus @default(ACTIVE)
+  version            Int               @default(1)
+  userId             String
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rotatedAt          DateTime?
+  revokedAt          DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@unique([userId, provider, version])
+  @@index([userId, status])
+  @@index([provider, status])
   @@index([createdAt])
 }
 

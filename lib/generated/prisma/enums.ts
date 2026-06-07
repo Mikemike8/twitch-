@@ -9,7 +9,52 @@
 * 🟢 You can import this file directly.
 */
 
+export const CatalogVisibility = {
+  DRAFT: 'DRAFT',
+  PUBLIC: 'PUBLIC',
+  UNLISTED: 'UNLISTED'
+} as const
+
+export type CatalogVisibility = (typeof CatalogVisibility)[keyof typeof CatalogVisibility]
 
 
-// This file is empty because there are no enums in the schema.
-export {}
+export const MaturityRating = {
+  G: 'G',
+  PG: 'PG',
+  PG_13: 'PG_13',
+  TV_14: 'TV_14',
+  TV_MA: 'TV_MA',
+  R: 'R'
+} as const
+
+export type MaturityRating = (typeof MaturityRating)[keyof typeof MaturityRating]
+
+
+export const VideoAssetStatus = {
+  UPLOADING: 'UPLOADING',
+  PROCESSING: 'PROCESSING',
+  READY: 'READY',
+  FAILED: 'FAILED'
+} as const
+
+export type VideoAssetStatus = (typeof VideoAssetStatus)[keyof typeof VideoAssetStatus]
+
+
+export const AnalyticsEventType = {
+  VIDEO_STARTED: 'VIDEO_STARTED',
+  VIDEO_PAUSED: 'VIDEO_PAUSED',
+  VIDEO_COMPLETED: 'VIDEO_COMPLETED',
+  VIDEO_SEEKED: 'VIDEO_SEEKED',
+  WATCH_TIME_UPDATED: 'WATCH_TIME_UPDATED'
+} as const
+
+export type AnalyticsEventType = (typeof AnalyticsEventType)[keyof typeof AnalyticsEventType]
+
+
+export const TokenIssuerStatus = {
+  ACTIVE: 'ACTIVE',
+  RETIRING: 'RETIRING',
+  REVOKED: 'REVOKED'
+} as const
+
+export type TokenIssuerStatus = (typeof TokenIssuerStatus)[keyof typeof TokenIssuerStatus]

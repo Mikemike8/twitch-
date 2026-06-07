@@ -9,8 +9,8 @@
  * 🟢 You can import this file directly.
  */
 import type * as runtime from "@prisma/client/runtime/client"
-import type * as $Enums from "../enums"
-import type * as Prisma from "../internal/prismaNamespace"
+import type * as $Enums from "../enums.ts"
+import type * as Prisma from "../internal/prismaNamespace.ts"
 
 /**
  * Model User
@@ -203,6 +203,10 @@ export type UserWhereInput = {
   blocking?: Prisma.BlockListRelationFilter
   blockedBy?: Prisma.BlockListRelationFilter
   stream?: Prisma.XOR<Prisma.StreamNullableScalarRelationFilter, Prisma.StreamWhereInput> | null
+  tokenIssuers?: Prisma.TokenIssuerListRelationFilter
+  playbackProgress?: Prisma.PlaybackProgressListRelationFilter
+  episodeComments?: Prisma.EpisodeCommentListRelationFilter
+  analyticsEvents?: Prisma.AnalyticsEventListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -218,6 +222,10 @@ export type UserOrderByWithRelationInput = {
   blocking?: Prisma.BlockOrderByRelationAggregateInput
   blockedBy?: Prisma.BlockOrderByRelationAggregateInput
   stream?: Prisma.StreamOrderByWithRelationInput
+  tokenIssuers?: Prisma.TokenIssuerOrderByRelationAggregateInput
+  playbackProgress?: Prisma.PlaybackProgressOrderByRelationAggregateInput
+  episodeComments?: Prisma.EpisodeCommentOrderByRelationAggregateInput
+  analyticsEvents?: Prisma.AnalyticsEventOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -236,6 +244,10 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   blocking?: Prisma.BlockListRelationFilter
   blockedBy?: Prisma.BlockListRelationFilter
   stream?: Prisma.XOR<Prisma.StreamNullableScalarRelationFilter, Prisma.StreamWhereInput> | null
+  tokenIssuers?: Prisma.TokenIssuerListRelationFilter
+  playbackProgress?: Prisma.PlaybackProgressListRelationFilter
+  episodeComments?: Prisma.EpisodeCommentListRelationFilter
+  analyticsEvents?: Prisma.AnalyticsEventListRelationFilter
 }, "id" | "username" | "externalUserId">
 
 export type UserOrderByWithAggregationInput = {
@@ -277,6 +289,10 @@ export type UserCreateInput = {
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -292,6 +308,10 @@ export type UserUncheckedCreateInput = {
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -307,6 +327,10 @@ export type UserUpdateInput = {
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -322,6 +346,10 @@ export type UserUncheckedUpdateInput = {
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -389,6 +417,11 @@ export type UserScalarRelationFilter = {
   isNot?: Prisma.UserWhereInput
 }
 
+export type UserNullableScalarRelationFilter = {
+  is?: Prisma.UserWhereInput | null
+  isNot?: Prisma.UserWhereInput | null
+}
+
 export type StringFieldUpdateOperationsInput = {
   set?: string
 }
@@ -399,6 +432,64 @@ export type NullableStringFieldUpdateOperationsInput = {
 
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type UserCreateNestedOneWithoutPlaybackProgressInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPlaybackProgressInput, Prisma.UserUncheckedCreateWithoutPlaybackProgressInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlaybackProgressInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPlaybackProgressNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPlaybackProgressInput, Prisma.UserUncheckedCreateWithoutPlaybackProgressInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPlaybackProgressInput
+  upsert?: Prisma.UserUpsertWithoutPlaybackProgressInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPlaybackProgressInput, Prisma.UserUpdateWithoutPlaybackProgressInput>, Prisma.UserUncheckedUpdateWithoutPlaybackProgressInput>
+}
+
+export type UserCreateNestedOneWithoutEpisodeCommentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutEpisodeCommentsInput, Prisma.UserUncheckedCreateWithoutEpisodeCommentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutEpisodeCommentsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutEpisodeCommentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutEpisodeCommentsInput, Prisma.UserUncheckedCreateWithoutEpisodeCommentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutEpisodeCommentsInput
+  upsert?: Prisma.UserUpsertWithoutEpisodeCommentsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutEpisodeCommentsInput, Prisma.UserUpdateWithoutEpisodeCommentsInput>, Prisma.UserUncheckedUpdateWithoutEpisodeCommentsInput>
+}
+
+export type UserCreateNestedOneWithoutAnalyticsEventsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAnalyticsEventsInput, Prisma.UserUncheckedCreateWithoutAnalyticsEventsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAnalyticsEventsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutAnalyticsEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAnalyticsEventsInput, Prisma.UserUncheckedCreateWithoutAnalyticsEventsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAnalyticsEventsInput
+  upsert?: Prisma.UserUpsertWithoutAnalyticsEventsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAnalyticsEventsInput, Prisma.UserUpdateWithoutAnalyticsEventsInput>, Prisma.UserUncheckedUpdateWithoutAnalyticsEventsInput>
+}
+
+export type UserCreateNestedOneWithoutTokenIssuersInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTokenIssuersInput, Prisma.UserUncheckedCreateWithoutTokenIssuersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTokenIssuersInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutTokenIssuersNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTokenIssuersInput, Prisma.UserUncheckedCreateWithoutTokenIssuersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTokenIssuersInput
+  upsert?: Prisma.UserUpsertWithoutTokenIssuersInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutTokenIssuersInput, Prisma.UserUpdateWithoutTokenIssuersInput>, Prisma.UserUncheckedUpdateWithoutTokenIssuersInput>
 }
 
 export type UserCreateNestedOneWithoutStreamInput = {
@@ -471,6 +562,358 @@ export type UserUpdateOneRequiredWithoutBlockedByNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutBlockedByInput, Prisma.UserUpdateWithoutBlockedByInput>, Prisma.UserUncheckedUpdateWithoutBlockedByInput>
 }
 
+export type UserCreateWithoutPlaybackProgressInput = {
+  id?: string
+  username: string
+  imageUrl: string
+  externalUserId: string
+  bio?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  following?: Prisma.FollowCreateNestedManyWithoutFollowerInput
+  followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
+  blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
+  blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
+  stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPlaybackProgressInput = {
+  id?: string
+  username: string
+  imageUrl: string
+  externalUserId: string
+  bio?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  following?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowerInput
+  followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
+  blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
+  blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
+  stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutPlaybackProgressInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPlaybackProgressInput, Prisma.UserUncheckedCreateWithoutPlaybackProgressInput>
+}
+
+export type UserUpsertWithoutPlaybackProgressInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPlaybackProgressInput, Prisma.UserUncheckedUpdateWithoutPlaybackProgressInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPlaybackProgressInput, Prisma.UserUncheckedCreateWithoutPlaybackProgressInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPlaybackProgressInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPlaybackProgressInput, Prisma.UserUncheckedUpdateWithoutPlaybackProgressInput>
+}
+
+export type UserUpdateWithoutPlaybackProgressInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  following?: Prisma.FollowUpdateManyWithoutFollowerNestedInput
+  followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
+  blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
+  blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
+  stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPlaybackProgressInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  following?: Prisma.FollowUncheckedUpdateManyWithoutFollowerNestedInput
+  followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
+  blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
+  blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
+  stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutEpisodeCommentsInput = {
+  id?: string
+  username: string
+  imageUrl: string
+  externalUserId: string
+  bio?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  following?: Prisma.FollowCreateNestedManyWithoutFollowerInput
+  followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
+  blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
+  blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
+  stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutEpisodeCommentsInput = {
+  id?: string
+  username: string
+  imageUrl: string
+  externalUserId: string
+  bio?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  following?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowerInput
+  followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
+  blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
+  blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
+  stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutEpisodeCommentsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutEpisodeCommentsInput, Prisma.UserUncheckedCreateWithoutEpisodeCommentsInput>
+}
+
+export type UserUpsertWithoutEpisodeCommentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutEpisodeCommentsInput, Prisma.UserUncheckedUpdateWithoutEpisodeCommentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutEpisodeCommentsInput, Prisma.UserUncheckedCreateWithoutEpisodeCommentsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutEpisodeCommentsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutEpisodeCommentsInput, Prisma.UserUncheckedUpdateWithoutEpisodeCommentsInput>
+}
+
+export type UserUpdateWithoutEpisodeCommentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  following?: Prisma.FollowUpdateManyWithoutFollowerNestedInput
+  followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
+  blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
+  blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
+  stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutEpisodeCommentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  following?: Prisma.FollowUncheckedUpdateManyWithoutFollowerNestedInput
+  followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
+  blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
+  blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
+  stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutAnalyticsEventsInput = {
+  id?: string
+  username: string
+  imageUrl: string
+  externalUserId: string
+  bio?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  following?: Prisma.FollowCreateNestedManyWithoutFollowerInput
+  followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
+  blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
+  blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
+  stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutAnalyticsEventsInput = {
+  id?: string
+  username: string
+  imageUrl: string
+  externalUserId: string
+  bio?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  following?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowerInput
+  followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
+  blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
+  blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
+  stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutAnalyticsEventsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAnalyticsEventsInput, Prisma.UserUncheckedCreateWithoutAnalyticsEventsInput>
+}
+
+export type UserUpsertWithoutAnalyticsEventsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAnalyticsEventsInput, Prisma.UserUncheckedUpdateWithoutAnalyticsEventsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAnalyticsEventsInput, Prisma.UserUncheckedCreateWithoutAnalyticsEventsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAnalyticsEventsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAnalyticsEventsInput, Prisma.UserUncheckedUpdateWithoutAnalyticsEventsInput>
+}
+
+export type UserUpdateWithoutAnalyticsEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  following?: Prisma.FollowUpdateManyWithoutFollowerNestedInput
+  followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
+  blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
+  blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
+  stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAnalyticsEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  following?: Prisma.FollowUncheckedUpdateManyWithoutFollowerNestedInput
+  followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
+  blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
+  blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
+  stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutTokenIssuersInput = {
+  id?: string
+  username: string
+  imageUrl: string
+  externalUserId: string
+  bio?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  following?: Prisma.FollowCreateNestedManyWithoutFollowerInput
+  followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
+  blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
+  blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
+  stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutTokenIssuersInput = {
+  id?: string
+  username: string
+  imageUrl: string
+  externalUserId: string
+  bio?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  following?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowerInput
+  followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
+  blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
+  blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
+  stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutTokenIssuersInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutTokenIssuersInput, Prisma.UserUncheckedCreateWithoutTokenIssuersInput>
+}
+
+export type UserUpsertWithoutTokenIssuersInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutTokenIssuersInput, Prisma.UserUncheckedUpdateWithoutTokenIssuersInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutTokenIssuersInput, Prisma.UserUncheckedCreateWithoutTokenIssuersInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutTokenIssuersInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutTokenIssuersInput, Prisma.UserUncheckedUpdateWithoutTokenIssuersInput>
+}
+
+export type UserUpdateWithoutTokenIssuersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  following?: Prisma.FollowUpdateManyWithoutFollowerNestedInput
+  followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
+  blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
+  blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
+  stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutTokenIssuersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  following?: Prisma.FollowUncheckedUpdateManyWithoutFollowerNestedInput
+  followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
+  blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
+  blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
+  stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+}
+
 export type UserCreateWithoutStreamInput = {
   id?: string
   username: string
@@ -483,6 +926,10 @@ export type UserCreateWithoutStreamInput = {
   followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
+  tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutStreamInput = {
@@ -497,6 +944,10 @@ export type UserUncheckedCreateWithoutStreamInput = {
   followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutStreamInput = {
@@ -527,6 +978,10 @@ export type UserUpdateWithoutStreamInput = {
   followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStreamInput = {
@@ -541,6 +996,10 @@ export type UserUncheckedUpdateWithoutStreamInput = {
   followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutFollowingInput = {
@@ -555,6 +1014,10 @@ export type UserCreateWithoutFollowingInput = {
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutFollowingInput = {
@@ -569,6 +1032,10 @@ export type UserUncheckedCreateWithoutFollowingInput = {
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutFollowingInput = {
@@ -588,6 +1055,10 @@ export type UserCreateWithoutFollowedByInput = {
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutFollowedByInput = {
@@ -602,6 +1073,10 @@ export type UserUncheckedCreateWithoutFollowedByInput = {
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutFollowedByInput = {
@@ -632,6 +1107,10 @@ export type UserUpdateWithoutFollowingInput = {
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFollowingInput = {
@@ -646,6 +1125,10 @@ export type UserUncheckedUpdateWithoutFollowingInput = {
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutFollowedByInput = {
@@ -671,6 +1154,10 @@ export type UserUpdateWithoutFollowedByInput = {
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFollowedByInput = {
@@ -685,6 +1172,10 @@ export type UserUncheckedUpdateWithoutFollowedByInput = {
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBlockingInput = {
@@ -699,6 +1190,10 @@ export type UserCreateWithoutBlockingInput = {
   followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBlockingInput = {
@@ -713,6 +1208,10 @@ export type UserUncheckedCreateWithoutBlockingInput = {
   followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBlockingInput = {
@@ -732,6 +1231,10 @@ export type UserCreateWithoutBlockedByInput = {
   followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBlockedByInput = {
@@ -746,6 +1249,10 @@ export type UserUncheckedCreateWithoutBlockedByInput = {
   followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBlockedByInput = {
@@ -776,6 +1283,10 @@ export type UserUpdateWithoutBlockingInput = {
   followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBlockingInput = {
@@ -790,6 +1301,10 @@ export type UserUncheckedUpdateWithoutBlockingInput = {
   followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutBlockedByInput = {
@@ -815,6 +1330,10 @@ export type UserUpdateWithoutBlockedByInput = {
   followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBlockedByInput = {
@@ -829,6 +1348,10 @@ export type UserUncheckedUpdateWithoutBlockedByInput = {
   followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -841,6 +1364,10 @@ export type UserCountOutputType = {
   followedBy: number
   blocking: number
   blockedBy: number
+  tokenIssuers: number
+  playbackProgress: number
+  episodeComments: number
+  analyticsEvents: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -848,6 +1375,10 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   followedBy?: boolean | UserCountOutputTypeCountFollowedByArgs
   blocking?: boolean | UserCountOutputTypeCountBlockingArgs
   blockedBy?: boolean | UserCountOutputTypeCountBlockedByArgs
+  tokenIssuers?: boolean | UserCountOutputTypeCountTokenIssuersArgs
+  playbackProgress?: boolean | UserCountOutputTypeCountPlaybackProgressArgs
+  episodeComments?: boolean | UserCountOutputTypeCountEpisodeCommentsArgs
+  analyticsEvents?: boolean | UserCountOutputTypeCountAnalyticsEventsArgs
 }
 
 /**
@@ -888,6 +1419,34 @@ export type UserCountOutputTypeCountBlockedByArgs<ExtArgs extends runtime.Types.
   where?: Prisma.BlockWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountTokenIssuersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TokenIssuerWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPlaybackProgressArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PlaybackProgressWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountEpisodeCommentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.EpisodeCommentWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAnalyticsEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AnalyticsEventWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -902,6 +1461,10 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   blocking?: boolean | Prisma.User$blockingArgs<ExtArgs>
   blockedBy?: boolean | Prisma.User$blockedByArgs<ExtArgs>
   stream?: boolean | Prisma.User$streamArgs<ExtArgs>
+  tokenIssuers?: boolean | Prisma.User$tokenIssuersArgs<ExtArgs>
+  playbackProgress?: boolean | Prisma.User$playbackProgressArgs<ExtArgs>
+  episodeComments?: boolean | Prisma.User$episodeCommentsArgs<ExtArgs>
+  analyticsEvents?: boolean | Prisma.User$analyticsEventsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -942,6 +1505,10 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   blocking?: boolean | Prisma.User$blockingArgs<ExtArgs>
   blockedBy?: boolean | Prisma.User$blockedByArgs<ExtArgs>
   stream?: boolean | Prisma.User$streamArgs<ExtArgs>
+  tokenIssuers?: boolean | Prisma.User$tokenIssuersArgs<ExtArgs>
+  playbackProgress?: boolean | Prisma.User$playbackProgressArgs<ExtArgs>
+  episodeComments?: boolean | Prisma.User$episodeCommentsArgs<ExtArgs>
+  analyticsEvents?: boolean | Prisma.User$analyticsEventsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -955,6 +1522,10 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     blocking: Prisma.$BlockPayload<ExtArgs>[]
     blockedBy: Prisma.$BlockPayload<ExtArgs>[]
     stream: Prisma.$StreamPayload<ExtArgs> | null
+    tokenIssuers: Prisma.$TokenIssuerPayload<ExtArgs>[]
+    playbackProgress: Prisma.$PlaybackProgressPayload<ExtArgs>[]
+    episodeComments: Prisma.$EpisodeCommentPayload<ExtArgs>[]
+    analyticsEvents: Prisma.$AnalyticsEventPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1363,6 +1934,10 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   blocking<T extends Prisma.User$blockingArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$blockingArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BlockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   blockedBy<T extends Prisma.User$blockedByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$blockedByArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BlockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   stream<T extends Prisma.User$streamArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$streamArgs<ExtArgs>>): Prisma.Prisma__StreamClient<runtime.Types.Result.GetResult<Prisma.$StreamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  tokenIssuers<T extends Prisma.User$tokenIssuersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$tokenIssuersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TokenIssuerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  playbackProgress<T extends Prisma.User$playbackProgressArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$playbackProgressArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlaybackProgressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  episodeComments<T extends Prisma.User$episodeCommentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$episodeCommentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EpisodeCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  analyticsEvents<T extends Prisma.User$analyticsEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$analyticsEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AnalyticsEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1904,6 +2479,102 @@ export type User$streamArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    */
   include?: Prisma.StreamInclude<ExtArgs> | null
   where?: Prisma.StreamWhereInput
+}
+
+/**
+ * User.tokenIssuers
+ */
+export type User$tokenIssuersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TokenIssuer
+   */
+  select?: Prisma.TokenIssuerSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TokenIssuer
+   */
+  omit?: Prisma.TokenIssuerOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TokenIssuerInclude<ExtArgs> | null
+  where?: Prisma.TokenIssuerWhereInput
+  orderBy?: Prisma.TokenIssuerOrderByWithRelationInput | Prisma.TokenIssuerOrderByWithRelationInput[]
+  cursor?: Prisma.TokenIssuerWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TokenIssuerScalarFieldEnum | Prisma.TokenIssuerScalarFieldEnum[]
+}
+
+/**
+ * User.playbackProgress
+ */
+export type User$playbackProgressArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PlaybackProgress
+   */
+  select?: Prisma.PlaybackProgressSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PlaybackProgress
+   */
+  omit?: Prisma.PlaybackProgressOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PlaybackProgressInclude<ExtArgs> | null
+  where?: Prisma.PlaybackProgressWhereInput
+  orderBy?: Prisma.PlaybackProgressOrderByWithRelationInput | Prisma.PlaybackProgressOrderByWithRelationInput[]
+  cursor?: Prisma.PlaybackProgressWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PlaybackProgressScalarFieldEnum | Prisma.PlaybackProgressScalarFieldEnum[]
+}
+
+/**
+ * User.episodeComments
+ */
+export type User$episodeCommentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the EpisodeComment
+   */
+  select?: Prisma.EpisodeCommentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the EpisodeComment
+   */
+  omit?: Prisma.EpisodeCommentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EpisodeCommentInclude<ExtArgs> | null
+  where?: Prisma.EpisodeCommentWhereInput
+  orderBy?: Prisma.EpisodeCommentOrderByWithRelationInput | Prisma.EpisodeCommentOrderByWithRelationInput[]
+  cursor?: Prisma.EpisodeCommentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.EpisodeCommentScalarFieldEnum | Prisma.EpisodeCommentScalarFieldEnum[]
+}
+
+/**
+ * User.analyticsEvents
+ */
+export type User$analyticsEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AnalyticsEvent
+   */
+  select?: Prisma.AnalyticsEventSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AnalyticsEvent
+   */
+  omit?: Prisma.AnalyticsEventOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AnalyticsEventInclude<ExtArgs> | null
+  where?: Prisma.AnalyticsEventWhereInput
+  orderBy?: Prisma.AnalyticsEventOrderByWithRelationInput | Prisma.AnalyticsEventOrderByWithRelationInput[]
+  cursor?: Prisma.AnalyticsEventWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AnalyticsEventScalarFieldEnum | Prisma.AnalyticsEventScalarFieldEnum[]
 }
 
 /**

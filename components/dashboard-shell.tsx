@@ -11,6 +11,7 @@ const items = [
   { label: "Keys", href: "/keys", icon: KeyIcon },
   { label: "Chat", href: "/chat", icon: ChatIcon },
   { label: "Community", href: "/community", icon: UsersIcon },
+  { label: "Plan", href: "/subscription", icon: PlanIcon },
 ];
 
 export function DashboardShell({
@@ -57,4 +58,8 @@ function KeyIcon({ className = "h-5 w-5" }: { className?: string }) {
 
 function ChatIcon({ className = "h-5 w-5" }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" /></svg>;
+}
+
+function PlanIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><rect width="18" height="14" x="3" y="5" rx="2" /><path d="M3 10h18M7 15h4" /></svg>;
 }

@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { AccessToken } from "livekit-server-sdk";
 import type { PrismaClient } from "@/lib/generated/prisma/client";
-import { createParticipantIdentity as defaultCreateParticipantIdentity } from "@/lib/participant-identity";
-import { isBlockedWithFailClosedFallback } from "@/lib/block-flag";
+import { createParticipantIdentity as defaultCreateParticipantIdentity } from "./participant-identity.ts";
+import { isBlockedWithFailClosedFallback } from "./block-flag.ts";
+import type { TokenIssuerCredentials } from "./token-issuer-service";
 
 type Viewer = {
   id: string;
@@ -10,23 +11,21 @@ type Viewer = {
 };
 
 type ViewerTokenDependencies = {
-  apiKey: string;
-  apiSecret: string;
-  createAccessToken?: typeof AccessToken;
+  createAccessToken?: new (...args: ConstructorParameters<typeof AccessToken>) => AccessToken;
   createParticipantIdentity?: (userId: string) => string;
   db: PrismaClient;
   getAuthenticatedViewer: () => Promise<Viewer | null>;
+  getTokenIssuer: (hostIdentity: string) => Promise<TokenIssuerCredentials>;
   isBlocked?: (dbClient: PrismaClient, blockerId: string, blockedId: string) => Promise<boolean>;
   createGuestId?: () => string;
 };
 
 export function createViewerTokenService({
-  apiKey,
-  apiSecret,
   createAccessToken = AccessToken,
   createParticipantIdentity = defaultCreateParticipantIdentity,
   db,
   getAuthenticatedViewer,
+  getTokenIssuer,
   isBlocked = isBlockedWithFailClosedFallback,
   createGuestId = randomUUID,
 }: ViewerTokenDependencies) {
@@ -58,7 +57,8 @@ export function createViewerTokenService({
     );
     const canChat = Boolean(authenticatedViewer) && stream.isChatEnabled && (!stream.isChatFollowersOnly || isFollowing);
     const participantIdentity = createParticipantIdentity(viewer.id);
-    const token = new createAccessToken(apiKey, apiSecret, {
+    const issuer = await getTokenIssuer(host.id);
+    const token = new createAccessToken(issuer.apiKey, issuer.apiSecret, {
       identity: participantIdentity,
       name: viewer.username,
       ttl: "15m",
@@ -76,7 +76,11 @@ export function createViewerTokenService({
       token: await token.toJwt(),
       identity: viewer.id,
       participantIdentity,
+      issuerId: issuer.issuerId,
+      issuerSource: issuer.source,
+      issuerVersion: issuer.version,
       name: viewer.username,
+      serverUrl: issuer.wsUrl,
       isAuthenticated: Boolean(authenticatedViewer),
       canChat,
       isChatDelayed: stream.isChatDelayed,

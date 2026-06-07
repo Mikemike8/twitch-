@@ -16,6 +16,7 @@ export type Channel = {
   imageUrl?: string | null;
   bio?: string | null;
   followerCount?: number;
+  firstEpisodeId?: string | null;
 };
 
 export const channels: Channel[] = [

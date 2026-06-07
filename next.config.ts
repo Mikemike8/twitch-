@@ -4,6 +4,23 @@ const scriptSource = process.env.NODE_ENV === "production"
   ? "script-src 'self' 'unsafe-inline' https://*.clerk.accounts.dev https://*.clerk.com https://challenges.cloudflare.com"
   : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com https://challenges.cloudflare.com";
 
+const connectSources = [
+  "'self'",
+  "https://*.clerk.accounts.dev",
+  "https://*.clerk.com",
+  "https://challenges.cloudflare.com",
+  "https://*.ufs.sh",
+  "https://utfs.io",
+  "https://*.mux.com",
+  "https://stream.mux.com",
+  process.env.NEXT_PUBLIC_APP_URL,
+  process.env.NEXT_PUBLIC_LIVEKIT_WS_URL,
+  process.env.NODE_ENV === "production" ? undefined : "http://localhost:*",
+  process.env.NODE_ENV === "production" ? undefined : "ws://localhost:*",
+  process.env.NODE_ENV === "production" ? undefined : "https:",
+  process.env.NODE_ENV === "production" ? undefined : "wss:",
+].filter(Boolean).join(" ");
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1", "saved-morality-fanfare.ngrok-free.dev"],
   devIndicators: false,
@@ -13,7 +30,7 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: [
-          { key: "Content-Security-Policy", value: `default-src 'self'; ${scriptSource}; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://*.ufs.sh https://utfs.io https://img.clerk.com https://image.mux.com; media-src 'self' blob: https://stream.mux.com https://*.mux.com; connect-src 'self' https: wss:; frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://challenges.cloudflare.com https://player.mux.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self' https://*.clerk.accounts.dev https://*.clerk.com https://challenges.cloudflare.com` },
+          { key: "Content-Security-Policy", value: `default-src 'self'; ${scriptSource}; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://*.ufs.sh https://utfs.io https://img.clerk.com https://image.mux.com; media-src 'self' blob: https://stream.mux.com https://*.mux.com; connect-src ${connectSources}; frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://challenges.cloudflare.com https://player.mux.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self' https://*.clerk.accounts.dev https://*.clerk.com https://challenges.cloudflare.com` },
           { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

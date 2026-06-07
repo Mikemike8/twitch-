@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@/lib/generated/prisma/client";
-import { logger } from "@/lib/logger";
+import { logger } from "./logger.ts";
 
 type BlockFlagState = "blocked" | "clear" | "unknown";
 

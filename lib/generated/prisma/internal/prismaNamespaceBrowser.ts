@@ -17,8 +17,8 @@
 
 import * as runtime from "@prisma/client/runtime/index-browser"
 
-export type * from '../models'
-export type * from './prismaNamespace'
+export type * from '../models.ts'
+export type * from './prismaNamespace.ts'
 
 export const Decimal = runtime.Decimal
 
@@ -52,6 +52,16 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  CatalogTitle: 'CatalogTitle',
+  Season: 'Season',
+  Episode: 'Episode',
+  VideoAsset: 'VideoAsset',
+  CatalogTag: 'CatalogTag',
+  CatalogTitleTag: 'CatalogTitleTag',
+  PlaybackProgress: 'PlaybackProgress',
+  EpisodeComment: 'EpisodeComment',
+  AnalyticsEvent: 'AnalyticsEvent',
+  TokenIssuer: 'TokenIssuer',
   AuditLog: 'AuditLog',
   Stream: 'Stream',
   Follow: 'Follow',
@@ -85,6 +95,145 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const CatalogTitleScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  title: 'title',
+  description: 'description',
+  category: 'category',
+  posterUrl: 'posterUrl',
+  heroImageUrl: 'heroImageUrl',
+  visibility: 'visibility',
+  maturityRating: 'maturityRating',
+  allowedRegions: 'allowedRegions',
+  blockedRegions: 'blockedRegions',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CatalogTitleScalarFieldEnum = (typeof CatalogTitleScalarFieldEnum)[keyof typeof CatalogTitleScalarFieldEnum]
+
+
+export const SeasonScalarFieldEnum = {
+  id: 'id',
+  catalogTitleId: 'catalogTitleId',
+  number: 'number',
+  title: 'title',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SeasonScalarFieldEnum = (typeof SeasonScalarFieldEnum)[keyof typeof SeasonScalarFieldEnum]
+
+
+export const EpisodeScalarFieldEnum = {
+  id: 'id',
+  seasonId: 'seasonId',
+  number: 'number',
+  title: 'title',
+  description: 'description',
+  durationSeconds: 'durationSeconds',
+  thumbnailUrl: 'thumbnailUrl',
+  muxPlaybackId: 'muxPlaybackId',
+  publishedAt: 'publishedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EpisodeScalarFieldEnum = (typeof EpisodeScalarFieldEnum)[keyof typeof EpisodeScalarFieldEnum]
+
+
+export const VideoAssetScalarFieldEnum = {
+  id: 'id',
+  episodeId: 'episodeId',
+  provider: 'provider',
+  sourceUrl: 'sourceUrl',
+  playbackId: 'playbackId',
+  status: 'status',
+  codec: 'codec',
+  resolution: 'resolution',
+  bitrateKbps: 'bitrateKbps',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type VideoAssetScalarFieldEnum = (typeof VideoAssetScalarFieldEnum)[keyof typeof VideoAssetScalarFieldEnum]
+
+
+export const CatalogTagScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  createdAt: 'createdAt'
+} as const
+
+export type CatalogTagScalarFieldEnum = (typeof CatalogTagScalarFieldEnum)[keyof typeof CatalogTagScalarFieldEnum]
+
+
+export const CatalogTitleTagScalarFieldEnum = {
+  catalogTitleId: 'catalogTitleId',
+  tagId: 'tagId'
+} as const
+
+export type CatalogTitleTagScalarFieldEnum = (typeof CatalogTitleTagScalarFieldEnum)[keyof typeof CatalogTitleTagScalarFieldEnum]
+
+
+export const PlaybackProgressScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  episodeId: 'episodeId',
+  positionSeconds: 'positionSeconds',
+  durationSeconds: 'durationSeconds',
+  completedAt: 'completedAt',
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PlaybackProgressScalarFieldEnum = (typeof PlaybackProgressScalarFieldEnum)[keyof typeof PlaybackProgressScalarFieldEnum]
+
+
+export const EpisodeCommentScalarFieldEnum = {
+  id: 'id',
+  episodeId: 'episodeId',
+  userId: 'userId',
+  body: 'body',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type EpisodeCommentScalarFieldEnum = (typeof EpisodeCommentScalarFieldEnum)[keyof typeof EpisodeCommentScalarFieldEnum]
+
+
+export const AnalyticsEventScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  userId: 'userId',
+  episodeId: 'episodeId',
+  positionSeconds: 'positionSeconds',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type AnalyticsEventScalarFieldEnum = (typeof AnalyticsEventScalarFieldEnum)[keyof typeof AnalyticsEventScalarFieldEnum]
+
+
+export const TokenIssuerScalarFieldEnum = {
+  id: 'id',
+  provider: 'provider',
+  apiUrl: 'apiUrl',
+  apiKeyEncrypted: 'apiKeyEncrypted',
+  apiSecretEncrypted: 'apiSecretEncrypted',
+  status: 'status',
+  version: 'version',
+  userId: 'userId',
+  rotatedAt: 'rotatedAt',
+  revokedAt: 'revokedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TokenIssuerScalarFieldEnum = (typeof TokenIssuerScalarFieldEnum)[keyof typeof TokenIssuerScalarFieldEnum]
 
 
 export const AuditLogScalarFieldEnum = {

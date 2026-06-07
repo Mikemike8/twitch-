@@ -1,13 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { db } from "@/lib/db";
 import { getSelf } from "@/lib/auth-service";
 import { blockUser, unblockUser } from "@/lib/block-service";
-import { getRoomServiceClient } from "@/lib/livekit";
+import { createRoomServiceClient } from "@/lib/livekit";
 import { enforceActionRateLimit } from "@/lib/rate-limit";
 import { getUserIdFromParticipantIdentity } from "@/lib/participant-identity";
 import { requireUuid } from "@/lib/validation";
 import { writeAuditLog } from "@/lib/audit";
+import { resolveLiveKitTokenIssuer } from "@/lib/token-issuer-service";
 
 export async function onBlock(participantIdentity: string) {
   const self = await getSelf();
@@ -16,7 +18,8 @@ export async function onBlock(participantIdentity: string) {
   const block = await blockUser(userId);
 
   try {
-    await getRoomServiceClient().removeParticipant(block.blockerId, participantIdentity);
+    const issuer = await resolveLiveKitTokenIssuer({ db, hostIdentity: block.blockerId });
+    await createRoomServiceClient(issuer).removeParticipant(block.blockerId, participantIdentity);
   } catch {
     // The participant may be offline or LiveKit may not be configured in local demo mode.
   }

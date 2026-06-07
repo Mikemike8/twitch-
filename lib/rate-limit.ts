@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { getClientAddressFromHeaders } from "./client-address-core.ts";
 
 type MemoryBucket = {
   count: number;
@@ -78,14 +79,11 @@ export function hashRateLimitKey(value: string) {
 }
 
 export function clientRateLimitKey(requestHeaders: Headers) {
-  const address = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || requestHeaders.get("x-real-ip")
-    || "unknown";
-  return hashRateLimitKey(address);
+  return hashRateLimitKey(getClientAddressFromHeaders(requestHeaders));
 }
 
 export async function enforceActionRateLimit(scope: string, userId: string, userLimit: number, windowMs = 60_000, clientLimit = 100) {
-  const { getClientAddress } = await import("./client-address");
+  const { getClientAddress } = await import("./client-address.ts");
   const clientKey = hashRateLimitKey(await getClientAddress());
   await rateLimiter.enforce(`${scope}:ip:${clientKey}`, clientLimit, windowMs);
   await rateLimiter.enforce(`${scope}:user:${userId}`, userLimit, windowMs);

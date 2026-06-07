@@ -13,15 +13,65 @@
  * 🟢 You can import this file directly.
  */
 
-import * as Prisma from './internal/prismaNamespaceBrowser'
+import * as Prisma from './internal/prismaNamespaceBrowser.ts'
 export { Prisma }
-export * as $Enums from './enums'
-export * from './enums';
+export * as $Enums from './enums.ts'
+export * from './enums.ts';
 /**
  * Model User
  *
  */
 export type User = Prisma.UserModel
+/**
+ * Model CatalogTitle
+ *
+ */
+export type CatalogTitle = Prisma.CatalogTitleModel
+/**
+ * Model Season
+ *
+ */
+export type Season = Prisma.SeasonModel
+/**
+ * Model Episode
+ *
+ */
+export type Episode = Prisma.EpisodeModel
+/**
+ * Model VideoAsset
+ *
+ */
+export type VideoAsset = Prisma.VideoAssetModel
+/**
+ * Model CatalogTag
+ *
+ */
+export type CatalogTag = Prisma.CatalogTagModel
+/**
+ * Model CatalogTitleTag
+ *
+ */
+export type CatalogTitleTag = Prisma.CatalogTitleTagModel
+/**
+ * Model PlaybackProgress
+ *
+ */
+export type PlaybackProgress = Prisma.PlaybackProgressModel
+/**
+ * Model EpisodeComment
+ *
+ */
+export type EpisodeComment = Prisma.EpisodeCommentModel
+/**
+ * Model AnalyticsEvent
+ *
+ */
+export type AnalyticsEvent = Prisma.AnalyticsEventModel
+/**
+ * Model TokenIssuer
+ *
+ */
+export type TokenIssuer = Prisma.TokenIssuerModel
 /**
  * Model AuditLog
  *

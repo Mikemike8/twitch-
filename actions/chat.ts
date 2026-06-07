@@ -5,10 +5,11 @@ import { DataPacket_Kind } from "livekit-server-sdk";
 import { db } from "@/lib/db";
 import { getSelf } from "@/lib/auth-service";
 import { isBlockedWithFailClosedFallback } from "@/lib/block-flag";
-import { getRoomServiceClient } from "@/lib/livekit";
+import { createRoomServiceClient } from "@/lib/livekit";
 import { enforceActionRateLimit, rateLimiter } from "@/lib/rate-limit";
 import { createParticipantIdentity } from "@/lib/participant-identity";
 import { requireBoundedText, requireUuid } from "@/lib/validation";
+import { resolveLiveKitTokenIssuer } from "@/lib/token-issuer-service";
 
 const chatTopic = "lk.chat";
 
@@ -51,5 +52,8 @@ export async function onSendChatMessage(hostIdentity: string, value: string) {
     senderIdentity: createParticipantIdentity(viewer.id),
   }));
 
-  await getRoomServiceClient().sendData(host.id, payload, DataPacket_Kind.RELIABLE, { topic: chatTopic });
+  const issuer = await resolveLiveKitTokenIssuer({ db, hostIdentity: host.id });
+  if (!issuer.apiUrl) throw new Error("LiveKit credentials are not configured");
+
+  await createRoomServiceClient(issuer).sendData(host.id, payload, DataPacket_Kind.RELIABLE, { topic: chatTopic });
 }

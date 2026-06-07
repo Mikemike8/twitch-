@@ -30,22 +30,21 @@ export function LiveKitSession({
   const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_WS_URL;
 
   useEffect(() => {
-    if (!serverUrl) return;
-
     createViewerToken(hostIdentity)
       .then(setViewer)
       .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to join stream"));
-  }, [hostIdentity, serverUrl]);
+  }, [hostIdentity]);
 
-  const value = { viewer, error, ready: Boolean(serverUrl && viewer) };
+  const resolvedServerUrl = viewer?.serverUrl ?? serverUrl;
+  const value = { viewer, error, ready: Boolean(resolvedServerUrl && viewer) };
 
-  if (!serverUrl || !viewer) {
+  if (!resolvedServerUrl || !viewer) {
     return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
   }
 
   return (
     <SessionContext.Provider value={value}>
-      <LiveKitRoom token={viewer.token} serverUrl={serverUrl} connect video={false} audio={false} className="contents">
+      <LiveKitRoom token={viewer.token} serverUrl={resolvedServerUrl} connect video={false} audio={false} className="contents">
         {children}
       </LiveKitRoom>
     </SessionContext.Provider>

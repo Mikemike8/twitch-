@@ -6,6 +6,7 @@ import { getSelf } from "@/lib/auth-service";
 import { getFollowedUsers } from "@/lib/follow-service";
 import { boundedPage, boundedSearchTerm } from "@/lib/validation";
 import type { Channel } from "@/lib/channels";
+import { getCatalogTitles, getContinueWatching, searchCatalogTitles } from "@/lib/catalog-service";
 
 export default async function SearchPage({
   searchParams,
@@ -15,24 +16,29 @@ export default async function SearchPage({
   const params = await searchParams;
   const term = boundedSearchTerm(params.term ?? "");
   const page = boundedPage(params.page);
-  const [{ streams, hasNext }, viewer] = await Promise.all([
+  const [{ streams, hasNext }, viewer, catalog] = await Promise.all([
     term ? searchStreams(term, page) : getFeed(page),
     getViewerContext(),
+    term ? searchCatalogTitles(term, page) : getCatalogTitles(page),
   ]);
 
-  return <BrowseApp key={term} persistedChannels={streams.map(streamToChannel)} followedChannels={viewer.followedChannels} demoFallback={process.env.NODE_ENV !== "production"} initialQuery={term} clerkConfigured={isClerkConfigured} viewerIdentity={viewer.identity} viewerUsername={viewer.username} mobileBrowse pagination={{ page, hasNext, baseHref: `/search?term=${encodeURIComponent(term)}&page=` }} />;
+  return <BrowseApp key={term} persistedChannels={streams.map(streamToChannel)} followedChannels={viewer.followedChannels} catalogChannels={catalog.channels} continueWatching={viewer.continueWatching} demoFallback={process.env.NODE_ENV !== "production"} initialQuery={term} clerkConfigured={isClerkConfigured} viewerIdentity={viewer.identity} viewerUsername={viewer.username} mobileBrowse pagination={{ page, hasNext: hasNext || catalog.hasNext, baseHref: `/search?term=${encodeURIComponent(term)}&page=` }} />;
 }
 
 async function getViewerContext() {
-  if (!isClerkConfigured) return { followedChannels: [] as Channel[] };
+  if (!isClerkConfigured) return { followedChannels: [] as Channel[], continueWatching: [] };
 
   try {
     const self = await getSelf();
-    const followedChannels = (await getFollowedUsers()).flatMap(({ following }) =>
+    const [followedUsers, continueWatching] = await Promise.all([
+      getFollowedUsers(),
+      getContinueWatching(self.id),
+    ]);
+    const followedChannels = followedUsers.flatMap(({ following }) =>
       following.stream ? [streamToChannel({ ...following.stream, user: following })] : [],
     );
-    return { identity: self.id, username: self.username, followedChannels };
+    return { identity: self.id, username: self.username, followedChannels, continueWatching };
   } catch {
-    return { followedChannels: [] as Channel[] };
+    return { followedChannels: [] as Channel[], continueWatching: [] };
   }
 }

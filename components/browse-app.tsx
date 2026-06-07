@@ -5,8 +5,9 @@ import Link from "next/link";
 import { Show, SignInButton } from "@clerk/nextjs";
 import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
 import MuxPlayer from "@mux/mux-player-react";
-import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type SyntheticEvent } from "react";
 import { useRouter } from "next/navigation";
+import { recordVideoEvent, savePlaybackProgress } from "@/actions/catalog";
 import { createEpisodeChatToken } from "@/actions/episode-token";
 import { ChannelPage } from "@/components/channel-page";
 import { BellIcon, MoreIcon, SearchIcon } from "@/components/icons";
@@ -20,6 +21,8 @@ type BrowseAppProps = {
   persistedChannels?: Channel[];
   followedChannels?: Channel[];
   recommendedChannels?: Channel[];
+  catalogChannels?: Channel[];
+  continueWatching?: ContinueWatchingItem[];
   demoFallback?: boolean;
   initialQuery?: string;
   clerkConfigured?: boolean;
@@ -27,6 +30,16 @@ type BrowseAppProps = {
   viewerUsername?: string;
   mobileBrowse?: boolean;
   pagination?: { page: number; hasNext: boolean; baseHref: string };
+};
+
+type ContinueWatchingItem = {
+  channel: Channel;
+  durationSeconds: number | null;
+  episodeCode: string;
+  episodeId: string;
+  episodeTitle: string;
+  positionSeconds: number;
+  progressPercent: number;
 };
 
 const animeTitles = ["Solo Leveling", "Demon Slayer", "Jujutsu Kaisen", "Attack on Titan", "My Hero Academia", "Chainsaw Man", "One Piece", "Black Clover"];
@@ -314,7 +327,7 @@ const muxEpisodePlaybackIds: Record<string, string[]> = {
   "Solo Leveling": ["vGVPge2z02gzlCUDH8RAmcj542Z02ITHJ3y9EGcD8002o00", "Ughp4MfIu01Nvt602FFsOLRiJ8Yo01rx7AXzE1TrL8DKZQ"],
 };
 
-function seriesEpisodes(channel: Channel) {
+function seriesEpisodes(channel: Channel, progressByEpisode = new Map<string, ContinueWatchingItem>()) {
   const title = channel.catalogTitle ?? channel.displayName;
   const playbackIds = muxEpisodePlaybackIds[title] ?? [];
   const trailer = trailerSources[title] ?? {
@@ -334,6 +347,7 @@ function seriesEpisodes(channel: Channel) {
   const thumbnails = channels.map((item) => item.posterUrl ?? item.thumbnailUrl).filter(Boolean) as string[];
 
   return episodeNames.map((name, index) => ({
+    id: index === 0 && channel.firstEpisodeId ? channel.firstEpisodeId : `episode_${episodeSlug(title)}_${index + 1}`,
     code: `S1 E${index + 1}`,
     name,
     date: `Mar ${1 + index * 7}, 2026`,
@@ -344,6 +358,8 @@ function seriesEpisodes(channel: Channel) {
     thumbnailUrl: thumbnails[index % thumbnails.length],
     viewers: Math.max(120, Math.round(channel.viewers * (1 - index * 0.085))),
     muxPlaybackId: index === 0 ? playbackIds[1] ?? playbackIds[0] : playbackIds[index],
+    positionSeconds: progressByEpisode.get(index === 0 && channel.firstEpisodeId ? channel.firstEpisodeId : `episode_${episodeSlug(title)}_${index + 1}`)?.positionSeconds ?? 0,
+    progressPercent: progressByEpisode.get(index === 0 && channel.firstEpisodeId ? channel.firstEpisodeId : `episode_${episodeSlug(title)}_${index + 1}`)?.progressPercent ?? 0,
     trailerUrl: trailer.embedId
       ? `https://www.youtube.com/watch?v=${trailer.embedId}`
       : trailer.url,
@@ -369,6 +385,8 @@ function episodeRoomName(title: string, episode: SeriesEpisode) {
 function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { title: string; episode: SeriesEpisode; viewerUsername?: string; onClose: () => void }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [session, setSession] = useState<EpisodeChatToken | null>(null);
+  const lastProgressSyncAt = useRef(0);
+  const resumed = useRef(false);
   const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_WS_URL;
   const [error, setError] = useState(() => serverUrl ? "" : "Live chat is not configured");
   const roomName = useMemo(() => episodeRoomName(title, episode), [title, episode]);
@@ -381,6 +399,36 @@ function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { t
       .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to join live chat"));
   }, [roomName, serverUrl]);
 
+  const syncProgress = (player: HTMLMediaElement, eventType: "VIDEO_STARTED" | "VIDEO_PAUSED" | "VIDEO_COMPLETED" | "VIDEO_SEEKED" | "WATCH_TIME_UPDATED") => {
+    const positionSeconds = Math.floor(player.currentTime || 0);
+    const durationSeconds = Number.isFinite(player.duration) ? Math.floor(player.duration) : undefined;
+
+    if (positionSeconds > 0) {
+      savePlaybackProgress({ durationSeconds, episodeId: episode.id, positionSeconds }).catch(() => undefined);
+    }
+
+    recordVideoEvent({
+      episodeId: episode.id,
+      metadata: { title, episodeCode: episode.code },
+      positionSeconds,
+      type: eventType,
+    }).catch(() => undefined);
+  };
+
+  const resumePlayback = (event: SyntheticEvent<HTMLMediaElement>) => {
+    const player = event.currentTarget;
+    if (resumed.current || !episode.positionSeconds) return;
+    player.currentTime = episode.positionSeconds;
+    resumed.current = true;
+  };
+
+  const syncWhilePlaying = (event: SyntheticEvent<HTMLMediaElement>) => {
+    const now = Date.now();
+    if (now - lastProgressSyncAt.current < 10_000) return;
+    lastProgressSyncAt.current = now;
+    syncProgress(event.currentTarget, "WATCH_TIME_UPDATED");
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black text-white">
       <MuxPlayer
@@ -388,6 +436,12 @@ function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { t
         metadata={{ video_title: `${title} ${episode.code} ${episode.name}` }}
         streamType="on-demand"
         autoPlay
+        onEnded={(event) => syncProgress(event.currentTarget, "VIDEO_COMPLETED")}
+        onLoadedMetadata={resumePlayback}
+        onPause={(event) => syncProgress(event.currentTarget, "VIDEO_PAUSED")}
+        onPlay={(event) => syncProgress(event.currentTarget, "VIDEO_STARTED")}
+        onSeeked={(event) => syncProgress(event.currentTarget, "VIDEO_SEEKED")}
+        onTimeUpdate={syncWhilePlaying}
         className="absolute inset-0 h-full w-full bg-black"
         style={{
           width: "100vw",
@@ -476,7 +530,12 @@ function EpisodeHoverChat({ episode, session, chatOpen, setChatOpen, viewerUsern
             <button type="submit" disabled={!canSend} className="px-3 text-xs font-black text-[#bf94ff] disabled:cursor-not-allowed disabled:text-white/25">Send</button>
           </div>
         ) : (
-          <div className="rounded-md border border-white/15 bg-black/35 p-3 text-xs text-white/60">Sign in to chat.</div>
+          <div className="rounded-md border border-white/15 bg-black/35 p-3 text-xs text-white/60">
+            <p>Sign in to chat.</p>
+            <SignInButton>
+              <button type="button" className="mt-2 rounded bg-[#9147ff] px-3 py-2 font-black text-white">Sign in</button>
+            </SignInButton>
+          </div>
         )}
       </form>
     </EpisodeChatShell>
@@ -500,11 +559,12 @@ function EpisodeHoverChatFallback({ episode, chatOpen, setChatOpen, error }: { e
   );
 }
 
-function SeriesDetailPage({ channel, onBack, clerkConfigured, viewerUsername }: { channel: Channel; onBack: () => void; clerkConfigured: boolean; viewerUsername?: string }) {
+function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, viewerUsername }: { channel: Channel; continueWatching: ContinueWatchingItem[]; onBack: () => void; clerkConfigured: boolean; viewerUsername?: string }) {
   const [listed, setListed] = useState(false);
   const [playingEpisode, setPlayingEpisode] = useState<SeriesEpisode | null>(null);
   const title = channel.catalogTitle ?? channel.displayName;
-  const episodes = seriesEpisodes(channel);
+  const progressByEpisode = useMemo(() => new Map(continueWatching.map((item) => [item.episodeId, item])), [continueWatching]);
+  const episodes = seriesEpisodes(channel, progressByEpisode);
   const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
   const totalWatching = episodes.reduce((sum, episode) => sum + episode.viewers, 0);
   const openEpisode = (episode: SeriesEpisode) => {
@@ -547,7 +607,7 @@ function SeriesDetailPage({ channel, onBack, clerkConfigured, viewerUsername }: 
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[#f1f1f3] sm:text-xl">{description}</p>
           <p className="mt-5 max-w-3xl text-sm leading-6 text-[#b9b9c2]">Featuring: elite hunters, cursed warriors, rival clans, and a season-long battle for survival.</p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            {episodes[0]?.muxPlaybackId ? <button type="button" onClick={() => openEpisode(episodes[0])} className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1</button> : <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1 Trailer</a>}
+            {episodes[0]?.muxPlaybackId ? <button type="button" onClick={() => openEpisode(episodes[0])} className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />{episodes[0].positionSeconds ? "Resume S1 E1" : "Watch S1 E1"}</button> : <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1 Trailer</a>}
             <button type="button" onClick={() => setListed(!listed)} className="grid h-14 w-14 place-items-center rounded-full border border-white/40 text-4xl leading-none">{listed ? "✓" : "+"}</button>
             <span className="text-sm font-black uppercase tracking-wide">My List</span>
             <button type="button" className="ml-0 grid h-14 w-14 place-items-center rounded-full border border-white/40 lg:ml-5" aria-label="Notify"><BellIcon className="h-6 w-6" /></button>
@@ -582,11 +642,12 @@ function EpisodeCard({ episode, onPlay }: { episode: SeriesEpisode; onPlay: () =
                   <Image src={episode.thumbnailUrl} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw" className="object-cover transition duration-500 group-hover:scale-105" />
                   <span className="absolute left-2 top-2 rounded bg-red-600 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white">Live</span>
                   <span className="absolute bottom-2 left-2 rounded bg-black/80 px-2 py-1 text-xs font-bold text-white">{formatViewers(episode.viewers)} watching</span>
+                  {episode.progressPercent > 0 && <span className="absolute inset-x-0 bottom-0 h-1 bg-white/20"><i className="block h-full bg-[#2563eb]" style={{ width: `${episode.progressPercent}%` }} /></span>}
                   <span className="absolute inset-0 grid place-items-center bg-black/0 opacity-0 transition group-hover:bg-black/35 group-hover:opacity-100"><PlayIcon className="h-10 w-10" /></span>
                 </span>
                 <h3 className="mt-4 text-lg font-black"><span>{episode.code}</span> <span className="font-medium">{episode.name}</span></h3>
                 <p className="mt-2 line-clamp-2 min-h-[44px] text-sm leading-6 text-[#a1a1aa]">{episode.description}</p>
-                <p className="mt-2 text-sm font-bold text-[#8f8f99]">{episode.duration}  {episode.date}  ·  {formatViewers(episode.viewers)} live</p>
+                <p className="mt-2 text-sm font-bold text-[#8f8f99]">{episode.progressPercent > 0 ? `${episode.progressPercent}% watched` : episode.duration}  {episode.date}  ·  {formatViewers(episode.viewers)} live</p>
     </>
   );
 
@@ -597,7 +658,35 @@ function EpisodeCard({ episode, onPlay }: { episode: SeriesEpisode; onPlay: () =
   return <a href={episode.trailerUrl} target="_blank" rel="noreferrer" className="group text-left">{cardBody}</a>;
 }
 
-export function BrowseApp({ persistedChannels = [], followedChannels = [], recommendedChannels = [], demoFallback = true, initialQuery = "", clerkConfigured = false, viewerIdentity, viewerUsername, mobileBrowse = false, pagination }: BrowseAppProps) {
+function ContinueWatchingRail({ items, onOpen }: { items: ContinueWatchingItem[]; onOpen: (channel: Channel) => void }) {
+  if (!items.length) return null;
+
+  return (
+    <section className="relative mt-8 hidden lg:block">
+      <div className="mb-4 flex items-end justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#2563eb]">Resume</p>
+          <h2 className="mt-1 text-xl font-black">Continue watching</h2>
+        </div>
+      </div>
+      <div className="grid grid-flow-col auto-cols-[260px] gap-3 overflow-x-auto pb-5 xl:auto-cols-[310px]">
+        {items.map((item) => (
+          <button key={item.episodeId} type="button" onClick={() => onOpen(item.channel)} className="group min-w-0 text-left transition duration-300 hover:z-10 hover:scale-105 focus:z-10 focus:scale-105 focus:outline-none">
+            <span className="relative block aspect-video overflow-hidden rounded-md bg-[#18181b] shadow-lg">
+              <CatalogArtwork channel={item.channel} className="absolute inset-0 transition duration-500 group-hover:scale-110" />
+              <span className="absolute inset-x-0 bottom-0 h-1 bg-white/20"><i className="block h-full bg-[#2563eb]" style={{ width: `${item.progressPercent}%` }} /></span>
+              <span className="absolute bottom-3 left-3 rounded bg-black/75 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white">{item.progressPercent}% watched</span>
+            </span>
+            <strong className="mt-3 block truncate text-sm">{item.channel.catalogTitle ?? item.channel.displayName}</strong>
+            <span className="mt-1 block truncate text-xs font-semibold text-[#a1a1aa]">{item.episodeCode} {item.episodeTitle}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function BrowseApp({ persistedChannels = [], followedChannels = [], recommendedChannels = [], catalogChannels = [], continueWatching = [], demoFallback = true, initialQuery = "", clerkConfigured = false, viewerIdentity, viewerUsername, mobileBrowse = false, pagination }: BrowseAppProps) {
   const [query, setQuery] = useState(initialQuery);
   const [selected, setSelected] = useState<Channel | null>(null);
   const [mode, setMode] = useState<BrowseMode>("browse");
@@ -618,13 +707,14 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
   const trendingChannels = displayChannels.filter((channel) => channel.live);
   const liveStreamerChannels = persistedChannels.filter((channel) => channel.live);
   const recommendedDisplayChannels = recommendedChannels.length ? recommendedChannels : displayChannels.filter((channel) => channel.live).slice(0, 8);
-  const animeChannels = channels
+  const catalogSource = catalogChannels.length ? catalogChannels : channels;
+  const animeChannels = catalogSource
     .filter((channel) => !query.trim() || channel.catalogTitle?.toLowerCase().includes(query.trim().toLowerCase()))
     .sort((left, right) => right.viewers - left.viewers);
   const spotlightChannel = animeChannels[0];
 
   if (selected && !selected.hostIdentity) {
-    return <SeriesDetailPage channel={selected} onBack={() => setSelected(null)} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />;
+    return <SeriesDetailPage channel={selected} continueWatching={continueWatching} onBack={() => setSelected(null)} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />;
   }
 
   if (selected) return <div className="min-h-screen bg-black"><ChannelPage channel={selected} initialFollowing={followedUsernames.has(selected.username)} canFollow={!selected.hostIdentity || selected.hostIdentity !== viewerIdentity} authenticated={Boolean(viewerIdentity)} /><MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} /></div>;
@@ -637,6 +727,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
           <main className="min-w-0">
             {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={trendingChannels.length ? trendingChannels : displayChannels} onOpen={setSelected} searchable /> : <MobileStreamingHome channels={animeChannels} onOpen={setSelected} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
             <Hero channel={spotlightChannel} onOpen={setSelected} />
+            <ContinueWatchingRail items={continueWatching} onOpen={setSelected} />
             <ContentRail title="Recommended for you" channels={recommendedDisplayChannels.slice(0, 12)} onOpen={setSelected} horizontal />
             <div id="live-streamers"><ContentRail title={mode === "following" ? "Your followed channels" : "Live streamers"} channels={(mode === "following" ? followedChannels : liveStreamerChannels).slice(0, 12)} onOpen={setSelected} horizontal /></div>
             <div id="live-anime"><ContentRail title="Live anime" channels={animeChannels} onOpen={setSelected} /></div>

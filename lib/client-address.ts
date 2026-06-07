@@ -1,10 +1,6 @@
 import { headers } from "next/headers";
-
-export function getClientAddressFromHeaders(requestHeaders: Headers) {
-  return requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim()
-    || requestHeaders.get("x-real-ip")
-    || "unknown";
-}
+import { getClientAddressFromHeaders } from "./client-address-core.ts";
+export { getClientAddressFromHeaders, trustsProxyHeaders } from "./client-address-core.ts";
 
 export async function getClientAddress() {
   return getClientAddressFromHeaders(await headers());

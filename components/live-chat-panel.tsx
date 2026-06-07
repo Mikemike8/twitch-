@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useState, type KeyboardEvent } from "react";
+import { SignInButton } from "@clerk/nextjs";
 import { useChat, useParticipants } from "@livekit/components-react";
 import { SendIcon } from "@/components/icons";
 import { onBlock } from "@/actions/block";
@@ -82,7 +82,11 @@ function RealtimeChat({ viewer, hostIdentity }: { viewer: ViewerToken; hostIdent
       ) : (
         <div className="rounded-md border border-[#3f3f46] bg-[#242429] p-3 text-xs text-[#adadb8]">
           <p>{restriction}</p>
-          {!viewer.isAuthenticated && <Link href="/sign-in" className="mt-2 inline-flex rounded bg-[#9147ff] px-3 py-2 font-black text-white">Sign in to chat</Link>}
+          {!viewer.isAuthenticated && (
+            <SignInButton>
+              <button type="button" className="mt-2 inline-flex rounded bg-[#9147ff] px-3 py-2 font-black text-white">Sign in to chat</button>
+            </SignInButton>
+          )}
         </div>
       )}
       {viewer.isChatDelayed && viewer.canChat && <p className="mt-2 text-[11px] text-[#adadb8]">Slow mode is enabled. You can send one message every 15 seconds.</p>}
