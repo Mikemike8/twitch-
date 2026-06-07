@@ -346,7 +346,7 @@ const muxEpisodePlaybackIds: Record<string, string[]> = {
   // Add real Mux playback IDs after uploads, in episode order.
   // Example:
   // "Solo Leveling": ["PLAYBACK_ID_FOR_S1_E1", "PLAYBACK_ID_FOR_S1_E2"],
-  "Solo Leveling": ["Ughp4MfIu01Nvt602FFsOLRiJ8Yo01rx7AXzE1TrL8DKZQ"],
+  "Solo Leveling": ["WuO3fmG5KtbaWqc00gKhQGdNVNg3r6b02zot02vIh84xiY", "kmRk4d01IOCv62IbZYBBd2fB8O6R4id023lRXJ32gAlnY"],
 };
 
 function seriesEpisodes(channel: Channel, progressByEpisode = new Map<string, ContinueWatchingItem>()) {
