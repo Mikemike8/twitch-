@@ -57,6 +57,13 @@ function getPlayerProgressTarget(event: { currentTarget: EventTarget | null }) {
   return target as EventTarget & PlayerProgressTarget;
 }
 
+function prioritizePlayableCatalog(left: Channel, right: Channel) {
+  if (left.catalogTitle === "Solo Leveling") return -1;
+  if (right.catalogTitle === "Solo Leveling") return 1;
+
+  return right.viewers - left.viewers;
+}
+
 const animeTitles = ["Solo Leveling", "Demon Slayer", "Jujutsu Kaisen", "Attack on Titan", "My Hero Academia", "Chainsaw Man", "One Piece", "Black Clover"];
 function animeTitle(channel: Channel, index: number) {
   return channel.hostIdentity ? channel.title : channel.catalogTitle ?? animeTitles[index % animeTitles.length];
@@ -740,7 +747,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
   const catalogSource = catalogChannels.length ? catalogChannels : channels;
   const animeChannels = catalogSource
     .filter((channel) => !query.trim() || channel.catalogTitle?.toLowerCase().includes(query.trim().toLowerCase()))
-    .sort((left, right) => right.viewers - left.viewers);
+    .sort(prioritizePlayableCatalog);
   const spotlightChannel = animeChannels[0];
 
   if (selected && !selected.hostIdentity) {
