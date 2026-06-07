@@ -519,7 +519,7 @@ function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { t
 function EpisodeChatShell({ chatOpen, children }: { chatOpen: boolean; children: React.ReactNode }) {
   return (
     <aside
-      className={`fixed inset-x-0 bottom-0 z-50 flex h-[64vh] flex-col overflow-hidden rounded-t-2xl border-t border-white/10 bg-[#08080b]/95 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 md:static md:h-full md:shrink-0 md:rounded-none md:border-l md:border-t-0 md:transition-[width] ${chatOpen ? "translate-y-0 md:w-[360px]" : "translate-y-full md:w-0"}`}
+      className={`fixed inset-x-0 bottom-0 z-50 flex h-[38vh] min-h-[260px] flex-col overflow-hidden rounded-t-2xl border-t border-white/10 bg-[#08080b]/95 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 md:static md:h-full md:min-h-0 md:shrink-0 md:rounded-none md:border-l md:border-t-0 md:transition-[width] ${chatOpen ? "translate-y-0 md:w-[360px]" : "translate-y-full md:w-0"}`}
       onClick={(event) => event.stopPropagation()}
       aria-hidden={!chatOpen}
     >
