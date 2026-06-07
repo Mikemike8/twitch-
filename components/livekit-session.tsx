@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { LiveKitRoom } from "@livekit/components-react";
 import { createViewerToken } from "@/actions/token";
+import { normalizeLiveKitWsUrl } from "@/lib/livekit-url";
 
 export type ViewerToken = Awaited<ReturnType<typeof createViewerToken>>;
 
@@ -27,7 +28,7 @@ export function LiveKitSession({
 }) {
   const [viewer, setViewer] = useState<ViewerToken | null>(null);
   const [error, setError] = useState("");
-  const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_WS_URL;
+  const serverUrl = normalizeLiveKitWsUrl(process.env.NEXT_PUBLIC_LIVEKIT_WS_URL);
 
   useEffect(() => {
     createViewerToken(hostIdentity)
@@ -35,7 +36,7 @@ export function LiveKitSession({
       .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to join stream"));
   }, [hostIdentity]);
 
-  const resolvedServerUrl = viewer?.serverUrl ?? serverUrl;
+  const resolvedServerUrl = normalizeLiveKitWsUrl(viewer?.serverUrl) ?? serverUrl;
   const value = { viewer, error, ready: Boolean(resolvedServerUrl && viewer) };
 
   if (!resolvedServerUrl || !viewer) {

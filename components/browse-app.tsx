@@ -13,6 +13,7 @@ import { ChannelPage } from "@/components/channel-page";
 import { BellIcon, MoreIcon, SearchIcon } from "@/components/icons";
 import { SiteTopbar, type SiteTopbarMode } from "@/components/site-topbar";
 import { channels, formatViewers, type Channel } from "@/lib/channels";
+import { normalizeLiveKitWsUrl } from "@/lib/livekit-url";
 import { inputLimits } from "@/lib/validation";
 
 type BrowseMode = SiteTopbarMode;
@@ -409,8 +410,11 @@ function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { t
   const [session, setSession] = useState<EpisodeChatToken | null>(null);
   const lastProgressSyncAt = useRef(0);
   const resumed = useRef(false);
-  const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_WS_URL;
-  const [error, setError] = useState(() => serverUrl ? "" : "Live chat is not configured");
+  const serverUrl = normalizeLiveKitWsUrl(process.env.NEXT_PUBLIC_LIVEKIT_WS_URL);
+  const [error, setError] = useState(() => {
+    if (serverUrl) return "";
+    return process.env.NEXT_PUBLIC_LIVEKIT_WS_URL ? "Live chat URL is formatted incorrectly" : "Live chat is not configured";
+  });
   const roomName = useMemo(() => episodeRoomName(title, episode), [title, episode]);
 
   useEffect(() => {
@@ -547,7 +551,7 @@ function EpisodeHoverChat({ episode, session, chatOpen, setChatOpen, viewerUsern
           <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
           <p className="mt-1 text-[11px] text-white/60">{formatViewers(viewerCount)} watching</p>
         </div>
-        <button type="button" onClick={() => setChatOpen(false)} className="text-xl text-white/70 md:hidden" aria-label="Hide chat">×</button>
+        <button type="button" onClick={(event) => { event.stopPropagation(); setChatOpen(false); }} className="grid h-9 w-9 place-items-center rounded text-xl text-white/70 hover:bg-white/10" aria-label="Hide chat">×</button>
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 text-xs leading-5">
         {displayMessages.length ? displayMessages.map((message) => (
@@ -587,7 +591,7 @@ function EpisodeHoverChatFallback({ episode, chatOpen, setChatOpen, error }: { e
           <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
           <p className="mt-1 text-[11px] text-white/60">{formatViewers(episode.viewers)} watching</p>
         </div>
-        <button type="button" onClick={() => setChatOpen(false)} className="text-xl text-white/70 md:hidden" aria-label="Hide chat">×</button>
+        <button type="button" onClick={(event) => { event.stopPropagation(); setChatOpen(false); }} className="grid h-9 w-9 place-items-center rounded text-xl text-white/70 hover:bg-white/10" aria-label="Hide chat">×</button>
       </div>
       <div className="min-h-0 flex-1 px-4 py-4 text-xs leading-5 text-white/60">
         {error || "Joining live chat..."}

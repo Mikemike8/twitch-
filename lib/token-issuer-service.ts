@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { PrismaClient } from "./generated/prisma/client";
+import { normalizeLiveKitWsUrl } from "./livekit-url.ts";
 import { secretStorage } from "./secret-storage.ts";
 
 const livekitProvider = "livekit";
@@ -70,7 +71,7 @@ export async function resolveLiveKitTokenIssuer({
       issuerId: issuer.id,
       source: "creator",
       version: issuer.version,
-      wsUrl: toLiveKitWsUrl(apiUrl) ?? env.NEXT_PUBLIC_LIVEKIT_WS_URL,
+      wsUrl: normalizeLiveKitWsUrl(apiUrl) ?? normalizeLiveKitWsUrl(env.NEXT_PUBLIC_LIVEKIT_WS_URL) ?? undefined,
     };
   }
 
@@ -86,16 +87,8 @@ export async function resolveLiveKitTokenIssuer({
     apiSecret,
     apiUrl: env.LIVEKIT_API_URL,
     source: "global",
-    wsUrl: env.NEXT_PUBLIC_LIVEKIT_WS_URL ?? toLiveKitWsUrl(env.LIVEKIT_API_URL),
+    wsUrl: normalizeLiveKitWsUrl(env.NEXT_PUBLIC_LIVEKIT_WS_URL) ?? normalizeLiveKitWsUrl(env.LIVEKIT_API_URL) ?? undefined,
   };
-}
-
-function toLiveKitWsUrl(apiUrl: string | undefined) {
-  if (!apiUrl) return undefined;
-  if (apiUrl.startsWith("wss://") || apiUrl.startsWith("ws://")) return apiUrl;
-  if (apiUrl.startsWith("https://")) return `wss://${apiUrl.slice("https://".length)}`;
-  if (apiUrl.startsWith("http://")) return `ws://${apiUrl.slice("http://".length)}`;
-  return undefined;
 }
 
 export async function rotateLiveKitTokenIssuer({
