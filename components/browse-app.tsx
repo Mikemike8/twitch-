@@ -488,7 +488,7 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
   return (
     <div className="fixed inset-0 z-50 bg-black text-white">
       <div className="flex h-full min-h-0 flex-col md:flex-row">
-        <div className="relative min-h-0 flex-1">
+        <div className="relative min-h-0 flex-1 basis-[66vh] md:basis-auto">
           <MuxPlayer
             playbackId={episode.muxPlaybackId}
             metadata={{ video_title: `${title} ${episode.code} ${episode.name}` }}
@@ -542,7 +542,7 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
 function EpisodeChatShell({ chatOpen, expanded, children }: { chatOpen: boolean; expanded: boolean; children: React.ReactNode }) {
   return (
     <aside
-      className={`fixed inset-x-0 bottom-0 z-50 flex min-h-[260px] flex-col overflow-hidden rounded-t-2xl border-t border-white/10 bg-[#08080b]/95 text-white shadow-2xl backdrop-blur-md transition-[height,transform,width] duration-300 md:static md:h-full md:min-h-0 md:shrink-0 md:rounded-none md:border-l md:border-t-0 ${expanded ? "h-[72vh]" : "h-[38vh]"} ${chatOpen ? "translate-y-0 md:w-[360px]" : "translate-y-full md:w-0"}`}
+      className={`flex min-h-[260px] shrink-0 flex-col overflow-hidden border-t border-white/10 bg-[#08080b] text-white transition-[height,width] duration-300 md:h-full md:min-h-0 md:border-l md:border-t-0 ${expanded ? "h-[56vh]" : "h-[34vh]"} ${chatOpen ? "md:w-[360px]" : "h-0 min-h-0 border-t-0 md:h-full md:w-0 md:border-l"}`}
       onClick={(event) => event.stopPropagation()}
       aria-hidden={!chatOpen}
     >
