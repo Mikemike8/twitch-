@@ -457,7 +457,7 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
   useEffect(() => {
     const lockLandscapeOnFullscreen = () => {
       const orientation = screen.orientation as ScreenOrientation & {
-        lock?: (orientation: OrientationLockType) => Promise<void>;
+        lock?: (orientation: "landscape") => Promise<void>;
         unlock?: () => void;
       };
 
