@@ -116,27 +116,28 @@ function CatalogArtwork({ channel, className = "" }: { channel: Channel; classNa
   );
 }
 
-function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "home" }: { viewerUsername?: string; clerkConfigured?: boolean; active?: "home" | "search" | "live" | "profile" }) {
-  const itemClass = "flex min-h-[74px] flex-col items-center justify-center gap-1.5 px-1 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
+function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "home" }: { viewerUsername?: string; clerkConfigured?: boolean; active?: "home" | "search" | "episodes" | "live" | "profile" }) {
+  const itemClass = "relative flex min-h-[76px] flex-col items-center justify-center gap-1.5 px-1 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
   const color = (item: typeof active) => item === active ? "text-white" : "text-white/55";
-  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/5 bg-[#111113]/95 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl lg:hidden">
-    <Link href="/" className={`${itemClass} ${color("home")}`}><HomeIcon className="h-7 w-7" />Home</Link>
-    <Link href="/search" className={`${itemClass} ${color("search")}`}><BrowseIcon className="h-7 w-7" />Search</Link>
-    <Link href="/search" className={`${itemClass} text-white/55`}><ClipsIcon className="h-7 w-7" />Clips</Link>
-    <Link href="/live" className={`${itemClass} ${color("live")}`}><LiveTvIcon className="h-7 w-7" />Live TV</Link>
+  const marker = (item: typeof active) => item === active ? <i className="absolute top-0 h-0.5 w-8 rounded-full bg-white" /> : null;
+  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/10 bg-[#0f0f12]/98 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:hidden">
+    <Link href="/" className={`${itemClass} ${color("home")}`}>{marker("home")}<HomeIcon className="h-7 w-7" />Home</Link>
+    <Link href="/search" className={`${itemClass} ${color("search")}`}>{marker("search")}<BrowseIcon className="h-7 w-7" />Search</Link>
+    <Link href="/search" className={`${itemClass} ${color("episodes")}`}>{marker("episodes")}<ClipsIcon className="h-7 w-7" />Episodes</Link>
+    <Link href="/live" className={`${itemClass} ${color("live")}`}>{marker("live")}<LiveTvIcon className="h-7 w-7" />Live</Link>
     {clerkConfigured ? (
       <>
         <Show when="signed-in">
-          <Link href={viewerUsername ? `/${viewerUsername}` : "/"} className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
+          <Link href={viewerUsername ? `/${viewerUsername}` : "/"} className={`${itemClass} ${color("profile")}`}>{marker("profile")}<ProfileIcon className="h-7 w-7" />Profile</Link>
         </Show>
         <Show when="signed-out">
           <SignInButton>
-            <button type="button" className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</button>
+            <button type="button" className={`${itemClass} ${color("profile")}`}>{marker("profile")}<ProfileIcon className="h-7 w-7" />Profile</button>
           </SignInButton>
         </Show>
       </>
     ) : (
-      <Link href="/sign-in" className={`${itemClass} ${color("profile")}`}><ProfileIcon className="h-7 w-7" />Profile</Link>
+      <Link href="/sign-in" className={`${itemClass} ${color("profile")}`}>{marker("profile")}<ProfileIcon className="h-7 w-7" />Profile</Link>
     )}
   </nav>;
 }
@@ -733,9 +734,16 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
       </section>
 
       <section id="episodes" className="px-5 pb-12 sm:px-8 lg:px-14">
-          <div className="mb-5 flex items-end gap-8">
-            <h2 className="text-3xl font-black">Full Episodes</h2>
-            <span className="pb-1 text-base text-white/75">Season 1</span>
+          <div className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-[#a970ff]">Season guide</p>
+              <h2 className="mt-2 text-3xl font-black">Full Episodes</h2>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto text-sm font-black uppercase tracking-wide [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <span className="shrink-0 rounded-full bg-white px-4 py-2 text-black">Season 1</span>
+              <span className="shrink-0 rounded-full border border-white/15 px-4 py-2 text-white/60">{episodes.length} Episodes</span>
+              <span className="shrink-0 rounded-full border border-white/15 px-4 py-2 text-white/60">Live chat</span>
+            </div>
           </div>
           <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             {episodes.map((episode) => (

@@ -119,7 +119,7 @@ function MobileLiveRow({ channel, selected, index, onSelect }: { channel: Channe
 }
 
 function MobileLiveBottomNav({ viewerUsername, clerkConfigured }: { viewerUsername?: string; clerkConfigured: boolean }) {
-  const itemClass = "flex min-h-[74px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
+  const itemClass = "relative flex min-h-[76px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
   const profileItem = clerkConfigured ? (
     <>
       <Show when="signed-in">
@@ -134,7 +134,7 @@ function MobileLiveBottomNav({ viewerUsername, clerkConfigured }: { viewerUserna
   ) : (
     <Link href="/sign-in" className={itemClass}><ProfileIcon />Profile</Link>
   );
-  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/5 bg-[#111113]/95 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 backdrop-blur-2xl"><Link href="/" className={itemClass}><HomeIcon />Home</Link><Link href="/search" className={itemClass}><SearchIcon className="h-7 w-7" />Search</Link><Link href="/search" className={itemClass}><ClipsIcon />Clips</Link><span className={`${itemClass} text-white`}><LiveTvIcon />Live TV</span>{profileItem}</nav>;
+  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/10 bg-[#0f0f12]/98 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 shadow-[0_-18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl"><Link href="/" className={itemClass}><HomeIcon />Home</Link><Link href="/search" className={itemClass}><SearchIcon className="h-7 w-7" />Search</Link><Link href="/search" className={itemClass}><ClipsIcon />Episodes</Link><span className={`${itemClass} text-white`}><i className="absolute top-0 h-0.5 w-8 rounded-full bg-white" /><LiveTvIcon />Live</span>{profileItem}</nav>;
 }
 
 function CastIcon({ className = "h-5 w-5" }: { className?: string }) {

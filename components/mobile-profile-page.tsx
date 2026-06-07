@@ -5,7 +5,7 @@ import { SignOutButton } from "@clerk/nextjs";
 import { useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { FollowButton } from "@/components/follow-button";
-import { SearchIcon, VideoIcon } from "@/components/icons";
+import { BellIcon, SearchIcon, VideoIcon } from "@/components/icons";
 import { SiteTopbar } from "@/components/site-topbar";
 import type { Channel } from "@/lib/channels";
 
@@ -35,99 +35,81 @@ export function MobileProfilePage({
           {isSelf ? <Link href={`/u/${channel.username}`} className="rounded-md border border-white/20 px-4 py-2 text-sm font-bold text-[#bf94ff]">Creator Dashboard</Link> : <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
         </div>
 
-        <h1 className="text-4xl font-black tracking-tight sm:text-5xl">Account</h1>
-
-        <section className="mt-7 border-t border-white/15">
-          <ProfileRow title="Profile">
-            <Detail label="Display name" value={channel.displayName} />
-            <Detail label="Username" value={`@${channel.username}`} />
-            <Action href={isSelf ? `/u/${channel.username}` : `/${channel.username}`} label={isSelf ? "Edit Profile" : "View Channel"} />
-          </ProfileRow>
-
-          <ProfileRow title="Creator Identity">
-            <div className="flex min-w-0 items-center gap-4">
+        <section className="overflow-hidden rounded-lg border border-white/10 bg-[#11111a]">
+          <div className="relative min-h-56 overflow-hidden">
+            <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${channel.colors[0]}, ${channel.colors[1]})` }} />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#11111a] via-[#11111a]/45 to-black/10" />
+            <div className="relative flex min-h-56 flex-col justify-end p-5 sm:p-7">
               <Avatar channel={channel} size="lg" />
-              <div className="min-w-0">
-                <p className="truncate text-lg font-black">{channel.displayName}</p>
-                <p className="mt-1 text-sm text-[#a1a1aa]">{channel.bio || "Anime fan, streamer, and ARGUS community member."}</p>
-              </div>
+              <h1 className="mt-4 truncate text-4xl font-black tracking-tight sm:text-5xl">{channel.displayName}</h1>
+              <p className="mt-1 text-sm font-bold text-[#a1a1aa]">@{channel.username}</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#d4d4dd]">{channel.bio || "Anime fan, streamer, and ARGUS community member."}</p>
             </div>
-          </ProfileRow>
+          </div>
 
-          <ProfileRow title="Stream">
-            <Detail label="Title" value={channel.title} />
-            <Detail label="Status" value={channel.live ? "Live now" : "Offline"} strong={channel.live} />
-            <Action href={channel.live ? `/live` : isSelf ? `/u/${channel.username}/keys` : `/search`} label={channel.live ? "Watch Live" : isSelf ? "Stream Keys" : "Browse Live"} />
-          </ProfileRow>
+          <div className="grid border-t border-white/10 sm:grid-cols-3">
+            <ProfileStat label="Followers" value={`${channel.followerCount ?? 0}`} />
+            <ProfileStat label="Category" value={channel.category} />
+            <ProfileStat label="Status" value={channel.live ? "Live now" : "Offline"} strong={channel.live} />
+          </div>
+        </section>
 
-          {isSelf && <ProfileRow title="Creator Tools">
-            <ToolLink href={`/u/${channel.username}/keys`} icon={<VideoIcon className="h-5 w-5" />} label="Connection keys" />
-            <ToolLink href={`/u/${channel.username}/chat`} icon={<SearchIcon className="h-5 w-5" />} label="Chat moderation" />
-            <Action href={`/u/${channel.username}`} label="Manage" />
-          </ProfileRow>}
+        <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-[#101015]">
+          <ProfileMenuLink href="/search" icon={<ClipsIcon />} title="Watchlist" detail="Save anime, movies, and series for later" />
+          <ProfileMenuLink href="/" icon={<HomeIcon />} title="Continue Watching" detail="Resume episodes and live watch rooms" />
+          <ProfileMenuLink href="/live" icon={<LiveTvIcon />} title="Live Rooms" detail="Jump back into active community streams" />
+          <ProfileMenuLink href={isSelf ? `/u/${channel.username}` : `/${channel.username}`} icon={<ProfileIcon />} title={isSelf ? "Edit Profile" : "View Channel"} detail={isSelf ? "Update your public identity" : "Open this creator channel"} />
+        </section>
 
-          <ProfileRow title="Community">
-            <Detail label="Followers" value={`${channel.followerCount ?? 0}`} />
-            <Detail label="Category" value={channel.category} />
-            <Action href="/search" label="Discover" />
-          </ProfileRow>
+        {isSelf && <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-[#101015]">
+          <ProfileMenuLink href={`/u/${channel.username}/keys`} icon={<VideoIcon className="h-5 w-5" />} title="Connection Keys" detail="Manage stream connection details" />
+          <ProfileMenuLink href={`/u/${channel.username}/chat`} icon={<SearchIcon className="h-5 w-5" />} title="Chat Moderation" detail="Review chat controls and community safety" />
+          <ProfileMenuLink href={`/u/${channel.username}`} icon={<BellIcon className="h-5 w-5" />} title="Creator Dashboard" detail="Open the full creator workspace" />
+        </section>}
 
-          <ProfileRow title="Notifications">
-            <label className="flex min-w-0 items-start gap-3 text-[#a1a1aa]">
-              <input checked={updatesEnabled} onChange={(event) => setUpdatesEnabled(event.target.checked)} type="checkbox" className="mt-1 h-5 w-5 accent-[#244ed8]" />
-              <span>Yes, I would like to receive stream updates, community activity, and ARGUS creator notifications.</span>
-            </label>
-          </ProfileRow>
-
-          {isSelf && <ProfileRow title="Account">
-            <div className="sm:col-span-3">
-              <SignOutButton>
-                <button type="button" className="min-h-12 rounded-md border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm font-black uppercase tracking-wide text-red-100">
-                  Log out
-                </button>
-              </SignOutButton>
-            </div>
-          </ProfileRow>}
+        <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-[#101015]">
+          <label className="flex min-h-16 items-center gap-4 border-b border-white/10 px-4 py-4 text-left">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/[0.06] text-[#bf94ff]"><BellIcon className="h-5 w-5" /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-black">Notifications</span>
+              <span className="mt-1 block text-xs leading-5 text-[#8f8f9b]">Stream updates and episode activity</span>
+            </span>
+            <input checked={updatesEnabled} onChange={(event) => setUpdatesEnabled(event.target.checked)} type="checkbox" className="h-5 w-5 accent-[#244ed8]" />
+          </label>
+          {isSelf && <div className="px-4 py-4">
+            <SignOutButton>
+              <button type="button" className="min-h-12 rounded-md border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm font-black uppercase tracking-wide text-red-100">
+                Log out
+              </button>
+            </SignOutButton>
+          </div>}
         </section>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-white/10 bg-[#111113]/95 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 backdrop-blur-2xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-white/10 bg-[#0f0f12]/98 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 shadow-[0_-18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:hidden">
         <Link href="/" className={itemClass}><HomeIcon />Home</Link>
         <Link href="/search" className={itemClass}><BrowseIcon />Search</Link>
-        <Link href="/search" className={itemClass}><ClipsIcon />Clips</Link>
-        <Link href="/live" className={itemClass}><LiveTvIcon />Live TV</Link>
-        <span className={`${itemClass} text-white`}><ProfileIcon />Profile</span>
+        <Link href="/search" className={itemClass}><ClipsIcon />Episodes</Link>
+        <Link href="/live" className={itemClass}><LiveTvIcon />Live</Link>
+        <span className={`${itemClass} text-white`}><i className="absolute top-0 h-0.5 w-8 rounded-full bg-white" /><ProfileIcon />Profile</span>
       </nav>
     </div>
   );
 }
 
-function ProfileRow({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="grid gap-4 border-b border-white/15 py-6 sm:py-7 lg:grid-cols-[280px_1fr] lg:gap-10">
-      <h2 className="text-2xl font-black tracking-tight sm:text-[26px]">{title}</h2>
-      <div className="grid gap-5 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)_auto] sm:items-start">{children}</div>
-    </div>
-  );
+function ProfileStat({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+  return <div className="border-b border-white/10 px-4 py-4 sm:border-b-0 sm:border-r sm:last:border-r-0"><p className="text-[11px] font-black uppercase tracking-wide text-[#8f8f9b]">{label}</p><p className={`mt-1 truncate text-sm font-black ${strong ? "text-[#4ade80]" : "text-white"}`}>{value}</p></div>;
 }
 
-function Detail({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
-  return <div className="min-w-0"><p className="text-xl text-[#8f8f9b]">{label}</p><p className={`mt-2 break-words text-xl ${strong ? "font-black text-white" : "font-bold text-[#f4f4f5]"}`}>{value}</p></div>;
-}
-
-function Action({ href, label }: { href: string; label: string }) {
-  return <Link href={href} className="justify-self-start text-xl font-medium text-[#bf94ff] sm:justify-self-end">{label}</Link>;
-}
-
-function ToolLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
-  return <Link href={href} className="flex min-h-12 items-center gap-3 rounded-md border border-white/20 bg-white/[0.04] px-4 py-3 text-sm font-bold text-white">{icon}{label}</Link>;
+function ProfileMenuLink({ href, icon, title, detail }: { href: string; icon: React.ReactNode; title: string; detail: string }) {
+  return <Link href={href} className="flex min-h-16 items-center gap-4 border-b border-white/10 px-4 py-4 text-left last:border-b-0 hover:bg-white/[0.04]"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/[0.06] text-[#bf94ff]">{icon}</span><span className="min-w-0 flex-1"><span className="block text-sm font-black">{title}</span><span className="mt-1 block truncate text-xs text-[#8f8f9b]">{detail}</span></span><span className="text-xl text-white/35">›</span></Link>;
 }
 
 function BrowseIcon() {
   return <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="6" /><path d="m16 16 5 5" /></svg>;
 }
 
-const itemClass = "flex min-h-[74px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
+const itemClass = "relative flex min-h-[76px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
 
 function HomeIcon() {
   return <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /></svg>;
