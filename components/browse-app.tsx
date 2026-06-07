@@ -161,8 +161,8 @@ function PlayIcon({ className = "h-4 w-4" }: { className?: string }) {
   return <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7Z" /></svg>;
 }
 
-function ForwardIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4"><path d="M5 6l8 6-8 6V6Z" fill="currentColor" stroke="none" /><path d="M16 6v12" strokeLinecap="round" /></svg>;
+function ForwardIcon({ className = "h-4 w-4", direction = "next" }: { className?: string; direction?: "next" | "previous" }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4"><g className={direction === "previous" ? "origin-center rotate-180" : ""}><path d="M5 6l8 6-8 6V6Z" fill="currentColor" stroke="none" /><path d="M16 6v12" strokeLinecap="round" /></g></svg>;
 }
 
 function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channel) => void }) {
@@ -435,7 +435,7 @@ function episodeRoomName(title: string, episode: SeriesEpisode) {
   return `anime:${episodeSlug(title)}:s1:e${episodeNumber(episode)}`;
 }
 
-function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, onNext }: { title: string; episode: SeriesEpisode; nextEpisode?: SeriesEpisode; viewerUsername?: string; onNext?: (episode: SeriesEpisode) => void }) {
+function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, viewerUsername, onNext }: { title: string; episode: SeriesEpisode; nextEpisode?: SeriesEpisode; previousEpisode?: SeriesEpisode; viewerUsername?: string; onNext?: (episode: SeriesEpisode) => void }) {
   const [session, setSession] = useState<EpisodeChatToken | null>(null);
   const lastProgressSyncAt = useRef(0);
   const resumed = useRef(false);
@@ -549,10 +549,10 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
         </div>
         {serverUrl && session ? (
           <LiveKitRoom token={session.token} serverUrl={serverUrl} connect video={false} audio={false} className="contents">
-            <EpisodeHoverChat episode={episode} nextEpisode={nextEpisode} onNext={onNext} session={session} viewerUsername={viewerUsername} error={error} />
+            <EpisodeHoverChat episode={episode} nextEpisode={nextEpisode} previousEpisode={previousEpisode} onNext={onNext} session={session} viewerUsername={viewerUsername} error={error} />
           </LiveKitRoom>
         ) : (
-          <EpisodeHoverChatFallback episode={episode} nextEpisode={nextEpisode} onNext={onNext} error={error} />
+          <EpisodeHoverChatFallback episode={episode} nextEpisode={nextEpisode} previousEpisode={previousEpisode} onNext={onNext} error={error} />
         )}
       </div>
     </div>
@@ -570,7 +570,7 @@ function EpisodeChatShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function EpisodeHoverChat({ episode, nextEpisode, onNext, session, viewerUsername, error }: { episode: SeriesEpisode; nextEpisode?: SeriesEpisode; onNext?: (episode: SeriesEpisode) => void; session: EpisodeChatToken; viewerUsername?: string; error: string }) {
+function EpisodeHoverChat({ episode, nextEpisode, previousEpisode, onNext, session, viewerUsername, error }: { episode: SeriesEpisode; nextEpisode?: SeriesEpisode; previousEpisode?: SeriesEpisode; onNext?: (episode: SeriesEpisode) => void; session: EpisodeChatToken; viewerUsername?: string; error: string }) {
   const [chatMessage, setChatMessage] = useState("");
   const participants = useParticipants();
   const { chatMessages, send, isSending } = useChat();
@@ -598,6 +598,11 @@ function EpisodeHoverChat({ episode, nextEpisode, onNext, session, viewerUsernam
           <p className="mt-1 text-[11px] text-white/60">{formatViewers(viewerCount)} watching</p>
         </div>
         <div className="flex items-center gap-1">
+          {previousEpisode?.muxPlaybackId && (
+            <button type="button" onClick={(event) => { event.stopPropagation(); onNext?.(previousEpisode); }} className="flex items-center gap-1 rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={`Play ${previousEpisode.code}`}>
+              <ForwardIcon className="h-3.5 w-3.5" direction="previous" /> Prev
+            </button>
+          )}
           {nextEpisode?.muxPlaybackId && (
             <button type="button" onClick={(event) => { event.stopPropagation(); onNext?.(nextEpisode); }} className="flex items-center gap-1 rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={`Play ${nextEpisode.code}`}>
               <ForwardIcon className="h-3.5 w-3.5" /> Next
@@ -635,7 +640,7 @@ function EpisodeHoverChat({ episode, nextEpisode, onNext, session, viewerUsernam
   );
 }
 
-function EpisodeHoverChatFallback({ episode, nextEpisode, onNext, error }: { episode: SeriesEpisode; nextEpisode?: SeriesEpisode; onNext?: (episode: SeriesEpisode) => void; error: string }) {
+function EpisodeHoverChatFallback({ episode, nextEpisode, previousEpisode, onNext, error }: { episode: SeriesEpisode; nextEpisode?: SeriesEpisode; previousEpisode?: SeriesEpisode; onNext?: (episode: SeriesEpisode) => void; error: string }) {
   return (
     <EpisodeChatShell>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -644,6 +649,11 @@ function EpisodeHoverChatFallback({ episode, nextEpisode, onNext, error }: { epi
           <p className="mt-1 text-[11px] text-white/60">{formatViewers(episode.viewers)} watching</p>
         </div>
         <div className="flex items-center gap-1">
+          {previousEpisode?.muxPlaybackId && (
+            <button type="button" onClick={(event) => { event.stopPropagation(); onNext?.(previousEpisode); }} className="flex items-center gap-1 rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={`Play ${previousEpisode.code}`}>
+              <ForwardIcon className="h-3.5 w-3.5" direction="previous" /> Prev
+            </button>
+          )}
           {nextEpisode?.muxPlaybackId && (
             <button type="button" onClick={(event) => { event.stopPropagation(); onNext?.(nextEpisode); }} className="flex items-center gap-1 rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={`Play ${nextEpisode.code}`}>
               <ForwardIcon className="h-3.5 w-3.5" /> Next
@@ -664,8 +674,12 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
   const title = channel.catalogTitle ?? channel.displayName;
   const progressByEpisode = useMemo(() => new Map(continueWatching.map((item) => [item.episodeId, item])), [continueWatching]);
   const episodes = seriesEpisodes(channel, progressByEpisode);
-  const nextPlayableEpisode = playingEpisode
-    ? episodes.slice(episodes.findIndex((episode) => episode.id === playingEpisode.id) + 1).find((episode) => episode.muxPlaybackId)
+  const currentEpisodeIndex = playingEpisode ? episodes.findIndex((episode) => episode.id === playingEpisode.id) : -1;
+  const previousPlayableEpisode = currentEpisodeIndex > 0
+    ? episodes.slice(0, currentEpisodeIndex).reverse().find((episode) => episode.muxPlaybackId)
+    : undefined;
+  const nextPlayableEpisode = currentEpisodeIndex >= 0
+    ? episodes.slice(currentEpisodeIndex + 1).find((episode) => episode.muxPlaybackId)
     : undefined;
   const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
   const totalWatching = episodes.reduce((sum, episode) => sum + episode.viewers, 0);
@@ -730,7 +744,7 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
           </div>
       </section>
 
-      {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} nextEpisode={nextPlayableEpisode} viewerUsername={viewerUsername} onNext={setPlayingEpisode} />}
+      {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} nextEpisode={nextPlayableEpisode} previousEpisode={previousPlayableEpisode} viewerUsername={viewerUsername} onNext={setPlayingEpisode} />}
 
       <MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} />
     </div>
