@@ -431,8 +431,7 @@ function episodeRoomName(title: string, episode: SeriesEpisode) {
   return `anime:${episodeSlug(title)}:s1:e${episodeNumber(episode)}`;
 }
 
-function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, onClose, onNext }: { title: string; episode: SeriesEpisode; nextEpisode?: SeriesEpisode; viewerUsername?: string; onClose: () => void; onNext?: (episode: SeriesEpisode) => void }) {
-  const [chatOpen, setChatOpen] = useState(true);
+function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, onNext }: { title: string; episode: SeriesEpisode; nextEpisode?: SeriesEpisode; viewerUsername?: string; onNext?: (episode: SeriesEpisode) => void }) {
   const [chatExpanded, setChatExpanded] = useState(false);
   const [session, setSession] = useState<EpisodeChatToken | null>(null);
   const lastProgressSyncAt = useRef(0);
@@ -519,8 +518,7 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
               ["--media-object-position" as string]: "center",
             }}
           />
-          <button type="button" onClick={onClose} className="absolute left-4 top-4 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/55 text-2xl text-white/80 backdrop-blur hover:text-white" aria-label="Close video">×</button>
-          {nextEpisode?.muxPlaybackId && !chatOpen && (
+          {nextEpisode?.muxPlaybackId && (
             <button type="button" onClick={() => onNext?.(nextEpisode)} className="absolute bottom-5 left-5 z-30 flex items-center gap-2 rounded-full bg-white px-4 py-3 text-xs font-black uppercase tracking-wide text-black shadow-2xl md:bottom-4 md:left-4" aria-label={`Play ${nextEpisode.code}`}>
               <PlayIcon className="h-3.5 w-3.5" /> Next {nextEpisode.code}
             </button>
@@ -528,29 +526,28 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, o
         </div>
         {serverUrl && session ? (
           <LiveKitRoom token={session.token} serverUrl={serverUrl} connect video={false} audio={false} className="contents">
-            <EpisodeHoverChat episode={episode} session={session} chatOpen={chatOpen} chatExpanded={chatExpanded} setChatOpen={setChatOpen} setChatExpanded={setChatExpanded} viewerUsername={viewerUsername} error={error} />
+            <EpisodeHoverChat episode={episode} session={session} chatExpanded={chatExpanded} setChatExpanded={setChatExpanded} viewerUsername={viewerUsername} error={error} />
           </LiveKitRoom>
         ) : (
-          <EpisodeHoverChatFallback episode={episode} chatOpen={chatOpen} chatExpanded={chatExpanded} setChatOpen={setChatOpen} setChatExpanded={setChatExpanded} error={error} />
+          <EpisodeHoverChatFallback episode={episode} chatExpanded={chatExpanded} setChatExpanded={setChatExpanded} error={error} />
         )}
       </div>
     </div>
   );
 }
 
-function EpisodeChatShell({ chatOpen, expanded, children }: { chatOpen: boolean; expanded: boolean; children: React.ReactNode }) {
+function EpisodeChatShell({ expanded, children }: { expanded: boolean; children: React.ReactNode }) {
   return (
     <aside
-      className={`flex min-h-[260px] shrink-0 flex-col overflow-hidden border-t border-white/10 bg-[#08080b] text-white transition-[height,width] duration-300 md:h-full md:min-h-0 md:border-l md:border-t-0 ${expanded ? "h-[58vh]" : "h-[40vh]"} ${chatOpen ? "md:w-[360px]" : "h-0 min-h-0 border-t-0 md:h-full md:w-0 md:border-l"}`}
+      className={`flex min-h-[260px] shrink-0 flex-col overflow-hidden border-t border-white/10 bg-[#08080b] text-white transition-[height,width] duration-300 md:h-full md:min-h-0 md:w-[360px] md:border-l md:border-t-0 ${expanded ? "h-[58vh]" : "h-[40vh]"}`}
       onClick={(event) => event.stopPropagation()}
-      aria-hidden={!chatOpen}
     >
       {children}
     </aside>
   );
 }
 
-function EpisodeHoverChat({ episode, session, chatOpen, chatExpanded, setChatOpen, setChatExpanded, viewerUsername, error }: { episode: SeriesEpisode; session: EpisodeChatToken; chatOpen: boolean; chatExpanded: boolean; setChatOpen: (open: boolean) => void; setChatExpanded: (expanded: boolean) => void; viewerUsername?: string; error: string }) {
+function EpisodeHoverChat({ episode, session, chatExpanded, setChatExpanded, viewerUsername, error }: { episode: SeriesEpisode; session: EpisodeChatToken; chatExpanded: boolean; setChatExpanded: (expanded: boolean) => void; viewerUsername?: string; error: string }) {
   const [chatMessage, setChatMessage] = useState("");
   const participants = useParticipants();
   const { chatMessages, send, isSending } = useChat();
@@ -571,7 +568,7 @@ function EpisodeHoverChat({ episode, session, chatOpen, chatExpanded, setChatOpe
   };
 
   return (
-    <EpisodeChatShell chatOpen={chatOpen} expanded={chatExpanded}>
+    <EpisodeChatShell expanded={chatExpanded}>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div>
           <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
@@ -579,7 +576,6 @@ function EpisodeHoverChat({ episode, session, chatOpen, chatExpanded, setChatOpe
         </div>
         <div className="flex items-center gap-1">
           <button type="button" onClick={(event) => { event.stopPropagation(); setChatExpanded(!chatExpanded); }} className="rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={chatExpanded ? "Show half chat" : "Show full chat"}>{chatExpanded ? "Half" : "Full"}</button>
-          <button type="button" onClick={(event) => { event.stopPropagation(); setChatOpen(false); }} className="grid h-9 w-9 place-items-center rounded text-xl text-white/70 hover:bg-white/10" aria-label="Hide chat">×</button>
         </div>
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 text-xs leading-5">
@@ -612,9 +608,9 @@ function EpisodeHoverChat({ episode, session, chatOpen, chatExpanded, setChatOpe
   );
 }
 
-function EpisodeHoverChatFallback({ episode, chatOpen, chatExpanded, setChatOpen, setChatExpanded, error }: { episode: SeriesEpisode; chatOpen: boolean; chatExpanded: boolean; setChatOpen: (open: boolean) => void; setChatExpanded: (expanded: boolean) => void; error: string }) {
+function EpisodeHoverChatFallback({ episode, chatExpanded, setChatExpanded, error }: { episode: SeriesEpisode; chatExpanded: boolean; setChatExpanded: (expanded: boolean) => void; error: string }) {
   return (
-    <EpisodeChatShell chatOpen={chatOpen} expanded={chatExpanded}>
+    <EpisodeChatShell expanded={chatExpanded}>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div>
           <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
@@ -622,7 +618,6 @@ function EpisodeHoverChatFallback({ episode, chatOpen, chatExpanded, setChatOpen
         </div>
         <div className="flex items-center gap-1">
           <button type="button" onClick={(event) => { event.stopPropagation(); setChatExpanded(!chatExpanded); }} className="rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={chatExpanded ? "Show half chat" : "Show full chat"}>{chatExpanded ? "Half" : "Full"}</button>
-          <button type="button" onClick={(event) => { event.stopPropagation(); setChatOpen(false); }} className="grid h-9 w-9 place-items-center rounded text-xl text-white/70 hover:bg-white/10" aria-label="Hide chat">×</button>
         </div>
       </div>
       <div className="min-h-0 flex-1 px-4 py-4 text-xs leading-5 text-white/60">
@@ -704,7 +699,7 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
           </div>
       </section>
 
-      {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} nextEpisode={nextPlayableEpisode} viewerUsername={viewerUsername} onClose={() => setPlayingEpisode(null)} onNext={setPlayingEpisode} />}
+      {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} nextEpisode={nextPlayableEpisode} viewerUsername={viewerUsername} onNext={setPlayingEpisode} />}
 
       <MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} />
     </div>
