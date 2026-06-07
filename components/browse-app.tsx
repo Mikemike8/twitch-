@@ -205,10 +205,11 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
             <span className="text-3xl font-black italic tracking-[-0.12em]">ARGUS<span className="text-[#a970ff]">+</span></span>
             <button type="button" className="absolute right-6 grid h-11 w-11 place-items-center text-white" aria-label="Cast"><CastIcon className="h-8 w-8" /></button>
           </div>
-          <nav className="mt-7 grid grid-cols-3 text-center text-xl font-black">
-            <button type="button">Shows</button>
-            <button type="button">Movies</button>
-            <button type="button">Hubs<span className="ml-1 text-white/65">▼</span></button>
+          <nav className="mt-7 flex items-center gap-5 overflow-x-auto text-center text-base font-black [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <Link href="/" className="shrink-0 text-white">Home</Link>
+            <Link href="/search" className="shrink-0 text-white/70">Search</Link>
+            <button type="button" className="shrink-0 text-white/70">Movies & Series</button>
+            <button type="button" className="shrink-0 text-white/70">Categories</button>
           </nav>
         </header>
 
@@ -293,6 +294,27 @@ function RailCard({ channel, index, onOpen, horizontal = false }: { channel: Cha
 function ContentRail({ title, channels: railChannels, onOpen, horizontal = false }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void; horizontal?: boolean }) {
   if (!railChannels.length) return null;
   return <section className="relative mt-8 hidden lg:block"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9147ff]">Explore ARGUS</p><h2 className="mt-1 text-xl font-black">{title}</h2></div><button type="button" className="text-xs font-bold text-[#adadb8] transition hover:text-white">See all</button></div><div className={`grid grid-flow-col gap-3 overflow-x-auto pb-5 ${horizontal ? "auto-cols-[260px] xl:auto-cols-[310px]" : "auto-cols-[180px] xl:auto-cols-[205px]"}`}>{railChannels.map((channel, index) => <RailCard key={`${title}-${channel.username}`} channel={channel} index={index} onOpen={() => onOpen(channel)} horizontal={horizontal} />)}</div></section>;
+}
+
+function CategoriesRail({ channels: categoryChannels, onSelect }: { channels: Channel[]; onSelect: (category: string) => void }) {
+  const categories = Array.from(new Set(categoryChannels.flatMap((channel) => [channel.category, ...channel.tags]))).filter(Boolean).slice(0, 14);
+  if (!categories.length) return null;
+
+  return (
+    <section id="categories" className="relative mt-8 hidden scroll-mt-24 lg:block">
+      <div className="mb-4">
+        <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9147ff]">Browse by genre</p>
+        <h2 className="mt-1 text-xl font-black">Categories</h2>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {categories.map((category) => (
+          <button key={category} type="button" onClick={() => onSelect(category)} className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#d7d7df] transition hover:border-white/25 hover:bg-white/10 hover:text-white">
+            {category}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 const seriesDescriptions: Record<string, string> = {
@@ -409,7 +431,7 @@ function episodeRoomName(title: string, episode: SeriesEpisode) {
   return `anime:${episodeSlug(title)}:s1:e${episodeNumber(episode)}`;
 }
 
-function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { title: string; episode: SeriesEpisode; viewerUsername?: string; onClose: () => void }) {
+function EpisodePlaybackOverlay({ title, episode, nextEpisode, viewerUsername, onClose, onNext }: { title: string; episode: SeriesEpisode; nextEpisode?: SeriesEpisode; viewerUsername?: string; onClose: () => void; onNext?: (episode: SeriesEpisode) => void }) {
   const [chatOpen, setChatOpen] = useState(false);
   const [session, setSession] = useState<EpisodeChatToken | null>(null);
   const lastProgressSyncAt = useRef(0);
@@ -501,6 +523,11 @@ function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { t
           {!chatOpen && (
             <button type="button" onClick={() => setChatOpen(true)} className="absolute bottom-5 right-5 z-30 rounded-full bg-[#2554e8] px-4 py-3 text-xs font-black uppercase tracking-wide text-white shadow-2xl md:bottom-4 md:right-4" aria-label="Open chat">
               Chat
+            </button>
+          )}
+          {nextEpisode?.muxPlaybackId && !chatOpen && (
+            <button type="button" onClick={() => onNext?.(nextEpisode)} className="absolute bottom-5 left-5 z-30 flex items-center gap-2 rounded-full bg-white px-4 py-3 text-xs font-black uppercase tracking-wide text-black shadow-2xl md:bottom-4 md:left-4" aria-label={`Play ${nextEpisode.code}`}>
+              <PlayIcon className="h-3.5 w-3.5" /> Next {nextEpisode.code}
             </button>
           )}
         </div>
@@ -610,6 +637,9 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
   const title = channel.catalogTitle ?? channel.displayName;
   const progressByEpisode = useMemo(() => new Map(continueWatching.map((item) => [item.episodeId, item])), [continueWatching]);
   const episodes = seriesEpisodes(channel, progressByEpisode);
+  const nextPlayableEpisode = playingEpisode
+    ? episodes.slice(episodes.findIndex((episode) => episode.id === playingEpisode.id) + 1).find((episode) => episode.muxPlaybackId)
+    : undefined;
   const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
   const totalWatching = episodes.reduce((sum, episode) => sum + episode.viewers, 0);
   const openEpisode = (episode: SeriesEpisode) => {
@@ -673,7 +703,7 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
           </div>
       </section>
 
-      {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} viewerUsername={viewerUsername} onClose={() => setPlayingEpisode(null)} />}
+      {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} nextEpisode={nextPlayableEpisode} viewerUsername={viewerUsername} onClose={() => setPlayingEpisode(null)} onNext={setPlayingEpisode} />}
 
       <MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} />
     </div>
@@ -766,14 +796,15 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
 
   return (
     <div className="min-h-screen bg-[#07070a] text-[#f1f1f3]">
-      <div className="hidden lg:block"><SiteTopbar query={query} onQuery={setQuery} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} mode={mode} onMode={setMode} /></div>
+      <div className="hidden lg:block"><SiteTopbar query={query} onQuery={setQuery} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} mode={mode} onMode={setMode} active={mobileBrowse ? "search" : "home"} /></div>
       <div>
         <div className="px-4 pb-24 pt-4 lg:px-7 lg:pb-6">
           <main className="min-w-0">
             {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={trendingChannels.length ? trendingChannels : displayChannels} onOpen={setSelected} searchable /> : <MobileStreamingHome channels={animeChannels} onOpen={setSelected} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
             <Hero channel={spotlightChannel} onOpen={setSelected} />
             <ContinueWatchingRail items={continueWatching} onOpen={setSelected} />
-            <ContentRail title="Recommended for you" channels={recommendedDisplayChannels.slice(0, 12)} onOpen={setSelected} horizontal />
+            <div id="movies-series" className="scroll-mt-24"><ContentRail title="Movies & Series" channels={recommendedDisplayChannels.slice(0, 12)} onOpen={setSelected} horizontal /></div>
+            <CategoriesRail channels={animeChannels} onSelect={setQuery} />
             <div id="live-streamers"><ContentRail title={mode === "following" ? "Your followed channels" : "Live streamers"} channels={(mode === "following" ? followedChannels : liveStreamerChannels).slice(0, 12)} onOpen={setSelected} horizontal /></div>
             <div id="live-anime"><ContentRail title="Live anime" channels={animeChannels} onOpen={setSelected} /></div>
             <ContentRail title="Because you watch anime" channels={[...animeChannels].reverse()} onOpen={setSelected} />
