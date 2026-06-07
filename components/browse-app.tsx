@@ -379,7 +379,7 @@ function seriesEpisodes(channel: Channel, progressByEpisode = new Map<string, Co
       : `The conflict expands as ${title} pushes its heroes into a darker and more dangerous mission.`,
     thumbnailUrl: thumbnails[index % thumbnails.length],
     viewers: Math.max(120, Math.round(channel.viewers * (1 - index * 0.085))),
-    muxPlaybackId: index === 0 ? playbackIds[1] ?? playbackIds[0] : playbackIds[index],
+    muxPlaybackId: playbackIds[index],
     positionSeconds: progressByEpisode.get(index === 0 && channel.firstEpisodeId ? channel.firstEpisodeId : `episode_${episodeSlug(title)}_${index + 1}`)?.positionSeconds ?? 0,
     progressPercent: progressByEpisode.get(index === 0 && channel.firstEpisodeId ? channel.firstEpisodeId : `episode_${episodeSlug(title)}_${index + 1}`)?.progressPercent ?? 0,
     trailerUrl: trailer.embedId
