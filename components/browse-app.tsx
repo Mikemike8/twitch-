@@ -116,14 +116,13 @@ function CatalogArtwork({ channel, className = "" }: { channel: Channel; classNa
   );
 }
 
-function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "home" }: { viewerUsername?: string; clerkConfigured?: boolean; active?: "home" | "search" | "episodes" | "live" | "profile" }) {
+function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "home" }: { viewerUsername?: string; clerkConfigured?: boolean; active?: "home" | "search" | "live" | "profile" }) {
   const itemClass = "relative flex min-h-[76px] flex-col items-center justify-center gap-1.5 px-1 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
   const color = (item: typeof active) => item === active ? "text-white" : "text-white/55";
   const marker = (item: typeof active) => item === active ? <i className="absolute top-0 h-0.5 w-8 rounded-full bg-white" /> : null;
-  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-white/10 bg-[#0f0f12]/98 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:hidden">
+  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-white/10 bg-[#0f0f12]/98 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:hidden">
     <Link href="/" className={`${itemClass} ${color("home")}`}>{marker("home")}<HomeIcon className="h-7 w-7" />Home</Link>
     <Link href="/search" className={`${itemClass} ${color("search")}`}>{marker("search")}<BrowseIcon className="h-7 w-7" />Search</Link>
-    <Link href="/search" className={`${itemClass} ${color("episodes")}`}>{marker("episodes")}<ClipsIcon className="h-7 w-7" />Episodes</Link>
     <Link href="/live" className={`${itemClass} ${color("live")}`}>{marker("live")}<LiveTvIcon className="h-7 w-7" />Live</Link>
     {clerkConfigured ? (
       <>
@@ -267,22 +266,22 @@ function MobileChannelFeed({ query, onQuery, data, onOpen, searchable = false }:
 
   return (
     <section className="-mx-4 -mt-4 bg-[#07070a] text-[#f1f1f3] lg:hidden">
-      <div className="flex h-14 items-center justify-center border-b border-white/5 px-4"><h1 className="text-lg font-black">{searchable ? "Search channels" : "Live Channels"}</h1></div>
+      <div className="flex h-14 items-center justify-center border-b border-white/5 px-4"><h1 className="text-lg font-black">{searchable ? "Search" : "Live Channels"}</h1></div>
       {searchable && <form onSubmit={(event) => { event.preventDefault(); router.push(`/search?term=${encodeURIComponent(query)}`); }} className="mx-4 mt-3 flex items-center gap-3 rounded-xl border border-white/10 bg-[#18181b] px-3 py-3">
         <SearchIcon className="h-6 w-6 shrink-0 text-[#a8a8b3]" />
-        <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search live channels" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-[#777783]" />
+        <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search anime, series, live" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-[#777783]" />
       </form>}
       <div className="mt-2 flex items-end border-b border-white/10 px-4 text-base font-black">
-        <span className="border-b-[3px] border-[#7c3aed] px-1 pb-3 pt-2 text-[#7c3aed]">Live Channels</span>
-        <span className="px-7 pb-3 pt-2">Videos</span>
-        <span className="pb-3 pt-2">Clips</span>
+        <span className="border-b-[3px] border-[#7c3aed] px-1 pb-3 pt-2 text-[#7c3aed]">All</span>
+        <span className="px-7 pb-3 pt-2 text-white/55">Series</span>
+        <span className="pb-3 pt-2 text-white/55">Live</span>
         <button type="button" aria-label="Filter channels" className="ml-auto mb-1 grid h-11 w-11 place-items-center"><FilterIcon /></button>
       </div>
       <div>
-        {data.length ? data.slice(0, 12).map((channel, index) => <button key={channel.username} onClick={() => onOpen(channel)} className="block w-full border-b border-white/5 bg-[#0e0e10] text-left">
-          <div className="relative aspect-video overflow-hidden bg-black"><ChannelArtwork channel={channel} className="absolute inset-0" /><span className="absolute left-3 top-3 rounded bg-red-600 px-2 py-1 text-xs font-black text-white">LIVE</span><span className="absolute bottom-2 left-3 rounded bg-black/80 px-2 py-1 text-sm font-semibold text-white">{channel.viewers || 24} viewers</span></div>
-          <div className="flex gap-3 px-4 py-3"><ChannelArtwork channel={channel} className="h-12 w-12 shrink-0 rounded-full border border-white/10" /><span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><strong className="truncate text-base">{channel.displayName}</strong><i className="h-3 w-3 shrink-0 rounded-full bg-[#9147ff]" /></span><span className="mt-1 block truncate text-base text-[#adadb8]">{animeTitle(channel, index)}</span><span className="mt-2 flex flex-wrap gap-1.5">{[...channel.tags, channel.category].slice(0, 4).map((tag, tagIndex) => <i key={`${tag}-${tagIndex}`} className="rounded-full bg-[#2f2f35] px-3 py-1 text-xs font-bold not-italic text-[#c2c2cb]">{tag}</i>)}</span></span><MoreIcon className="mt-1 h-6 w-6 shrink-0 text-[#adadb8]" /></div>
-        </button>) : <div className="p-12 text-center text-sm text-[#adadb8]">No live channels found.</div>}
+        {data.length ? data.slice(0, 18).map((channel, index) => <button key={channel.username} onClick={() => onOpen(channel)} className="block w-full border-b border-white/5 bg-[#0e0e10] text-left">
+          <div className="relative aspect-video overflow-hidden bg-black"><CatalogArtwork channel={channel} className="absolute inset-0" /><span className={`absolute left-3 top-3 rounded px-2 py-1 text-xs font-black text-white ${channel.hostIdentity ? "bg-red-600" : "bg-[#2554e8]"}`}>{channel.hostIdentity ? "LIVE" : "SERIES"}</span><span className="absolute bottom-2 left-3 rounded bg-black/80 px-2 py-1 text-sm font-semibold text-white">{formatViewers(channel.viewers || 24)} watching</span></div>
+          <div className="flex gap-3 px-4 py-3"><CatalogArtwork channel={channel} className="h-12 w-12 shrink-0 rounded-full border border-white/10" /><span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><strong className="truncate text-base">{channel.catalogTitle ?? channel.displayName}</strong>{channel.hostIdentity && <i className="h-3 w-3 shrink-0 rounded-full bg-[#9147ff]" />}</span><span className="mt-1 block truncate text-base text-[#adadb8]">{channel.hostIdentity ? animeTitle(channel, index) : channel.category}</span><span className="mt-2 flex flex-wrap gap-1.5">{[...channel.tags, channel.category].slice(0, 4).map((tag, tagIndex) => <i key={`${tag}-${tagIndex}`} className="rounded-full bg-[#2f2f35] px-3 py-1 text-xs font-bold not-italic text-[#c2c2cb]">{tag}</i>)}</span></span><MoreIcon className="mt-1 h-6 w-6 shrink-0 text-[#adadb8]" /></div>
+        </button>) : <div className="p-12 text-center text-sm text-[#adadb8]">No results found.</div>}
       </div>
     </section>
   );
@@ -835,6 +834,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
   const animeChannels = catalogSource
     .filter((channel) => !query.trim() || channel.catalogTitle?.toLowerCase().includes(query.trim().toLowerCase()))
     .sort(prioritizePlayableCatalog);
+  const searchResultChannels = Array.from(new Map([...animeChannels, ...displayChannels].map((channel) => [channel.username, channel])).values());
   const spotlightChannel = animeChannels[0];
 
   if (selected && !selected.hostIdentity) {
@@ -849,7 +849,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
       <div>
         <div className="px-4 pb-24 pt-4 lg:px-7 lg:pb-6">
           <main className="min-w-0">
-            {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={trendingChannels.length ? trendingChannels : displayChannels} onOpen={setSelected} searchable /> : <MobileStreamingHome channels={animeChannels} onOpen={setSelected} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
+            {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={searchResultChannels} onOpen={setSelected} searchable /> : <MobileStreamingHome channels={animeChannels} onOpen={setSelected} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
             <Hero channel={spotlightChannel} onOpen={setSelected} />
             <ContinueWatchingRail items={continueWatching} onOpen={setSelected} />
             <div id="movies-series" className="scroll-mt-24"><ContentRail title="Movies & Series" channels={recommendedDisplayChannels.slice(0, 12)} onOpen={setSelected} horizontal /></div>

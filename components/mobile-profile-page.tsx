@@ -86,10 +86,9 @@ export function MobileProfilePage({
         </section>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-white/10 bg-[#0f0f12]/98 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 shadow-[0_-18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-white/10 bg-[#0f0f12]/98 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 shadow-[0_-18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:hidden">
         <Link href="/" className={itemClass}><HomeIcon />Home</Link>
         <Link href="/search" className={itemClass}><BrowseIcon />Search</Link>
-        <Link href="/search" className={itemClass}><ClipsIcon />Episodes</Link>
         <Link href="/live" className={itemClass}><LiveTvIcon />Live</Link>
         <span className={`${itemClass} text-white`}><i className="absolute top-0 h-0.5 w-8 rounded-full bg-white" /><ProfileIcon />Profile</span>
       </nav>
