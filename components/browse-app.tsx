@@ -498,7 +498,7 @@ function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { t
       ) : (
         <EpisodeHoverChatFallback episode={episode} chatOpen={chatOpen} setChatOpen={setChatOpen} error={error} />
       )}
-      <button type="button" onClick={onClose} className="absolute right-4 top-4 z-40 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-xl text-white/75 backdrop-blur hover:text-white" aria-label="Close video">×</button>
+      <button type="button" onClick={onClose} className="absolute right-4 top-4 z-30 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-xl text-white/75 backdrop-blur hover:text-white" aria-label="Close video">×</button>
     </div>
   );
 }
@@ -507,7 +507,7 @@ function EpisodeChatShell({ chatOpen, setChatOpen, children }: { chatOpen: boole
   return (
     <>
       <div
-        className="absolute inset-y-0 right-0 z-20 flex w-8 items-center justify-end"
+        className="absolute inset-y-0 right-0 z-40 flex w-8 items-center justify-end"
         onMouseEnter={() => setChatOpen(true)}
         onClick={() => setChatOpen(true)}
         aria-hidden={!chatOpen}
@@ -515,8 +515,9 @@ function EpisodeChatShell({ chatOpen, setChatOpen, children }: { chatOpen: boole
         <span className="mr-1 h-24 w-1 rounded-full bg-white/15 opacity-40" />
       </div>
       <aside
-        className={`absolute right-0 top-0 z-30 flex h-full w-[min(340px,82vw)] flex-col border-l border-white/10 bg-black/35 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 ${chatOpen ? "translate-x-0" : "translate-x-[calc(100%-10px)]"}`}
+        className={`absolute right-0 top-0 z-50 flex h-full w-[min(340px,82vw)] flex-col border-l border-white/10 bg-black/35 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 ${chatOpen ? "translate-x-0" : "translate-x-[calc(100%-10px)]"}`}
         onMouseEnter={() => setChatOpen(true)}
+        onClick={(event) => event.stopPropagation()}
       >
         {children}
       </aside>
