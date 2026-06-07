@@ -464,68 +464,67 @@ function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { t
 
   return (
     <div className="fixed inset-0 z-50 bg-black text-white">
-      <MuxPlayer
-        playbackId={episode.muxPlaybackId}
-        metadata={{ video_title: `${title} ${episode.code} ${episode.name}` }}
-        streamType="on-demand"
-        autoPlay
-        onEnded={(event) => {
-          const player = getPlayerProgressTarget(event);
-          if (player) syncProgress(player, "VIDEO_COMPLETED");
-        }}
-        onLoadedMetadata={resumePlayback}
-        onPause={(event) => {
-          const player = getPlayerProgressTarget(event);
-          if (player) syncProgress(player, "VIDEO_PAUSED");
-        }}
-        onPlay={(event) => {
-          const player = getPlayerProgressTarget(event);
-          if (player) syncProgress(player, "VIDEO_STARTED");
-        }}
-        onSeeked={(event) => {
-          const player = getPlayerProgressTarget(event);
-          if (player) syncProgress(player, "VIDEO_SEEKED");
-        }}
-        onTimeUpdate={syncWhilePlaying}
-        className="absolute inset-0 h-full w-full bg-black"
-        style={{
-          width: "100vw",
-          height: "100vh",
-          ["--media-object-fit" as string]: "contain",
-          ["--media-object-position" as string]: "center",
-        }}
-      />
-      {serverUrl && session ? (
-        <LiveKitRoom token={session.token} serverUrl={serverUrl} connect video={false} audio={false} className="contents">
-          <EpisodeHoverChat episode={episode} session={session} chatOpen={chatOpen} setChatOpen={setChatOpen} viewerUsername={viewerUsername} error={error} />
-        </LiveKitRoom>
-      ) : (
-        <EpisodeHoverChatFallback episode={episode} chatOpen={chatOpen} setChatOpen={setChatOpen} error={error} />
-      )}
-      <button type="button" onClick={onClose} className="absolute right-4 top-4 z-30 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-xl text-white/75 backdrop-blur hover:text-white" aria-label="Close video">×</button>
+      <div className="flex h-full min-h-0 flex-col md:flex-row">
+        <div className="relative min-h-0 flex-1">
+          <MuxPlayer
+            playbackId={episode.muxPlaybackId}
+            metadata={{ video_title: `${title} ${episode.code} ${episode.name}` }}
+            streamType="on-demand"
+            autoPlay
+            onEnded={(event) => {
+              const player = getPlayerProgressTarget(event);
+              if (player) syncProgress(player, "VIDEO_COMPLETED");
+            }}
+            onLoadedMetadata={resumePlayback}
+            onPause={(event) => {
+              const player = getPlayerProgressTarget(event);
+              if (player) syncProgress(player, "VIDEO_PAUSED");
+            }}
+            onPlay={(event) => {
+              const player = getPlayerProgressTarget(event);
+              if (player) syncProgress(player, "VIDEO_STARTED");
+            }}
+            onSeeked={(event) => {
+              const player = getPlayerProgressTarget(event);
+              if (player) syncProgress(player, "VIDEO_SEEKED");
+            }}
+            onTimeUpdate={syncWhilePlaying}
+            className="block h-full w-full bg-black"
+            style={{
+              width: "100%",
+              height: "100%",
+              ["--media-object-fit" as string]: "contain",
+              ["--media-object-position" as string]: "center",
+            }}
+          />
+          <button type="button" onClick={onClose} className="absolute left-4 top-4 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/55 text-2xl text-white/80 backdrop-blur hover:text-white" aria-label="Close video">×</button>
+          {!chatOpen && (
+            <button type="button" onClick={() => setChatOpen(true)} className="absolute bottom-5 right-5 z-30 rounded-full bg-[#2554e8] px-4 py-3 text-xs font-black uppercase tracking-wide text-white shadow-2xl md:bottom-4 md:right-4" aria-label="Open chat">
+              Chat
+            </button>
+          )}
+        </div>
+        {serverUrl && session ? (
+          <LiveKitRoom token={session.token} serverUrl={serverUrl} connect video={false} audio={false} className="contents">
+            <EpisodeHoverChat episode={episode} session={session} chatOpen={chatOpen} setChatOpen={setChatOpen} viewerUsername={viewerUsername} error={error} />
+          </LiveKitRoom>
+        ) : (
+          <EpisodeHoverChatFallback episode={episode} chatOpen={chatOpen} setChatOpen={setChatOpen} error={error} />
+        )}
+      </div>
     </div>
   );
 }
 
-function EpisodeChatShell({ chatOpen, setChatOpen, children }: { chatOpen: boolean; setChatOpen: (open: boolean) => void; children: React.ReactNode }) {
+function EpisodeChatShell({ chatOpen, children }: { chatOpen: boolean; children: React.ReactNode }) {
   return (
-    <>
-      <div
-        className="absolute inset-y-0 right-0 z-40 flex w-8 items-center justify-end"
-        onMouseEnter={() => setChatOpen(true)}
-        onClick={() => setChatOpen(true)}
-        aria-hidden={!chatOpen}
-      >
-        <span className="mr-1 h-24 w-1 rounded-full bg-white/15 opacity-40" />
-      </div>
-      <aside
-        className={`absolute right-0 top-0 z-50 flex h-full w-[min(340px,82vw)] flex-col border-l border-white/10 bg-black/35 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 ${chatOpen ? "translate-x-0" : "translate-x-[calc(100%-10px)]"}`}
-        onMouseEnter={() => setChatOpen(true)}
-        onClick={(event) => event.stopPropagation()}
-      >
-        {children}
-      </aside>
-    </>
+    <aside
+      className={`fixed inset-x-0 bottom-0 z-50 flex h-[64vh] flex-col overflow-hidden rounded-t-2xl border-t border-white/10 bg-[#08080b]/95 text-white shadow-2xl backdrop-blur-md transition-transform duration-300 md:static md:h-full md:shrink-0 md:rounded-none md:border-l md:border-t-0 md:transition-[width] ${chatOpen ? "translate-y-0 md:w-[360px]" : "translate-y-full md:w-0"}`}
+      onClick={(event) => event.stopPropagation()}
+      aria-hidden={!chatOpen}
+    >
+      {children}
+    </aside>
   );
 }
 
@@ -550,7 +549,7 @@ function EpisodeHoverChat({ episode, session, chatOpen, setChatOpen, viewerUsern
   };
 
   return (
-    <EpisodeChatShell chatOpen={chatOpen} setChatOpen={setChatOpen}>
+    <EpisodeChatShell chatOpen={chatOpen}>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div>
           <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
@@ -590,7 +589,7 @@ function EpisodeHoverChat({ episode, session, chatOpen, setChatOpen, viewerUsern
 
 function EpisodeHoverChatFallback({ episode, chatOpen, setChatOpen, error }: { episode: SeriesEpisode; chatOpen: boolean; setChatOpen: (open: boolean) => void; error: string }) {
   return (
-    <EpisodeChatShell chatOpen={chatOpen} setChatOpen={setChatOpen}>
+    <EpisodeChatShell chatOpen={chatOpen}>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div>
           <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
