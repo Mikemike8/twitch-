@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Show, SignInButton } from "@clerk/nextjs";
 import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
 import MuxPlayer from "@mux/mux-player-react";
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type SyntheticEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { recordVideoEvent, savePlaybackProgress } from "@/actions/catalog";
 import { createEpisodeChatToken } from "@/actions/episode-token";
@@ -41,6 +41,21 @@ type ContinueWatchingItem = {
   positionSeconds: number;
   progressPercent: number;
 };
+
+type PlayerProgressTarget = {
+  currentTime: number;
+  duration: number;
+};
+
+function getPlayerProgressTarget(event: { currentTarget: EventTarget | null }) {
+  const target = event.currentTarget as (EventTarget & Partial<PlayerProgressTarget>) | null;
+
+  if (!target || typeof target.currentTime !== "number" || typeof target.duration !== "number") {
+    return null;
+  }
+
+  return target as EventTarget & PlayerProgressTarget;
+}
 
 const animeTitles = ["Solo Leveling", "Demon Slayer", "Jujutsu Kaisen", "Attack on Titan", "My Hero Academia", "Chainsaw Man", "One Piece", "Black Clover"];
 function animeTitle(channel: Channel, index: number) {
@@ -399,7 +414,7 @@ function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { t
       .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to join live chat"));
   }, [roomName, serverUrl]);
 
-  const syncProgress = (player: HTMLMediaElement, eventType: "VIDEO_STARTED" | "VIDEO_PAUSED" | "VIDEO_COMPLETED" | "VIDEO_SEEKED" | "WATCH_TIME_UPDATED") => {
+  const syncProgress = (player: PlayerProgressTarget, eventType: "VIDEO_STARTED" | "VIDEO_PAUSED" | "VIDEO_COMPLETED" | "VIDEO_SEEKED" | "WATCH_TIME_UPDATED") => {
     const positionSeconds = Math.floor(player.currentTime || 0);
     const durationSeconds = Number.isFinite(player.duration) ? Math.floor(player.duration) : undefined;
 
@@ -415,18 +430,21 @@ function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { t
     }).catch(() => undefined);
   };
 
-  const resumePlayback = (event: SyntheticEvent<HTMLMediaElement>) => {
-    const player = event.currentTarget;
-    if (resumed.current || !episode.positionSeconds) return;
+  const resumePlayback = (event: { currentTarget: EventTarget | null }) => {
+    const player = getPlayerProgressTarget(event);
+    if (!player || resumed.current || !episode.positionSeconds) return;
     player.currentTime = episode.positionSeconds;
     resumed.current = true;
   };
 
-  const syncWhilePlaying = (event: SyntheticEvent<HTMLMediaElement>) => {
+  const syncWhilePlaying = (event: { currentTarget: EventTarget | null }) => {
+    const player = getPlayerProgressTarget(event);
+    if (!player) return;
+
     const now = Date.now();
     if (now - lastProgressSyncAt.current < 10_000) return;
     lastProgressSyncAt.current = now;
-    syncProgress(event.currentTarget, "WATCH_TIME_UPDATED");
+    syncProgress(player, "WATCH_TIME_UPDATED");
   };
 
   return (
@@ -436,11 +454,23 @@ function EpisodePlaybackOverlay({ title, episode, viewerUsername, onClose }: { t
         metadata={{ video_title: `${title} ${episode.code} ${episode.name}` }}
         streamType="on-demand"
         autoPlay
-        onEnded={(event) => syncProgress(event.currentTarget, "VIDEO_COMPLETED")}
+        onEnded={(event) => {
+          const player = getPlayerProgressTarget(event);
+          if (player) syncProgress(player, "VIDEO_COMPLETED");
+        }}
         onLoadedMetadata={resumePlayback}
-        onPause={(event) => syncProgress(event.currentTarget, "VIDEO_PAUSED")}
-        onPlay={(event) => syncProgress(event.currentTarget, "VIDEO_STARTED")}
-        onSeeked={(event) => syncProgress(event.currentTarget, "VIDEO_SEEKED")}
+        onPause={(event) => {
+          const player = getPlayerProgressTarget(event);
+          if (player) syncProgress(player, "VIDEO_PAUSED");
+        }}
+        onPlay={(event) => {
+          const player = getPlayerProgressTarget(event);
+          if (player) syncProgress(player, "VIDEO_STARTED");
+        }}
+        onSeeked={(event) => {
+          const player = getPlayerProgressTarget(event);
+          if (player) syncProgress(player, "VIDEO_SEEKED");
+        }}
         onTimeUpdate={syncWhilePlaying}
         className="absolute inset-0 h-full w-full bg-black"
         style={{
