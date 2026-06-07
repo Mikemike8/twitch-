@@ -51,7 +51,9 @@ export async function getCatalogTitles(page = 1) {
       LEFT JOIN "Episode" ep ON ep."seasonId" = season."id"
       WHERE ct."visibility" = 'PUBLIC'
       GROUP BY ct."id"
-      ORDER BY ct."updatedAt" DESC
+      ORDER BY
+        CASE WHEN ct."slug" = 'solo-leveling' THEN 0 ELSE 1 END,
+        ct."updatedAt" DESC
       LIMIT ${pageSize + 1}
       OFFSET ${(page - 1) * pageSize}
     `;
@@ -88,7 +90,9 @@ export async function searchCatalogTitles(query: string, page = 1) {
           OR tag."name" ILIKE ${term}
         )
       GROUP BY ct."id"
-      ORDER BY ct."updatedAt" DESC
+      ORDER BY
+        CASE WHEN ct."slug" = 'solo-leveling' THEN 0 ELSE 1 END,
+        ct."updatedAt" DESC
       LIMIT ${pageSize + 1}
       OFFSET ${(page - 1) * pageSize}
     `;
