@@ -282,7 +282,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
 
         <div className="relative z-10 mt-5 px-5">
           <div className="grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => onOpen(spotlight)} className="rounded bg-white px-3 py-3 text-sm font-bold text-black"><span className="mr-2">▶</span>Play</button>
+            <button type="button" onClick={() => onOpen(spotlight)} className="flex items-center justify-center gap-2 rounded bg-white px-3 py-3 text-sm font-bold text-black"><PlayIcon className="h-4 w-4" />Play</button>
             <button type="button" onClick={() => setListed(!listed)} className="rounded bg-white/20 px-3 py-3 text-sm font-bold text-white"><span className="mr-2 text-lg leading-none">{listed ? "✓" : "+"}</span>My List</button>
           </div>
         </div>
