@@ -23,27 +23,47 @@ export function MobileProfilePage({
   clerkConfigured?: boolean;
 }) {
   const [updatesEnabled, setUpdatesEnabled] = useState(true);
+  const dashboardHref = `/u/${channel.username}`;
+  const liveHref = channel.live ? `/live` : `/${channel.username}`;
 
   return (
-    <div className="min-h-screen bg-[#07070a] pb-24 text-[#f4f4f5]">
+    <div className="min-h-screen bg-[#141414] pb-24 text-white">
       <div className="hidden lg:block">
         <SiteTopbar clerkConfigured={clerkConfigured} viewerUsername={isSelf ? channel.username : undefined} active="profile" />
       </div>
-      <main className="mx-auto w-full max-w-[1180px] px-5 py-6 sm:px-8 sm:py-10 lg:px-10">
+      <main className="mx-auto w-full max-w-[1180px] px-5 py-5 sm:px-8 sm:py-10 lg:px-10">
         <div className="mb-8 flex items-center justify-between gap-4 lg:hidden">
-          <Link href="/" className="text-sm font-bold text-[#9ac4ff]">Back</Link>
-          {isSelf ? <Link href={`/u/${channel.username}`} className="rounded-md border border-white/20 px-4 py-2 text-sm font-bold text-[#9ac4ff]">Creator Dashboard</Link> : <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
+          <Link href="/" className="text-sm font-bold text-[#b3b3b3]">Back</Link>
+          {isSelf ? <Link href={dashboardHref} className="rounded bg-[#e50914] px-4 py-2 text-sm font-bold text-white">Creator Dashboard</Link> : <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
         </div>
 
-        <section className="overflow-hidden rounded-lg border border-white/10 bg-[#11111a]">
-          <div className="relative min-h-56 overflow-hidden">
-            <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${channel.colors[0]}, ${channel.colors[1]})` }} />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#11111a] via-[#11111a]/45 to-black/10" />
-            <div className="relative flex min-h-56 flex-col justify-end p-5 sm:p-7">
-              <Avatar channel={channel} size="lg" />
-              <h1 className="mt-4 truncate text-4xl font-black tracking-tight sm:text-5xl">{channel.displayName}</h1>
-              <p className="mt-1 text-sm font-bold text-[#a1a1aa]">@{channel.username}</p>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#d4d4dd]">{channel.bio || "Anime fan, streamer, and ARGUS community member."}</p>
+        <section className="overflow-hidden rounded border border-white/10 bg-[#181818]">
+          <div className="relative min-h-[430px] overflow-hidden lg:min-h-[520px]">
+            {channel.thumbnailUrl ? (
+              <div className="absolute inset-0 bg-cover bg-center opacity-60" style={{ backgroundImage: `url(${channel.thumbnailUrl})` }} />
+            ) : (
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,#232323,#000)]" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/25" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-[#181818]/32 to-black/20" />
+            <div className="relative flex min-h-[430px] flex-col justify-end p-5 sm:p-7 lg:min-h-[520px] lg:p-12">
+              <div className="flex items-end gap-4">
+                <Avatar channel={channel} size="lg" />
+                {channel.live && <span className="mb-1 rounded bg-[#e50914] px-2 py-1 text-xs font-bold uppercase text-white">Live now</span>}
+              </div>
+              <h1 className="mt-5 max-w-4xl text-5xl font-black uppercase leading-none tracking-normal sm:text-7xl lg:text-8xl">{channel.displayName}</h1>
+              <p className="mt-3 text-base font-medium text-[#b3b3b3]">@{channel.username}</p>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-[#e5e5e5]">{channel.bio || "Anime fan, streamer, and ARGUS community member."}</p>
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <Link href={liveHref} className="rounded bg-white px-5 py-3 text-sm font-bold text-black hover:bg-white/80">
+                  {channel.live ? "Watch Live" : "View Channel"}
+                </Link>
+                {isSelf ? (
+                  <Link href={dashboardHref} className="rounded bg-[#e50914] px-5 py-3 text-sm font-bold text-white hover:bg-[#f50723]">Creator Dashboard</Link>
+                ) : (
+                  <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />
+                )}
+              </div>
             </div>
           </div>
 
@@ -54,31 +74,51 @@ export function MobileProfilePage({
           </div>
         </section>
 
-        <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-[#101015]">
+        {isSelf && (
+          <section className="mt-6 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+            <Link href={dashboardHref} className="group overflow-hidden rounded border border-[#e50914]/45 bg-[#e50914] p-5 text-white transition hover:bg-[#f50723] sm:p-6">
+              <p className="text-xs font-bold uppercase text-white/75">Creator workspace</p>
+              <h2 className="mt-3 text-3xl font-black leading-none sm:text-4xl">Creator Dashboard</h2>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/82">Manage your stream title, keys, chat safety, community list, and subscription plan from one place.</p>
+              <span className="mt-6 inline-flex items-center text-sm font-bold">Open dashboard <span className="ml-2 transition group-hover:translate-x-1">›</span></span>
+            </Link>
+            <div className="rounded border border-white/10 bg-[#181818] p-5 sm:p-6">
+              <p className="text-xs font-bold uppercase text-[#b3b3b3]">Live control</p>
+              <p className="mt-3 text-2xl font-bold">{channel.live ? "Your channel is live" : "Ready to go live"}</p>
+              <p className="mt-3 text-sm leading-6 text-[#b3b3b3]">{channel.live ? "Jump into your public profile or tune the stream from the dashboard." : "Set connection keys, update stream info, then start your broadcast."}</p>
+              <div className="mt-5 flex gap-2">
+                <Link href={`${dashboardHref}/keys`} className="rounded bg-white/15 px-3 py-2 text-xs font-bold hover:bg-white/20">Keys</Link>
+                <Link href={`${dashboardHref}/chat`} className="rounded bg-white/15 px-3 py-2 text-xs font-bold hover:bg-white/20">Chat</Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section className="mt-6 overflow-hidden rounded border border-white/10 bg-[#181818]">
           <ProfileMenuLink href="/search" icon={<ClipsIcon />} title="Watchlist" detail="Save anime, movies, and series for later" />
           <ProfileMenuLink href="/" icon={<HomeIcon />} title="Continue Watching" detail="Resume episodes and live watch rooms" />
           <ProfileMenuLink href="/live" icon={<LiveTvIcon />} title="Live Rooms" detail="Jump back into active community streams" />
-          <ProfileMenuLink href={isSelf ? `/u/${channel.username}` : `/${channel.username}`} icon={<ProfileIcon />} title={isSelf ? "Edit Profile" : "View Channel"} detail={isSelf ? "Update your public identity" : "Open this creator channel"} />
+          <ProfileMenuLink href={isSelf ? dashboardHref : `/${channel.username}`} icon={<ProfileIcon />} title={isSelf ? "Edit Profile" : "View Channel"} detail={isSelf ? "Update your public identity" : "Open this creator channel"} />
         </section>
 
-        {isSelf && <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-[#101015]">
+        {isSelf && <section className="mt-6 overflow-hidden rounded border border-white/10 bg-[#181818]">
           <ProfileMenuLink href={`/u/${channel.username}/keys`} icon={<VideoIcon className="h-5 w-5" />} title="Connection Keys" detail="Manage stream connection details" />
           <ProfileMenuLink href={`/u/${channel.username}/chat`} icon={<SearchIcon className="h-5 w-5" />} title="Chat Moderation" detail="Review chat controls and community safety" />
-          <ProfileMenuLink href={`/u/${channel.username}`} icon={<BellIcon className="h-5 w-5" />} title="Creator Dashboard" detail="Open the full creator workspace" />
+          <ProfileMenuLink href={dashboardHref} icon={<BellIcon className="h-5 w-5" />} title="Creator Dashboard" detail="Open the full creator workspace" />
         </section>}
 
-        <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-[#101015]">
+        <section className="mt-6 overflow-hidden rounded border border-white/10 bg-[#181818]">
           <label className="flex min-h-16 items-center gap-4 border-b border-white/10 px-4 py-4 text-left">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/[0.06] text-[#9ac4ff]"><BellIcon className="h-5 w-5" /></span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded bg-white/[0.08] text-white"><BellIcon className="h-5 w-5" /></span>
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-black">Notifications</span>
-              <span className="mt-1 block text-xs leading-5 text-[#8f8f9b]">Stream updates and episode activity</span>
+              <span className="block text-sm font-bold">Notifications</span>
+              <span className="mt-1 block text-xs leading-5 text-[#b3b3b3]">Stream updates and episode activity</span>
             </span>
-            <input checked={updatesEnabled} onChange={(event) => setUpdatesEnabled(event.target.checked)} type="checkbox" className="h-5 w-5 accent-[#244ed8]" />
+            <input checked={updatesEnabled} onChange={(event) => setUpdatesEnabled(event.target.checked)} type="checkbox" className="h-5 w-5 accent-[#e50914]" />
           </label>
           {isSelf && <div className="px-4 py-4">
             <SignOutButton>
-              <button type="button" className="min-h-12 rounded-md border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm font-black uppercase tracking-wide text-red-100">
+              <button type="button" className="min-h-12 rounded border border-[#e50914]/35 bg-[#e50914]/10 px-4 py-3 text-sm font-bold text-red-100">
                 Log out
               </button>
             </SignOutButton>
@@ -86,29 +126,29 @@ export function MobileProfilePage({
         </section>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-white/10 bg-[#0f0f12]/98 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 shadow-[0_-18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-white/10 bg-black/92 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 backdrop-blur-xl lg:hidden">
         <Link href="/" className={itemClass}><HomeIcon />Home</Link>
         <Link href="/search" className={itemClass}><BrowseIcon />Search</Link>
         <Link href="/live" className={itemClass}><LiveTvIcon />Live</Link>
-        <span className={`${itemClass} text-white`}><i className="absolute top-0 h-0.5 w-8 rounded-full bg-white" /><ProfileIcon />Profile</span>
+        <span className={`${itemClass} text-white`}><i className="absolute top-0 h-0.5 w-8 rounded-full bg-[#e50914]" /><ProfileIcon />Profile</span>
       </nav>
     </div>
   );
 }
 
 function ProfileStat({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
-  return <div className="border-b border-white/10 px-4 py-4 sm:border-b-0 sm:border-r sm:last:border-r-0"><p className="text-[11px] font-black uppercase tracking-wide text-[#8f8f9b]">{label}</p><p className={`mt-1 truncate text-sm font-black ${strong ? "text-[#4ade80]" : "text-white"}`}>{value}</p></div>;
+  return <div className="border-b border-white/10 px-4 py-4 sm:border-b-0 sm:border-r sm:last:border-r-0"><p className="text-[11px] font-bold uppercase text-[#808080]">{label}</p><p className={`mt-1 truncate text-sm font-bold ${strong ? "text-[#46d369]" : "text-white"}`}>{value}</p></div>;
 }
 
 function ProfileMenuLink({ href, icon, title, detail }: { href: string; icon: React.ReactNode; title: string; detail: string }) {
-  return <Link href={href} className="flex min-h-16 items-center gap-4 border-b border-white/10 px-4 py-4 text-left last:border-b-0 hover:bg-white/[0.04]"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/[0.06] text-[#9ac4ff]">{icon}</span><span className="min-w-0 flex-1"><span className="block text-sm font-black">{title}</span><span className="mt-1 block truncate text-xs text-[#8f8f9b]">{detail}</span></span><span className="text-xl text-white/35">›</span></Link>;
+  return <Link href={href} className="flex min-h-16 items-center gap-4 border-b border-white/10 px-4 py-4 text-left last:border-b-0 hover:bg-white/[0.05]"><span className="grid h-10 w-10 shrink-0 place-items-center rounded bg-white/[0.08] text-white">{icon}</span><span className="min-w-0 flex-1"><span className="block text-sm font-bold">{title}</span><span className="mt-1 block truncate text-xs text-[#b3b3b3]">{detail}</span></span><span className="text-xl text-white/35">›</span></Link>;
 }
 
 function BrowseIcon() {
   return <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="6" /><path d="m16 16 5 5" /></svg>;
 }
 
-const itemClass = "relative flex min-h-[76px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
+const itemClass = "relative flex min-h-[72px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-bold uppercase";
 
 function HomeIcon() {
   return <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /></svg>;

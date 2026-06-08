@@ -117,10 +117,10 @@ function CatalogArtwork({ channel, className = "" }: { channel: Channel; classNa
 }
 
 function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "home" }: { viewerUsername?: string; clerkConfigured?: boolean; active?: "home" | "search" | "live" | "profile" }) {
-  const itemClass = "relative flex min-h-[76px] flex-col items-center justify-center gap-1.5 px-1 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
+  const itemClass = "relative flex min-h-[72px] flex-col items-center justify-center gap-1.5 px-1 pb-1 pt-2 text-[10px] font-bold uppercase";
   const color = (item: typeof active) => item === active ? "text-white" : "text-white/55";
-  const marker = (item: typeof active) => item === active ? <i className="absolute top-0 h-0.5 w-8 rounded-full bg-white" /> : null;
-  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-white/10 bg-[#0f0f12]/98 px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl lg:hidden">
+  const marker = (item: typeof active) => item === active ? <i className="absolute top-0 h-0.5 w-8 rounded-full bg-[#e50914]" /> : null;
+  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-white/10 bg-black/92 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
     <Link href="/" className={`${itemClass} ${color("home")}`}>{marker("home")}<HomeIcon className="h-7 w-7" />Home</Link>
     <Link href="/search" className={`${itemClass} ${color("search")}`}>{marker("search")}<BrowseIcon className="h-7 w-7" />Search</Link>
     <Link href="/live" className={`${itemClass} ${color("live")}`}>{marker("live")}<LiveTvIcon className="h-7 w-7" />Live</Link>
@@ -145,10 +145,6 @@ function HomeIcon({ className = "h-5 w-5" }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /></svg>;
 }
 
-function ClipsIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M7 4h10M5 8h14v12H5z" /><path d="m10 11 5 3-5 3Z" /></svg>;
-}
-
 function LiveTvIcon({ className = "h-5 w-5" }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="13" rx="1" /><path d="m10 9 5 2.5-5 2.5ZM8 21h8" /></svg>;
 }
@@ -168,19 +164,19 @@ function ForwardIcon({ className = "h-4 w-4", direction = "next" }: { className?
 function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channel) => void }) {
   if (!channel) return null;
   return (
-    <section className="relative -mx-7 -mt-4 hidden min-h-[560px] overflow-hidden bg-black lg:block">
+    <section className="relative -mx-7 -mt-4 hidden min-h-[640px] overflow-hidden bg-black lg:block">
       <CatalogArtwork channel={channel} className="absolute inset-0" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#07070a] via-[#07070a]/70 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-transparent to-black/25" />
-      <div className="relative z-10 flex min-h-[560px] max-w-2xl flex-col justify-end px-10 pb-20 xl:px-14">
-        <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#9ac4ff]"><span className="h-2.5 w-2.5 rounded-full bg-red-500" />Most watched live anime</div>
-        <h1 className="text-5xl font-black leading-[0.95] tracking-tight xl:text-7xl">{channel.catalogTitle}</h1>
-        <p className="mt-5 text-xl font-bold text-white">Streaming now on ARGUS</p>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-[#d2d2d8]">Join the live watch room, react with the community, and follow the conversation in real time.</p>
-        <div className="mt-5 flex flex-wrap items-center gap-2 text-xs font-bold"><span className="rounded bg-red-600 px-2 py-1 text-white">LIVE</span><span className="text-[#9ac4ff]">1M viewers</span></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/72 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-black/25" />
+      <div className="relative z-10 flex min-h-[640px] max-w-2xl flex-col justify-end px-10 pb-24 xl:px-14">
+        <div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase text-[#b3b3b3]"><span className="h-2.5 w-2.5 rounded bg-[#e50914]" />Most watched live anime</div>
+        <h1 className="text-5xl font-black leading-none tracking-normal xl:text-7xl">{channel.catalogTitle}</h1>
+        <p className="mt-5 text-xl font-medium text-white">Streaming now on ARGUS</p>
+        <p className="mt-3 max-w-xl text-base leading-6 text-[#bcbcbc]">Join the live watch room, react with the community, and follow the conversation in real time.</p>
+        <div className="mt-5 flex flex-wrap items-center gap-2 text-sm"><span className="rounded bg-[#e50914] px-2 py-1 font-bold text-white">LIVE</span><span className="text-[#b3b3b3]">1M viewers</span></div>
         <div className="mt-7 flex gap-3">
-          <button onClick={() => onOpen(channel)} className="flex items-center gap-2 rounded bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-white/80"><PlayIcon />Watch live</button>
-          <button onClick={() => onOpen(channel)} className="rounded bg-white/20 px-5 py-3 text-sm font-black text-white backdrop-blur transition hover:bg-white/30">More info</button>
+          <button onClick={() => onOpen(channel)} className="flex items-center gap-2 rounded bg-white px-6 py-3 text-base font-bold text-black transition hover:bg-white/80"><PlayIcon />Watch live</button>
+          <button onClick={() => onOpen(channel)} className="rounded bg-white/20 px-6 py-3 text-base font-bold text-white transition hover:bg-white/30">More info</button>
         </div>
       </div>
     </section>
@@ -200,44 +196,45 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
   const comedy = [...mobileChannels.slice(3), ...mobileChannels.slice(0, 3)];
 
   return (
-    <section className="-mx-4 -mt-4 min-h-screen overflow-hidden bg-[#080809] pb-24 text-white lg:hidden">
-      <CatalogArtwork channel={spotlight} className="fixed inset-0 opacity-25 blur-2xl" />
-      <div className="fixed inset-0 bg-gradient-to-b from-black/35 via-black/70 to-[#080809]" />
+    <section className="-mx-4 -mt-4 mobile-app-stage min-h-screen overflow-hidden pb-24 text-white lg:hidden">
       <div className="relative">
-        <header className="px-6 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
+        <header className="sticky top-0 z-30 bg-gradient-to-b from-black via-black/92 to-black/0 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
           <div className="flex items-center justify-center">
-            <span className="text-3xl font-black">ARGUS<span className="text-[#6aa7ff]">+</span></span>
-            <button type="button" className="absolute right-6 grid h-11 w-11 place-items-center text-white" aria-label="Cast"><CastIcon className="h-8 w-8" /></button>
+            <span className="text-3xl font-black text-[#e50914]">ARGUS</span>
+            <button type="button" className="absolute right-5 grid h-10 w-10 place-items-center text-white/85" aria-label="Cast"><CastIcon className="h-7 w-7" /></button>
           </div>
-          <nav className="mt-7 flex items-center gap-5 overflow-x-auto text-center text-base font-black [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <nav className="scroll-fade-x mt-6 flex items-center gap-5 overflow-x-auto text-center text-sm font-medium [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <Link href="/" className="shrink-0 text-white">Home</Link>
-            <Link href="/search" className="shrink-0 text-white/70">Search</Link>
+            <Link href="/search" className="shrink-0 text-[#b3b3b3]">Search</Link>
             <button type="button" className="shrink-0 text-white/70">Movies & Series</button>
             <button type="button" className="shrink-0 text-white/70">Categories</button>
           </nav>
         </header>
 
-        <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-[6vw] pb-3 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {featured.map((channel, index) => <button key={`featured-${channel.username}`} type="button" onClick={() => setFeaturedIndex(index)} className={`relative h-[64vh] min-h-[520px] w-[88vw] shrink-0 snap-center overflow-hidden rounded-md border transition ${index === featuredIndex ? "border-white/15 opacity-100" : "border-transparent opacity-55"}`} aria-label={`Feature ${animeTitle(channel, index)}`}>
-            <CatalogArtwork channel={channel} className="absolute inset-0" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/5 to-transparent" />
-            <LiveViewerBadge viewers={channel.viewers} className="absolute left-4 top-4" />
-            {index === featuredIndex && <div className="absolute inset-x-0 bottom-5 px-5 text-center">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/75">Streaming now</p>
-              <h1 className="mt-2 text-4xl font-black uppercase leading-none tracking-tight">{channel.catalogTitle ?? channel.displayName}</h1>
-              <p className="mt-4 text-sm font-black uppercase tracking-wide">Live now on ARGUS+</p>
-            </div>}
-          </button>)}
-        </div>
-
-        <div className="relative z-10 -mt-24 px-[11vw]">
-          <div className="grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => onOpen(spotlight)} className="rounded-md bg-white px-3 py-4 text-sm font-black uppercase text-black">Watch now</button>
-            <button type="button" onClick={() => setListed(!listed)} className="rounded-md bg-white/18 px-3 py-4 text-sm font-black uppercase text-white backdrop-blur-md"><span className="mr-2 text-2xl leading-none">{listed ? "✓" : "+"}</span>My list</button>
+        <div className="px-5 pt-1">
+          <button type="button" onClick={() => onOpen(spotlight)} className="relative block h-[62vh] min-h-[480px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left shadow-[0_22px_60px_rgba(0,0,0,0.5)]" aria-label={`Watch ${animeTitle(spotlight, 0)}`}>
+            <CatalogArtwork channel={spotlight} className="absolute inset-0" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/10" />
+            <LiveViewerBadge viewers={spotlight.viewers} className="absolute left-4 top-4" />
+            <div className="absolute inset-x-0 bottom-0 p-5">
+              <p className="text-xs font-medium uppercase text-[#b3b3b3]">Streaming now</p>
+              <h1 className="mt-2 text-4xl font-black uppercase leading-none tracking-normal">{spotlight.catalogTitle ?? spotlight.displayName}</h1>
+              <p className="mt-4 max-w-[18rem] text-sm leading-5 text-[#d2d2d2]">Live watch room, episodes, and chat in one place.</p>
+            </div>
+          </button>
+          <div className="mt-3 flex justify-center gap-1.5">
+            {featured.map((channel, index) => <button key={`featured-dot-${channel.username}`} type="button" onClick={() => setFeaturedIndex(index)} className={`h-1.5 rounded-full transition ${index === featuredIndex ? "w-7 bg-[#e50914]" : "w-1.5 bg-white/35"}`} aria-label={`Feature ${animeTitle(channel, index)}`} />)}
           </div>
         </div>
 
-        <div className="relative z-10 mt-16 space-y-9">
+        <div className="relative z-10 mt-5 px-5">
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => onOpen(spotlight)} className="rounded bg-white px-3 py-3 text-sm font-bold text-black"><span className="mr-2">▶</span>Play</button>
+            <button type="button" onClick={() => setListed(!listed)} className="rounded bg-white/20 px-3 py-3 text-sm font-bold text-white"><span className="mr-2 text-lg leading-none">{listed ? "✓" : "+"}</span>My List</button>
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-9 space-y-9">
           <MobilePosterRail title="Your Next Watch" channels={nextWatch} onOpen={onOpen} />
           <MobileLandscapeRail title="Keep Watching" channels={keepWatching} onOpen={onOpen} />
           <MobilePosterRail title="Comedy Shows" channels={comedy} onOpen={onOpen} />
@@ -250,38 +247,38 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
 }
 
 function MobilePosterRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
-  return <section><h2 className="px-5 text-2xl font-black">{title}</h2><div className="mt-4 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative aspect-[2/3] w-[27vw] max-w-40 shrink-0 overflow-hidden rounded-md bg-white/5"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute bottom-2 left-2" /></button>)}</div></section>;
+  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-2.5 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative aspect-[2/3] w-[29vw] max-w-36 shrink-0 overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute bottom-2 left-2" /></button>)}</div></section>;
 }
 
 function MobileLandscapeRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
-  return <section><h2 className="px-5 text-2xl font-black">{title}</h2><div className="mt-4 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="w-[44vw] max-w-64 shrink-0 text-left"><span className="relative block aspect-video overflow-hidden rounded-md bg-white/5"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute left-2 top-2" /><i className="absolute inset-x-0 bottom-0 h-1 bg-[#2563eb]" /></span><span className="mt-2 block text-xs text-white/55">{2022 + index} · {96 + index * 9}min</span><strong className="mt-1 block truncate text-sm">{animeTitle(channel, index)}</strong></button>)}</div></section>;
+  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="w-[48vw] max-w-64 shrink-0 text-left"><span className="relative block aspect-video overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute left-2 top-2" /><i className="absolute inset-x-0 bottom-0 h-1 bg-[#e50914]" /></span><span className="mt-2 block text-xs text-[#808080]">{2022 + index} · {96 + index * 9}min</span><strong className="mt-1 block truncate text-sm font-medium">{animeTitle(channel, index)}</strong></button>)}</div></section>;
 }
 
 function LiveViewerBadge({ viewers, className = "" }: { viewers: number; className?: string }) {
-  return <span className={`${className} flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white backdrop-blur`}><i className="h-1.5 w-1.5 rounded-full bg-red-600" />Live · {formatViewers(viewers)}</span>;
+  return <span className={`${className} flex items-center gap-1 rounded bg-black/80 px-2 py-1 text-[9px] font-bold uppercase text-white`}><i className="h-1.5 w-1.5 rounded-full bg-[#e50914]" />Live · {formatViewers(viewers)}</span>;
 }
 
 function MobileChannelFeed({ query, onQuery, data, onOpen, searchable = false }: { query: string; onQuery: (value: string) => void; data: Channel[]; onOpen: (channel: Channel) => void; searchable?: boolean }) {
   const router = useRouter();
 
   return (
-    <section className="-mx-4 -mt-4 bg-[#07070a] text-[#f1f1f3] lg:hidden">
-      <div className="flex h-14 items-center justify-center border-b border-white/5 px-4"><h1 className="text-lg font-black">{searchable ? "Search" : "Live Channels"}</h1></div>
-      {searchable && <form onSubmit={(event) => { event.preventDefault(); router.push(`/search?term=${encodeURIComponent(query)}`); }} className="mx-4 mt-3 flex items-center gap-3 rounded-md border border-white/10 bg-[#121723] px-3 py-3">
-        <SearchIcon className="h-6 w-6 shrink-0 text-[#a8a8b3]" />
-        <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search anime, series, live" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-[#777783]" />
+    <section className="-mx-4 -mt-4 min-h-screen bg-black text-white lg:hidden">
+      <div className="flex h-14 items-center justify-center border-b border-white/10 bg-black/90 px-4 backdrop-blur-xl"><h1 className="text-lg font-bold">{searchable ? "Search" : "Live Channels"}</h1></div>
+      {searchable && <form onSubmit={(event) => { event.preventDefault(); router.push(`/search?term=${encodeURIComponent(query)}`); }} className="mx-4 mt-3 flex items-center gap-3 rounded border border-white/30 bg-black px-3 py-3">
+        <SearchIcon className="h-6 w-6 shrink-0 text-[#b3b3b3]" />
+        <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search anime, series, live" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-[#808080]" />
       </form>}
-      <div className="mt-2 flex items-end border-b border-white/10 px-4 text-base font-black">
-        <span className="border-b-[3px] border-[#2f80ed] px-1 pb-3 pt-2 text-[#9ac4ff]">All</span>
-        <span className="px-7 pb-3 pt-2 text-white/55">Series</span>
-        <span className="pb-3 pt-2 text-white/55">Live</span>
+      <div className="mt-2 flex items-end border-b border-white/10 px-4 text-base font-bold">
+        <span className="border-b-[3px] border-[#e50914] px-1 pb-3 pt-2 text-white">All</span>
+        <span className="px-7 pb-3 pt-2 text-[#808080]">Series</span>
+        <span className="pb-3 pt-2 text-[#808080]">Live</span>
         <button type="button" aria-label="Filter channels" className="ml-auto mb-1 grid h-11 w-11 place-items-center"><FilterIcon /></button>
       </div>
       <div>
-        {data.length ? data.slice(0, 18).map((channel, index) => <button key={channel.username} onClick={() => onOpen(channel)} className="block w-full border-b border-white/5 bg-[#0e0e10] text-left">
-          <div className="relative aspect-video overflow-hidden bg-black"><CatalogArtwork channel={channel} className="absolute inset-0" /><span className={`absolute left-3 top-3 rounded px-2 py-1 text-xs font-black text-white ${channel.hostIdentity ? "bg-red-600" : "bg-[#2554e8]"}`}>{channel.hostIdentity ? "LIVE" : "SERIES"}</span><span className="absolute bottom-2 left-3 rounded bg-black/80 px-2 py-1 text-sm font-semibold text-white">{formatViewers(channel.viewers || 24)} watching</span></div>
-          <div className="flex gap-3 px-4 py-3"><CatalogArtwork channel={channel} className="h-12 w-12 shrink-0 rounded-full border border-white/10" /><span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><strong className="truncate text-base">{channel.catalogTitle ?? channel.displayName}</strong>{channel.hostIdentity && <i className="h-3 w-3 shrink-0 rounded-full bg-[#2f80ed]" />}</span><span className="mt-1 block truncate text-base text-[#adadb8]">{channel.hostIdentity ? animeTitle(channel, index) : channel.category}</span><span className="mt-2 flex flex-wrap gap-1.5">{[...channel.tags, channel.category].slice(0, 4).map((tag, tagIndex) => <i key={`${tag}-${tagIndex}`} className="rounded-full bg-[#202838] px-3 py-1 text-xs font-bold not-italic text-[#c2c2cb]">{tag}</i>)}</span></span><MoreIcon className="mt-1 h-6 w-6 shrink-0 text-[#adadb8]" /></div>
-        </button>) : <div className="p-12 text-center text-sm text-[#adadb8]">No results found.</div>}
+        {data.length ? data.slice(0, 18).map((channel, index) => <button key={channel.username} onClick={() => onOpen(channel)} className="block w-full border-b border-white/10 bg-[#141414] text-left">
+          <div className="relative aspect-video overflow-hidden bg-black"><CatalogArtwork channel={channel} className="absolute inset-0" /><span className={`absolute left-3 top-3 rounded px-2 py-1 text-xs font-bold text-white ${channel.hostIdentity ? "bg-[#e50914]" : "bg-[#333]"}`}>{channel.hostIdentity ? "LIVE" : "SERIES"}</span><span className="absolute bottom-2 left-3 rounded bg-black/80 px-2 py-1 text-sm font-semibold text-white">{formatViewers(channel.viewers || 24)} watching</span></div>
+          <div className="flex gap-3 px-4 py-3"><CatalogArtwork channel={channel} className="h-12 w-12 shrink-0 rounded border border-white/10" /><span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><strong className="truncate text-base">{channel.catalogTitle ?? channel.displayName}</strong>{channel.hostIdentity && <i className="h-3 w-3 shrink-0 rounded-full bg-[#46d369]" />}</span><span className="mt-1 block truncate text-base text-[#b3b3b3]">{channel.hostIdentity ? animeTitle(channel, index) : channel.category}</span><span className="mt-2 flex flex-wrap gap-1.5">{[...channel.tags, channel.category].slice(0, 4).map((tag, tagIndex) => <i key={`${tag}-${tagIndex}`} className="rounded bg-[#2a2a2a] px-3 py-1 text-xs font-bold not-italic text-[#bcbcbc]">{tag}</i>)}</span></span><MoreIcon className="mt-1 h-6 w-6 shrink-0 text-[#b3b3b3]" /></div>
+        </button>) : <div className="p-12 text-center text-sm text-[#b3b3b3]">No results found.</div>}
       </div>
     </section>
   );
@@ -292,12 +289,12 @@ function FilterIcon() {
 }
 
 function RailCard({ channel, index, onOpen, horizontal = false }: { channel: Channel; index: number; onOpen: () => void; horizontal?: boolean }) {
-  return <button onClick={onOpen} aria-label={`Watch ${animeTitle(channel, index)} live`} className="group min-w-0 transition duration-300 hover:z-10 hover:scale-105 focus:z-10 focus:scale-105 focus:outline-none"><div className={`relative overflow-hidden rounded-md bg-[#18181b] shadow-lg ${horizontal ? "aspect-video" : "aspect-[2/3]"}`}><CatalogArtwork channel={channel} className="absolute inset-0 transition duration-500 group-hover:scale-110" /><div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 to-transparent" /><span className="absolute bottom-1 left-1 flex items-center gap-0.5 rounded border border-white/10 bg-white/[0.06] px-1 py-px text-[7px] font-bold leading-3 text-white/85 shadow-sm backdrop-blur-sm"><i className="h-1 w-1 rounded-full bg-red-600" />LIVE · 1M</span></div></button>;
+  return <button onClick={onOpen} aria-label={`Watch ${animeTitle(channel, index)} live`} className="group min-w-0 transition duration-300 hover:z-10 hover:scale-[1.035] focus:z-10 focus:scale-[1.035] focus:outline-none"><div className={`relative overflow-hidden rounded border border-white/8 bg-[#181818] ${horizontal ? "aspect-video" : "aspect-[2/3]"}`}><CatalogArtwork channel={channel} className="absolute inset-0 transition duration-500 group-hover:scale-110" /><div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" /><span className="absolute bottom-1 left-1 flex items-center gap-0.5 rounded bg-black/80 px-1.5 py-0.5 text-[8px] font-bold leading-3 text-white"><i className="h-1 w-1 rounded-full bg-[#e50914]" />LIVE · 1M</span></div></button>;
 }
 
 function ContentRail({ title, channels: railChannels, onOpen, horizontal = false }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void; horizontal?: boolean }) {
   if (!railChannels.length) return null;
-  return <section className="relative mt-8 hidden lg:block"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#9ac4ff]">Explore ARGUS</p><h2 className="mt-1 text-xl font-black">{title}</h2></div><button type="button" className="text-xs font-bold text-[#adadb8] transition hover:text-white">See all</button></div><div className={`grid grid-flow-col gap-3 overflow-x-auto pb-5 ${horizontal ? "auto-cols-[260px] xl:auto-cols-[310px]" : "auto-cols-[180px] xl:auto-cols-[205px]"}`}>{railChannels.map((channel, index) => <RailCard key={`${title}-${channel.username}`} channel={channel} index={index} onOpen={() => onOpen(channel)} horizontal={horizontal} />)}</div></section>;
+  return <section className="relative mt-8 hidden lg:block"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Explore ARGUS</p><h2 className="mt-1 text-xl font-bold">{title}</h2></div><button type="button" className="text-xs font-bold text-[#b3b3b3] transition hover:text-white">See all</button></div><div className={`scroll-fade-x grid grid-flow-col gap-3 overflow-x-auto pb-5 ${horizontal ? "auto-cols-[260px] xl:auto-cols-[310px]" : "auto-cols-[180px] xl:auto-cols-[205px]"}`}>{railChannels.map((channel, index) => <RailCard key={`${title}-${channel.username}`} channel={channel} index={index} onOpen={() => onOpen(channel)} horizontal={horizontal} />)}</div></section>;
 }
 
 function CategoriesRail({ channels: categoryChannels, onSelect }: { channels: Channel[]; onSelect: (category: string) => void }) {
@@ -307,12 +304,12 @@ function CategoriesRail({ channels: categoryChannels, onSelect }: { channels: Ch
   return (
     <section id="categories" className="relative mt-8 hidden scroll-mt-24 lg:block">
       <div className="mb-4">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#9ac4ff]">Browse by genre</p>
-        <h2 className="mt-1 text-xl font-black">Categories</h2>
+        <p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Browse by genre</p>
+        <h2 className="mt-1 text-xl font-bold">Categories</h2>
       </div>
       <div className="flex flex-wrap gap-2">
         {categories.map((category) => (
-          <button key={category} type="button" onClick={() => onSelect(category)} className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-black uppercase tracking-wide text-[#d7d7df] transition hover:border-white/25 hover:bg-white/10 hover:text-white">
+          <button key={category} type="button" onClick={() => onSelect(category)} className="rounded border border-white/15 bg-[#181818] px-4 py-2 text-xs font-bold uppercase text-[#bcbcbc] transition hover:border-white/30 hover:bg-[#232323] hover:text-white">
             {category}
           </button>
         ))}
@@ -613,7 +610,7 @@ function EpisodeHoverChat({ episode, nextEpisode, previousEpisode, onNext, sessi
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 text-xs leading-5">
         {displayMessages.length ? displayMessages.map((message) => (
           <p key={message.id}>
-            <strong className="mr-2 text-[#9ac4ff]">{message.from?.name ?? viewerUsername ?? "viewer"}:</strong>
+            <strong className="mr-2 text-[#e5e5e5]">{message.from?.name ?? viewerUsername ?? "viewer"}:</strong>
             <span className="text-white/85">{message.message}</span>
           </p>
         )) : (
@@ -625,13 +622,13 @@ function EpisodeHoverChat({ episode, nextEpisode, previousEpisode, onNext, sessi
         {session.canChat ? (
           <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#2f80ed]">
             <input type="text" enterKeyHint="send" value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={sendOnEnter} onPointerDown={(event) => { event.preventDefault(); event.currentTarget.focus({ preventScroll: true }); }} placeholder="Chat" className="min-w-0 flex-1 bg-transparent px-3 py-3 text-base outline-none placeholder:text-white/40 md:py-2 md:text-xs" />
-            <button type="submit" disabled={!canSend} className="px-3 text-xs font-black text-[#9ac4ff] disabled:cursor-not-allowed disabled:text-white/25">Send</button>
+            <button type="submit" disabled={!canSend} className="px-3 text-xs font-bold text-[#e50914] disabled:cursor-not-allowed disabled:text-white/25">Send</button>
           </div>
         ) : (
           <div className="rounded-md border border-white/15 bg-black/35 p-3 text-xs text-white/60">
             <p>Sign in to chat.</p>
             <SignInButton>
-              <button type="button" className="mt-2 rounded bg-[#0b5cab] px-3 py-2 font-black text-white">Sign in</button>
+              <button type="button" className="mt-2 rounded bg-[#e50914] px-3 py-2 font-bold text-white">Sign in</button>
             </SignInButton>
           </div>
         )}
@@ -699,35 +696,35 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
   }, [playingEpisode]);
 
   return (
-    <div className="min-h-screen bg-[#09090b] pb-24 text-white">
+    <div className="min-h-screen bg-[#141414] pb-24 text-white">
       <section className="relative min-h-[620px] overflow-hidden bg-black">
         <CatalogArtwork channel={channel} className="absolute inset-0 opacity-55" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#09090b] via-[#09090b]/82 to-[#09090b]/25" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/30 to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/82 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/30 to-black/30" />
         <header className="relative z-10 flex items-center gap-6 px-5 py-5 text-sm font-bold text-white/72 sm:px-8 lg:px-14">
-          <button type="button" onClick={onBack} className="text-white">ARGUS</button>
+          <button type="button" onClick={onBack} className="text-[#e50914]">ARGUS</button>
           <span className="text-white">{title}</span>
           <a href="#episodes" className="hover:text-white">Episodes</a>
           <a href="#about" className="hover:text-white">About</a>
         </header>
         <div className="relative z-10 flex min-h-[520px] max-w-4xl flex-col justify-end px-5 pb-16 sm:px-8 lg:px-14">
-          <h1 className="max-w-3xl text-5xl font-black uppercase leading-none tracking-tight sm:text-7xl lg:text-8xl">{title}</h1>
-          <div className="mt-9 flex flex-wrap gap-x-8 gap-y-3 text-sm font-black uppercase tracking-wide text-white">
+          <h1 className="max-w-3xl text-5xl font-black uppercase leading-none tracking-normal sm:text-7xl lg:text-8xl">{title}</h1>
+          <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-base text-[#bcbcbc]">
             <span>{channel.category}</span>
             <span>2026</span>
             <span>1 Season</span>
-            <span>TV-14</span>
+            <span className="border border-[#bcbcbc] px-1.5 text-sm text-[#bcbcbc]">TV-14</span>
             <span>{formatViewers(totalWatching)} watching</span>
           </div>
-          <p className="mt-6 text-lg font-black uppercase text-[#4ade80]">All episodes streaming live watch sessions</p>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-[#f1f1f3] sm:text-xl">{description}</p>
-          <p className="mt-5 max-w-3xl text-sm leading-6 text-[#b9b9c2]">Featuring: elite hunters, cursed warriors, rival clans, and a season-long battle for survival.</p>
+          <p className="mt-6 text-base font-medium text-[#46d369]">New episodes with live watch sessions</p>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-white sm:text-lg">{description}</p>
+          <p className="mt-5 max-w-3xl text-sm leading-6 text-[#b3b3b3]"><span className="text-[#777]">Featuring:</span> elite hunters, cursed warriors, rival clans, and a season-long battle for survival.</p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            {episodes[0]?.muxPlaybackId ? <button type="button" onClick={() => openEpisode(episodes[0])} className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />{episodes[0].positionSeconds ? "Resume S1 E1" : "Watch S1 E1"}</button> : <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-md bg-[#2554e8] px-6 text-sm font-black uppercase tracking-wide text-white"><PlayIcon />Watch S1 E1 Trailer</a>}
-            <button type="button" onClick={() => setListed(!listed)} className="grid h-14 w-14 place-items-center rounded-full border border-white/40 text-4xl leading-none">{listed ? "✓" : "+"}</button>
-            <span className="text-sm font-black uppercase tracking-wide">My List</span>
-            <button type="button" className="ml-0 grid h-14 w-14 place-items-center rounded-full border border-white/40 lg:ml-5" aria-label="Notify"><BellIcon className="h-6 w-6" /></button>
-            <span className="text-sm font-black uppercase tracking-wide">Notify</span>
+            {episodes[0]?.muxPlaybackId ? <button type="button" onClick={() => openEpisode(episodes[0])} className="flex min-h-12 items-center gap-3 rounded bg-white px-6 text-base font-bold text-black"><PlayIcon />{episodes[0].positionSeconds ? "Resume S1 E1" : "Watch S1 E1"}</button> : <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-12 items-center gap-3 rounded bg-white px-6 text-base font-bold text-black"><PlayIcon />Watch S1 E1 Trailer</a>}
+            <button type="button" onClick={() => setListed(!listed)} className="grid h-12 w-12 place-items-center rounded-full border border-[#bcbcbc] text-3xl leading-none">{listed ? "✓" : "+"}</button>
+            <span className="text-sm font-bold">My List</span>
+            <button type="button" className="ml-0 grid h-12 w-12 place-items-center rounded-full border border-[#bcbcbc] lg:ml-5" aria-label="Notify"><BellIcon className="h-6 w-6" /></button>
+            <span className="text-sm font-bold">Notify</span>
           </div>
         </div>
       </section>
@@ -735,13 +732,13 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
       <section id="episodes" className="px-5 pb-12 sm:px-8 lg:px-14">
           <div className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9ac4ff]">Season guide</p>
-              <h2 className="mt-2 text-3xl font-black">Full Episodes</h2>
+              <p className="text-xs font-medium uppercase text-[#b3b3b3]">Season guide</p>
+              <h2 className="mt-2 text-3xl font-bold">Full Episodes</h2>
             </div>
-            <div className="flex items-center gap-2 overflow-x-auto text-sm font-black uppercase tracking-wide [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <span className="shrink-0 rounded-full bg-white px-4 py-2 text-black">Season 1</span>
-              <span className="shrink-0 rounded-full border border-white/15 px-4 py-2 text-white/60">{episodes.length} Episodes</span>
-              <span className="shrink-0 rounded-full border border-white/15 px-4 py-2 text-white/60">Live chat</span>
+            <div className="flex items-center gap-2 overflow-x-auto text-sm font-bold [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <span className="shrink-0 rounded bg-white px-4 py-2 text-black">Season 1</span>
+              <span className="shrink-0 rounded border border-white/15 px-4 py-2 text-[#b3b3b3]">{episodes.length} Episodes</span>
+              <span className="shrink-0 rounded border border-white/15 px-4 py-2 text-[#b3b3b3]">Live chat</span>
             </div>
           </div>
           <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
@@ -761,16 +758,16 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
 function EpisodeCard({ episode, onPlay }: { episode: SeriesEpisode; onPlay: () => void }) {
   const cardBody = (
     <>
-                <span className="relative block aspect-video overflow-hidden rounded-md bg-white/5">
+                <span className="relative block aspect-video overflow-hidden rounded bg-[#181818]">
                   <Image src={episode.thumbnailUrl} alt="" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw" className="object-cover transition duration-500 group-hover:scale-105" />
-                  <span className="absolute left-2 top-2 rounded bg-red-600 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white">Live</span>
+                  <span className="absolute left-2 top-2 rounded bg-[#e50914] px-2 py-1 text-[10px] font-bold uppercase text-white">Live</span>
                   <span className="absolute bottom-2 left-2 rounded bg-black/80 px-2 py-1 text-xs font-bold text-white">{formatViewers(episode.viewers)} watching</span>
-                  {episode.progressPercent > 0 && <span className="absolute inset-x-0 bottom-0 h-1 bg-white/20"><i className="block h-full bg-[#2563eb]" style={{ width: `${episode.progressPercent}%` }} /></span>}
+                  {episode.progressPercent > 0 && <span className="absolute inset-x-0 bottom-0 h-1 bg-white/20"><i className="block h-full bg-[#e50914]" style={{ width: `${episode.progressPercent}%` }} /></span>}
                   <span className="absolute inset-0 grid place-items-center bg-black/0 opacity-0 transition group-hover:bg-black/35 group-hover:opacity-100"><PlayIcon className="h-10 w-10" /></span>
                 </span>
-                <h3 className="mt-4 text-lg font-black"><span>{episode.code}</span> <span className="font-medium">{episode.name}</span></h3>
-                <p className="mt-2 line-clamp-2 min-h-[44px] text-sm leading-6 text-[#a1a1aa]">{episode.description}</p>
-                <p className="mt-2 text-sm font-bold text-[#8f8f99]">{episode.progressPercent > 0 ? `${episode.progressPercent}% watched` : episode.duration}  {episode.date}  ·  {formatViewers(episode.viewers)} live</p>
+                <h3 className="mt-4 text-lg font-bold"><span>{episode.code}</span> <span className="font-medium">{episode.name}</span></h3>
+                <p className="mt-2 line-clamp-2 min-h-[44px] text-sm leading-6 text-[#b3b3b3]">{episode.description}</p>
+                <p className="mt-2 text-sm font-medium text-[#808080]">{episode.progressPercent > 0 ? `${episode.progressPercent}% watched` : episode.duration}  {episode.date}  ·  {formatViewers(episode.viewers)} live</p>
     </>
   );
 
@@ -788,20 +785,20 @@ function ContinueWatchingRail({ items, onOpen }: { items: ContinueWatchingItem[]
     <section className="relative mt-8 hidden lg:block">
       <div className="mb-4 flex items-end justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#2563eb]">Resume</p>
-          <h2 className="mt-1 text-xl font-black">Continue watching</h2>
+          <p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Resume</p>
+          <h2 className="mt-1 text-xl font-bold">Continue watching</h2>
         </div>
       </div>
       <div className="grid grid-flow-col auto-cols-[260px] gap-3 overflow-x-auto pb-5 xl:auto-cols-[310px]">
         {items.map((item) => (
           <button key={item.episodeId} type="button" onClick={() => onOpen(item.channel)} className="group min-w-0 text-left transition duration-300 hover:z-10 hover:scale-105 focus:z-10 focus:scale-105 focus:outline-none">
-            <span className="relative block aspect-video overflow-hidden rounded-md bg-[#18181b] shadow-lg">
+            <span className="relative block aspect-video overflow-hidden rounded bg-[#181818]">
               <CatalogArtwork channel={item.channel} className="absolute inset-0 transition duration-500 group-hover:scale-110" />
-              <span className="absolute inset-x-0 bottom-0 h-1 bg-white/20"><i className="block h-full bg-[#2563eb]" style={{ width: `${item.progressPercent}%` }} /></span>
-              <span className="absolute bottom-3 left-3 rounded bg-black/75 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white">{item.progressPercent}% watched</span>
+              <span className="absolute inset-x-0 bottom-0 h-1 bg-white/20"><i className="block h-full bg-[#e50914]" style={{ width: `${item.progressPercent}%` }} /></span>
+              <span className="absolute bottom-3 left-3 rounded bg-black/75 px-2 py-1 text-[10px] font-bold uppercase text-white">{item.progressPercent}% watched</span>
             </span>
             <strong className="mt-3 block truncate text-sm">{item.channel.catalogTitle ?? item.channel.displayName}</strong>
-            <span className="mt-1 block truncate text-xs font-semibold text-[#a1a1aa]">{item.episodeCode} {item.episodeTitle}</span>
+            <span className="mt-1 block truncate text-xs font-semibold text-[#b3b3b3]">{item.episodeCode} {item.episodeTitle}</span>
           </button>
         ))}
       </div>
@@ -827,7 +824,6 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
   const visibleChannels = mode === "following" ? followedChannels : availableChannels;
   const filtered = useMemo(() => visibleChannels.filter((channel) => `${channel.displayName} ${channel.title} ${channel.category} ${channel.catalogTitle ?? ""}`.toLowerCase().includes(query.toLowerCase())), [visibleChannels, query]);
   const displayChannels = filtered.length ? filtered : visibleChannels;
-  const trendingChannels = displayChannels.filter((channel) => channel.live);
   const liveStreamerChannels = persistedChannels.filter((channel) => channel.live);
   const recommendedDisplayChannels = recommendedChannels.length ? recommendedChannels : displayChannels.filter((channel) => channel.live).slice(0, 8);
   const catalogSource = catalogChannels.length ? catalogChannels : channels;
@@ -844,7 +840,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
   if (selected) return <div className="min-h-screen bg-black"><ChannelPage channel={selected} initialFollowing={followedUsernames.has(selected.username)} canFollow={!selected.hostIdentity || selected.hostIdentity !== viewerIdentity} authenticated={Boolean(viewerIdentity)} /><MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} /></div>;
 
   return (
-    <div className="min-h-screen bg-[#07070a] text-[#f1f1f3]">
+    <div className="app-shell min-h-screen text-[#f1f1f3]">
       <div className="hidden lg:block"><SiteTopbar query={query} onQuery={setQuery} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} mode={mode} onMode={setMode} active={mobileBrowse ? "search" : "home"} /></div>
       <div>
         <div className="px-4 pb-24 pt-4 lg:px-7 lg:pb-6">
@@ -857,7 +853,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
             <div id="live-streamers"><ContentRail title={mode === "following" ? "Your followed channels" : "Live streamers"} channels={(mode === "following" ? followedChannels : liveStreamerChannels).slice(0, 12)} onOpen={setSelected} horizontal /></div>
             <div id="live-anime"><ContentRail title="Live anime" channels={animeChannels} onOpen={setSelected} /></div>
             <ContentRail title="Because you watch anime" channels={[...animeChannels].reverse()} onOpen={setSelected} />
-            {mode === "browse" && pagination && (pagination.page > 1 || pagination.hasNext) && <nav className="mt-6 flex items-center justify-center gap-3" aria-label="Channel pages">{pagination.page > 1 && <Link href={`${pagination.baseHref}${pagination.page - 1}`} className="rounded-lg bg-white/10 px-4 py-2 text-xs font-bold">Previous</Link>}<span className="text-xs text-[#94949f]">Page {pagination.page}</span>{pagination.hasNext && <Link href={`${pagination.baseHref}${pagination.page + 1}`} className="rounded-lg bg-[#0b5cab] px-4 py-2 text-xs font-bold">Next</Link>}</nav>}
+            {mode === "browse" && pagination && (pagination.page > 1 || pagination.hasNext) && <nav className="mt-6 flex items-center justify-center gap-3" aria-label="Channel pages">{pagination.page > 1 && <Link href={`${pagination.baseHref}${pagination.page - 1}`} className="rounded bg-white/10 px-4 py-2 text-xs font-bold">Previous</Link>}<span className="text-xs text-[#94949f]">Page {pagination.page}</span>{pagination.hasNext && <Link href={`${pagination.baseHref}${pagination.page + 1}`} className="rounded bg-[#e50914] px-4 py-2 text-xs font-bold">Next</Link>}</nav>}
           </main>
         </div>
       </div>

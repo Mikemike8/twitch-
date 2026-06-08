@@ -63,7 +63,7 @@ function toChannel(user: {
     viewers: 0,
     live: user.stream?.isLive ?? false,
     tags: ["New creator"],
-    colors: ["#9147ff", "#1f1f23"],
+    colors: ["#232323", "#000000"],
     initials: username.slice(0, 2).toUpperCase(),
     hostIdentity: user.id,
     thumbnailUrl: user.stream?.thumbnailUrl,
