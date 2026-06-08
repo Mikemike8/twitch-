@@ -31,8 +31,8 @@ export function MobileProfilePage({
       </div>
       <main className="mx-auto w-full max-w-[1180px] px-5 py-6 sm:px-8 sm:py-10 lg:px-10">
         <div className="mb-8 flex items-center justify-between gap-4 lg:hidden">
-          <Link href="/" className="text-sm font-bold text-[#a970ff]">Back</Link>
-          {isSelf ? <Link href={`/u/${channel.username}`} className="rounded-md border border-white/20 px-4 py-2 text-sm font-bold text-[#bf94ff]">Creator Dashboard</Link> : <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
+          <Link href="/" className="text-sm font-bold text-[#9ac4ff]">Back</Link>
+          {isSelf ? <Link href={`/u/${channel.username}`} className="rounded-md border border-white/20 px-4 py-2 text-sm font-bold text-[#9ac4ff]">Creator Dashboard</Link> : <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
         </div>
 
         <section className="overflow-hidden rounded-lg border border-white/10 bg-[#11111a]">
@@ -69,7 +69,7 @@ export function MobileProfilePage({
 
         <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-[#101015]">
           <label className="flex min-h-16 items-center gap-4 border-b border-white/10 px-4 py-4 text-left">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/[0.06] text-[#bf94ff]"><BellIcon className="h-5 w-5" /></span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/[0.06] text-[#9ac4ff]"><BellIcon className="h-5 w-5" /></span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-black">Notifications</span>
               <span className="mt-1 block text-xs leading-5 text-[#8f8f9b]">Stream updates and episode activity</span>
@@ -101,7 +101,7 @@ function ProfileStat({ label, value, strong = false }: { label: string; value: s
 }
 
 function ProfileMenuLink({ href, icon, title, detail }: { href: string; icon: React.ReactNode; title: string; detail: string }) {
-  return <Link href={href} className="flex min-h-16 items-center gap-4 border-b border-white/10 px-4 py-4 text-left last:border-b-0 hover:bg-white/[0.04]"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/[0.06] text-[#bf94ff]">{icon}</span><span className="min-w-0 flex-1"><span className="block text-sm font-black">{title}</span><span className="mt-1 block truncate text-xs text-[#8f8f9b]">{detail}</span></span><span className="text-xl text-white/35">›</span></Link>;
+  return <Link href={href} className="flex min-h-16 items-center gap-4 border-b border-white/10 px-4 py-4 text-left last:border-b-0 hover:bg-white/[0.04]"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/[0.06] text-[#9ac4ff]">{icon}</span><span className="min-w-0 flex-1"><span className="block text-sm font-black">{title}</span><span className="mt-1 block truncate text-xs text-[#8f8f9b]">{detail}</span></span><span className="text-xl text-white/35">›</span></Link>;
 }
 
 function BrowseIcon() {

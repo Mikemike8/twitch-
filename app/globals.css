@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0e0e10;
-  --foreground: #efeff1;
+  --background: #05070b;
+  --foreground: #f4f7fb;
+  --accent: #0b5cab;
+  --accent-soft: #9ac4ff;
 }
 
 * {
@@ -19,7 +21,20 @@ body {
   overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-ui), Arial, Helvetica, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: geometricPrecision;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), var(--font-ui), Arial, Helvetica, sans-serif;
+  letter-spacing: 0;
+}
+
+::selection {
+  background: rgba(45, 127, 237, 0.38);
 }
 
 nextjs-portal {

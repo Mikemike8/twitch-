@@ -173,11 +173,11 @@ function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channe
       <div className="absolute inset-0 bg-gradient-to-r from-[#07070a] via-[#07070a]/70 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#07070a] via-transparent to-black/25" />
       <div className="relative z-10 flex min-h-[560px] max-w-2xl flex-col justify-end px-10 pb-20 xl:px-14">
-        <div className="mb-5 flex items-center gap-2 text-xs font-black uppercase tracking-[0.3em] text-[#bf94ff]"><span className="h-2.5 w-2.5 rounded-full bg-red-500" />Most watched live anime</div>
+        <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#9ac4ff]"><span className="h-2.5 w-2.5 rounded-full bg-red-500" />Most watched live anime</div>
         <h1 className="text-5xl font-black leading-[0.95] tracking-tight xl:text-7xl">{channel.catalogTitle}</h1>
         <p className="mt-5 text-xl font-bold text-white">Streaming now on ARGUS</p>
         <p className="mt-3 max-w-xl text-sm leading-6 text-[#d2d2d8]">Join the live watch room, react with the community, and follow the conversation in real time.</p>
-        <div className="mt-5 flex flex-wrap items-center gap-2 text-xs font-bold"><span className="rounded bg-red-600 px-2 py-1 text-white">LIVE</span><span className="text-[#bf94ff]">1M viewers</span></div>
+        <div className="mt-5 flex flex-wrap items-center gap-2 text-xs font-bold"><span className="rounded bg-red-600 px-2 py-1 text-white">LIVE</span><span className="text-[#9ac4ff]">1M viewers</span></div>
         <div className="mt-7 flex gap-3">
           <button onClick={() => onOpen(channel)} className="flex items-center gap-2 rounded bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-white/80"><PlayIcon />Watch live</button>
           <button onClick={() => onOpen(channel)} className="rounded bg-white/20 px-5 py-3 text-sm font-black text-white backdrop-blur transition hover:bg-white/30">More info</button>
@@ -206,7 +206,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
       <div className="relative">
         <header className="px-6 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
           <div className="flex items-center justify-center">
-            <span className="text-3xl font-black italic tracking-[-0.12em]">ARGUS<span className="text-[#a970ff]">+</span></span>
+            <span className="text-3xl font-black">ARGUS<span className="text-[#6aa7ff]">+</span></span>
             <button type="button" className="absolute right-6 grid h-11 w-11 place-items-center text-white" aria-label="Cast"><CastIcon className="h-8 w-8" /></button>
           </div>
           <nav className="mt-7 flex items-center gap-5 overflow-x-auto text-center text-base font-black [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -218,7 +218,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
         </header>
 
         <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-[6vw] pb-3 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {featured.map((channel, index) => <button key={`featured-${channel.username}`} type="button" onClick={() => setFeaturedIndex(index)} className={`relative h-[64vh] min-h-[520px] w-[88vw] shrink-0 snap-center overflow-hidden rounded-2xl border transition ${index === featuredIndex ? "border-white/15 opacity-100" : "border-transparent opacity-55"}`} aria-label={`Feature ${animeTitle(channel, index)}`}>
+          {featured.map((channel, index) => <button key={`featured-${channel.username}`} type="button" onClick={() => setFeaturedIndex(index)} className={`relative h-[64vh] min-h-[520px] w-[88vw] shrink-0 snap-center overflow-hidden rounded-md border transition ${index === featuredIndex ? "border-white/15 opacity-100" : "border-transparent opacity-55"}`} aria-label={`Feature ${animeTitle(channel, index)}`}>
             <CatalogArtwork channel={channel} className="absolute inset-0" />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/5 to-transparent" />
             <LiveViewerBadge viewers={channel.viewers} className="absolute left-4 top-4" />
@@ -232,8 +232,8 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
 
         <div className="relative z-10 -mt-24 px-[11vw]">
           <div className="grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => onOpen(spotlight)} className="rounded-xl bg-white px-3 py-4 text-sm font-black uppercase text-black">Watch now</button>
-            <button type="button" onClick={() => setListed(!listed)} className="rounded-xl bg-white/25 px-3 py-4 text-sm font-black uppercase text-white backdrop-blur-md"><span className="mr-2 text-2xl leading-none">{listed ? "✓" : "+"}</span>My list</button>
+            <button type="button" onClick={() => onOpen(spotlight)} className="rounded-md bg-white px-3 py-4 text-sm font-black uppercase text-black">Watch now</button>
+            <button type="button" onClick={() => setListed(!listed)} className="rounded-md bg-white/18 px-3 py-4 text-sm font-black uppercase text-white backdrop-blur-md"><span className="mr-2 text-2xl leading-none">{listed ? "✓" : "+"}</span>My list</button>
           </div>
         </div>
 
@@ -250,11 +250,11 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
 }
 
 function MobilePosterRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
-  return <section><h2 className="px-5 text-2xl font-black">{title}</h2><div className="mt-4 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative aspect-[2/3] w-[27vw] max-w-40 shrink-0 overflow-hidden rounded-xl bg-white/5"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute bottom-2 left-2" /></button>)}</div></section>;
+  return <section><h2 className="px-5 text-2xl font-black">{title}</h2><div className="mt-4 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative aspect-[2/3] w-[27vw] max-w-40 shrink-0 overflow-hidden rounded-md bg-white/5"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute bottom-2 left-2" /></button>)}</div></section>;
 }
 
 function MobileLandscapeRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
-  return <section><h2 className="px-5 text-2xl font-black">{title}</h2><div className="mt-4 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="w-[44vw] max-w-64 shrink-0 text-left"><span className="relative block aspect-video overflow-hidden rounded-xl bg-white/5"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute left-2 top-2" /><i className="absolute inset-x-0 bottom-0 h-1 bg-[#2563eb]" /></span><span className="mt-2 block text-xs text-white/55">{2022 + index} · {96 + index * 9}min</span><strong className="mt-1 block truncate text-sm">{animeTitle(channel, index)}</strong></button>)}</div></section>;
+  return <section><h2 className="px-5 text-2xl font-black">{title}</h2><div className="mt-4 flex gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="w-[44vw] max-w-64 shrink-0 text-left"><span className="relative block aspect-video overflow-hidden rounded-md bg-white/5"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute left-2 top-2" /><i className="absolute inset-x-0 bottom-0 h-1 bg-[#2563eb]" /></span><span className="mt-2 block text-xs text-white/55">{2022 + index} · {96 + index * 9}min</span><strong className="mt-1 block truncate text-sm">{animeTitle(channel, index)}</strong></button>)}</div></section>;
 }
 
 function LiveViewerBadge({ viewers, className = "" }: { viewers: number; className?: string }) {
@@ -267,12 +267,12 @@ function MobileChannelFeed({ query, onQuery, data, onOpen, searchable = false }:
   return (
     <section className="-mx-4 -mt-4 bg-[#07070a] text-[#f1f1f3] lg:hidden">
       <div className="flex h-14 items-center justify-center border-b border-white/5 px-4"><h1 className="text-lg font-black">{searchable ? "Search" : "Live Channels"}</h1></div>
-      {searchable && <form onSubmit={(event) => { event.preventDefault(); router.push(`/search?term=${encodeURIComponent(query)}`); }} className="mx-4 mt-3 flex items-center gap-3 rounded-xl border border-white/10 bg-[#18181b] px-3 py-3">
+      {searchable && <form onSubmit={(event) => { event.preventDefault(); router.push(`/search?term=${encodeURIComponent(query)}`); }} className="mx-4 mt-3 flex items-center gap-3 rounded-md border border-white/10 bg-[#121723] px-3 py-3">
         <SearchIcon className="h-6 w-6 shrink-0 text-[#a8a8b3]" />
         <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search anime, series, live" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-[#777783]" />
       </form>}
       <div className="mt-2 flex items-end border-b border-white/10 px-4 text-base font-black">
-        <span className="border-b-[3px] border-[#7c3aed] px-1 pb-3 pt-2 text-[#7c3aed]">All</span>
+        <span className="border-b-[3px] border-[#2f80ed] px-1 pb-3 pt-2 text-[#9ac4ff]">All</span>
         <span className="px-7 pb-3 pt-2 text-white/55">Series</span>
         <span className="pb-3 pt-2 text-white/55">Live</span>
         <button type="button" aria-label="Filter channels" className="ml-auto mb-1 grid h-11 w-11 place-items-center"><FilterIcon /></button>
@@ -280,7 +280,7 @@ function MobileChannelFeed({ query, onQuery, data, onOpen, searchable = false }:
       <div>
         {data.length ? data.slice(0, 18).map((channel, index) => <button key={channel.username} onClick={() => onOpen(channel)} className="block w-full border-b border-white/5 bg-[#0e0e10] text-left">
           <div className="relative aspect-video overflow-hidden bg-black"><CatalogArtwork channel={channel} className="absolute inset-0" /><span className={`absolute left-3 top-3 rounded px-2 py-1 text-xs font-black text-white ${channel.hostIdentity ? "bg-red-600" : "bg-[#2554e8]"}`}>{channel.hostIdentity ? "LIVE" : "SERIES"}</span><span className="absolute bottom-2 left-3 rounded bg-black/80 px-2 py-1 text-sm font-semibold text-white">{formatViewers(channel.viewers || 24)} watching</span></div>
-          <div className="flex gap-3 px-4 py-3"><CatalogArtwork channel={channel} className="h-12 w-12 shrink-0 rounded-full border border-white/10" /><span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><strong className="truncate text-base">{channel.catalogTitle ?? channel.displayName}</strong>{channel.hostIdentity && <i className="h-3 w-3 shrink-0 rounded-full bg-[#9147ff]" />}</span><span className="mt-1 block truncate text-base text-[#adadb8]">{channel.hostIdentity ? animeTitle(channel, index) : channel.category}</span><span className="mt-2 flex flex-wrap gap-1.5">{[...channel.tags, channel.category].slice(0, 4).map((tag, tagIndex) => <i key={`${tag}-${tagIndex}`} className="rounded-full bg-[#2f2f35] px-3 py-1 text-xs font-bold not-italic text-[#c2c2cb]">{tag}</i>)}</span></span><MoreIcon className="mt-1 h-6 w-6 shrink-0 text-[#adadb8]" /></div>
+          <div className="flex gap-3 px-4 py-3"><CatalogArtwork channel={channel} className="h-12 w-12 shrink-0 rounded-full border border-white/10" /><span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><strong className="truncate text-base">{channel.catalogTitle ?? channel.displayName}</strong>{channel.hostIdentity && <i className="h-3 w-3 shrink-0 rounded-full bg-[#2f80ed]" />}</span><span className="mt-1 block truncate text-base text-[#adadb8]">{channel.hostIdentity ? animeTitle(channel, index) : channel.category}</span><span className="mt-2 flex flex-wrap gap-1.5">{[...channel.tags, channel.category].slice(0, 4).map((tag, tagIndex) => <i key={`${tag}-${tagIndex}`} className="rounded-full bg-[#202838] px-3 py-1 text-xs font-bold not-italic text-[#c2c2cb]">{tag}</i>)}</span></span><MoreIcon className="mt-1 h-6 w-6 shrink-0 text-[#adadb8]" /></div>
         </button>) : <div className="p-12 text-center text-sm text-[#adadb8]">No results found.</div>}
       </div>
     </section>
@@ -297,7 +297,7 @@ function RailCard({ channel, index, onOpen, horizontal = false }: { channel: Cha
 
 function ContentRail({ title, channels: railChannels, onOpen, horizontal = false }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void; horizontal?: boolean }) {
   if (!railChannels.length) return null;
-  return <section className="relative mt-8 hidden lg:block"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9147ff]">Explore ARGUS</p><h2 className="mt-1 text-xl font-black">{title}</h2></div><button type="button" className="text-xs font-bold text-[#adadb8] transition hover:text-white">See all</button></div><div className={`grid grid-flow-col gap-3 overflow-x-auto pb-5 ${horizontal ? "auto-cols-[260px] xl:auto-cols-[310px]" : "auto-cols-[180px] xl:auto-cols-[205px]"}`}>{railChannels.map((channel, index) => <RailCard key={`${title}-${channel.username}`} channel={channel} index={index} onOpen={() => onOpen(channel)} horizontal={horizontal} />)}</div></section>;
+  return <section className="relative mt-8 hidden lg:block"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#9ac4ff]">Explore ARGUS</p><h2 className="mt-1 text-xl font-black">{title}</h2></div><button type="button" className="text-xs font-bold text-[#adadb8] transition hover:text-white">See all</button></div><div className={`grid grid-flow-col gap-3 overflow-x-auto pb-5 ${horizontal ? "auto-cols-[260px] xl:auto-cols-[310px]" : "auto-cols-[180px] xl:auto-cols-[205px]"}`}>{railChannels.map((channel, index) => <RailCard key={`${title}-${channel.username}`} channel={channel} index={index} onOpen={() => onOpen(channel)} horizontal={horizontal} />)}</div></section>;
 }
 
 function CategoriesRail({ channels: categoryChannels, onSelect }: { channels: Channel[]; onSelect: (category: string) => void }) {
@@ -307,7 +307,7 @@ function CategoriesRail({ channels: categoryChannels, onSelect }: { channels: Ch
   return (
     <section id="categories" className="relative mt-8 hidden scroll-mt-24 lg:block">
       <div className="mb-4">
-        <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#9147ff]">Browse by genre</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#9ac4ff]">Browse by genre</p>
         <h2 className="mt-1 text-xl font-black">Categories</h2>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -613,7 +613,7 @@ function EpisodeHoverChat({ episode, nextEpisode, previousEpisode, onNext, sessi
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 text-xs leading-5">
         {displayMessages.length ? displayMessages.map((message) => (
           <p key={message.id}>
-            <strong className="mr-2 text-[#bf94ff]">{message.from?.name ?? viewerUsername ?? "viewer"}:</strong>
+            <strong className="mr-2 text-[#9ac4ff]">{message.from?.name ?? viewerUsername ?? "viewer"}:</strong>
             <span className="text-white/85">{message.message}</span>
           </p>
         )) : (
@@ -623,15 +623,15 @@ function EpisodeHoverChat({ episode, nextEpisode, previousEpisode, onNext, sessi
       </div>
       <form className="border-t border-white/10 p-3" onSubmit={(event) => { event.preventDefault(); void sendChatMessage(); }}>
         {session.canChat ? (
-          <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#9147ff]">
+          <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#2f80ed]">
             <input type="text" enterKeyHint="send" value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={sendOnEnter} onPointerDown={(event) => { event.preventDefault(); event.currentTarget.focus({ preventScroll: true }); }} placeholder="Chat" className="min-w-0 flex-1 bg-transparent px-3 py-3 text-base outline-none placeholder:text-white/40 md:py-2 md:text-xs" />
-            <button type="submit" disabled={!canSend} className="px-3 text-xs font-black text-[#bf94ff] disabled:cursor-not-allowed disabled:text-white/25">Send</button>
+            <button type="submit" disabled={!canSend} className="px-3 text-xs font-black text-[#9ac4ff] disabled:cursor-not-allowed disabled:text-white/25">Send</button>
           </div>
         ) : (
           <div className="rounded-md border border-white/15 bg-black/35 p-3 text-xs text-white/60">
             <p>Sign in to chat.</p>
             <SignInButton>
-              <button type="button" className="mt-2 rounded bg-[#9147ff] px-3 py-2 font-black text-white">Sign in</button>
+              <button type="button" className="mt-2 rounded bg-[#0b5cab] px-3 py-2 font-black text-white">Sign in</button>
             </SignInButton>
           </div>
         )}
@@ -735,7 +735,7 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
       <section id="episodes" className="px-5 pb-12 sm:px-8 lg:px-14">
           <div className="mb-6 flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-[#a970ff]">Season guide</p>
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9ac4ff]">Season guide</p>
               <h2 className="mt-2 text-3xl font-black">Full Episodes</h2>
             </div>
             <div className="flex items-center gap-2 overflow-x-auto text-sm font-black uppercase tracking-wide [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -857,7 +857,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
             <div id="live-streamers"><ContentRail title={mode === "following" ? "Your followed channels" : "Live streamers"} channels={(mode === "following" ? followedChannels : liveStreamerChannels).slice(0, 12)} onOpen={setSelected} horizontal /></div>
             <div id="live-anime"><ContentRail title="Live anime" channels={animeChannels} onOpen={setSelected} /></div>
             <ContentRail title="Because you watch anime" channels={[...animeChannels].reverse()} onOpen={setSelected} />
-            {mode === "browse" && pagination && (pagination.page > 1 || pagination.hasNext) && <nav className="mt-6 flex items-center justify-center gap-3" aria-label="Channel pages">{pagination.page > 1 && <Link href={`${pagination.baseHref}${pagination.page - 1}`} className="rounded-lg bg-white/10 px-4 py-2 text-xs font-bold">Previous</Link>}<span className="text-xs text-[#94949f]">Page {pagination.page}</span>{pagination.hasNext && <Link href={`${pagination.baseHref}${pagination.page + 1}`} className="rounded-lg bg-[#8425e6] px-4 py-2 text-xs font-bold">Next</Link>}</nav>}
+            {mode === "browse" && pagination && (pagination.page > 1 || pagination.hasNext) && <nav className="mt-6 flex items-center justify-center gap-3" aria-label="Channel pages">{pagination.page > 1 && <Link href={`${pagination.baseHref}${pagination.page - 1}`} className="rounded-lg bg-white/10 px-4 py-2 text-xs font-bold">Previous</Link>}<span className="text-xs text-[#94949f]">Page {pagination.page}</span>{pagination.hasNext && <Link href={`${pagination.baseHref}${pagination.page + 1}`} className="rounded-lg bg-[#0b5cab] px-4 py-2 text-xs font-bold">Next</Link>}</nav>}
           </main>
         </div>
       </div>

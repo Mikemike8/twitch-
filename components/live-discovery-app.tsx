@@ -66,10 +66,10 @@ export function LiveDiscoveryApp({ liveChannels, followedChannels, clerkConfigur
       {desktop && <div className="relative min-h-screen overflow-hidden bg-black text-white" onMouseMove={handleMouseMove} onMouseLeave={() => { setChromeVisible(false); setGuideVisible(false); setNavVisible(false); }}>
         <StreamerBackdrop channel={selected} />
         <div className={`absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/30 transition-opacity duration-300 ${chromeVisible ? "opacity-100" : "opacity-0"}`} />
-        <button onMouseEnter={() => setNavVisible(true)} className={`fixed left-1/2 top-6 z-40 -translate-x-1/2 text-sm font-medium tracking-wide text-white/90 transition-opacity duration-300 ${chromeVisible && !guideVisible && !navVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}>Menu</button>
+        <button onMouseEnter={() => setNavVisible(true)} className={`fixed left-1/2 top-6 z-40 -translate-x-1/2 text-sm font-medium text-white/90 transition-opacity duration-300 ${chromeVisible && !guideVisible && !navVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}>Menu</button>
         <header onMouseLeave={() => setNavVisible(false)} className={`fixed inset-x-0 top-0 z-30 flex h-16 items-center gap-7 border-b border-white/10 bg-black/80 px-5 backdrop-blur-lg transition-opacity duration-300 sm:px-10 lg:px-16 ${navVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}>
-          <Link href="/" className="text-xl font-black italic tracking-tight">ARGUS</Link>
-          <nav className="hidden items-center gap-7 text-sm font-bold tracking-wide text-white/75 md:flex">
+          <Link href="/" className="text-xl font-black tracking-tight">ARGUS</Link>
+          <nav className="hidden items-center gap-7 text-sm font-bold text-white/75 md:flex">
             <Link href="/" className="hover:text-white">Home</Link>
             <Link href="/" className="hover:text-white">Browse</Link>
             <Link href="/live" className="text-white">Live</Link>
