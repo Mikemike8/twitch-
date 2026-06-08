@@ -17,23 +17,23 @@ export default async function SubscriptionPage({
   const { username } = await params;
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#111116]">
-      <div className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
-        <header className="flex items-center justify-between border-b border-white/10 pb-5">
+    <div className="min-h-[calc(100vh-3.5rem)] min-w-0 bg-[#111116]">
+      <div className="mx-auto flex w-full max-w-5xl flex-col px-3 py-5 sm:px-6 lg:px-10 lg:py-10">
+        <header className="flex min-w-0 items-center justify-between gap-3 border-b border-white/10 pb-5">
           <Link href="/" aria-label="Argus home" className="flex items-center gap-3">
-            <BrandLogo className="h-8 w-auto" />
+            <BrandLogo className="h-7 w-auto max-w-[124px] sm:h-8 sm:max-w-none" />
           </Link>
-          <Link href={`/u/${username}`} className="rounded-md border border-white/10 px-3 py-2 text-xs font-bold text-[#d6d6df] hover:bg-white/5">Dashboard</Link>
+          <Link href={`/u/${username}`} className="shrink-0 rounded-md border border-white/10 px-3 py-2 text-xs font-bold text-[#d6d6df] hover:bg-white/5">Dashboard</Link>
         </header>
 
         <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col pt-10 sm:pt-14">
           <div className="text-center">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#27d7ff]">Step 1 of 1</p>
-            <h1 className="mt-4 text-4xl font-black leading-tight text-white sm:text-5xl">Choose your plan</h1>
+            <h1 className="mt-4 text-3xl font-black leading-tight text-white sm:text-5xl">Choose your plan</h1>
             <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-[#c8c8d2]">Your creator account is on the Free plan while subscription billing is still being prepared.</p>
           </div>
 
-          <div className="mt-9 rounded-lg border-2 border-[#0aa7c8] bg-[#27272f] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.35)] sm:p-7">
+          <div className="mt-9 rounded-lg border-2 border-[#0aa7c8] bg-[#27272f] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.35)] sm:p-7">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-xl font-black text-white">Argus Free</p>

@@ -33,19 +33,19 @@ export function ConnectionKeys({ configured, initialConnection }: { configured: 
   };
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-10">
+    <div className="min-w-0 space-y-5 p-3 sm:p-6 lg:p-10">
       <div><p className="text-xs font-black uppercase tracking-[0.2em] text-[#bf94ff]">Creator tools</p><h1 className="mt-2 text-2xl font-black sm:text-3xl">Connection keys</h1><p className="mt-3 text-sm text-[#adadb8]">Generate a secure RTMP or WHIP connection for your streaming software.</p></div>
-      <section className="max-w-3xl rounded-lg border border-[#303038] bg-[#18181b] p-5">
+      <section className="max-w-3xl rounded-lg border border-[#303038] bg-[#18181b] p-4 sm:p-5">
         <label className="text-xs font-bold text-[#adadb8]">Connection type</label>
-        <div className="mt-3 flex gap-2">{(["RTMP_INPUT", "WHIP_INPUT"] as const).map((type) => <button key={type} onClick={() => setInputType(type)} className={`rounded px-3 py-2 text-xs font-bold ${inputType === type ? "bg-[#9147ff]" : "bg-[#303038]"}`}>{type === "RTMP_INPUT" ? "RTMP" : "WHIP"}</button>)}</div>
-        <button onClick={generate} disabled={isPending} className="mt-5 rounded bg-[#9147ff] px-4 py-2 text-xs font-bold hover:bg-[#a970ff] disabled:opacity-50">{isPending ? "Generating..." : "Generate connection"}</button>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:flex">{(["RTMP_INPUT", "WHIP_INPUT"] as const).map((type) => <button key={type} onClick={() => setInputType(type)} className={`rounded px-3 py-2 text-xs font-bold ${inputType === type ? "bg-[#9147ff]" : "bg-[#303038]"}`}>{type === "RTMP_INPUT" ? "RTMP" : "WHIP"}</button>)}</div>
+        <button onClick={generate} disabled={isPending} className="mt-5 w-full rounded bg-[#9147ff] px-4 py-3 text-xs font-bold hover:bg-[#a970ff] disabled:opacity-50 sm:w-auto sm:py-2">{isPending ? "Generating..." : "Generate connection"}</button>
         {message && <p className="mt-4 text-xs text-[#adadb8]">{message}</p>}
       </section>
-      {connection && <section className="max-w-3xl space-y-4 rounded-lg border border-[#303038] bg-[#18181b] p-5"><Credential label="Server URL" value={connection.serverUrl} /><Credential label="Stream key" value={showKey ? connection.streamKey : "••••••••••••••••"} /><button onClick={() => setShowKey(!showKey)} className="text-xs font-bold text-[#bf94ff] hover:underline">{showKey ? "Hide key" : "Show key"}</button></section>}
+      {connection && <section className="max-w-3xl space-y-4 rounded-lg border border-[#303038] bg-[#18181b] p-4 sm:p-5"><Credential label="Server URL" value={connection.serverUrl} /><Credential label="Stream key" value={showKey ? connection.streamKey : "••••••••••••••••"} /><button onClick={() => setShowKey(!showKey)} className="text-xs font-bold text-[#bf94ff] hover:underline">{showKey ? "Hide key" : "Show key"}</button></section>}
     </div>
   );
 }
 
 function Credential({ label, value }: { label: string; value: string }) {
-  return <div><p className="text-xs font-bold text-[#adadb8]">{label}</p><div className="mt-2 overflow-x-auto rounded bg-[#242429] px-3 py-2 text-sm">{value}</div></div>;
+  return <div className="min-w-0"><p className="text-xs font-bold text-[#adadb8]">{label}</p><div className="mt-2 max-w-full overflow-x-auto rounded bg-[#242429] px-3 py-2 text-sm [scrollbar-width:thin]"><code className="whitespace-nowrap">{value}</code></div></div>;
 }

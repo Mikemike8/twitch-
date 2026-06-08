@@ -14,7 +14,7 @@ export function ThumbnailUpload({
 
   if (!configured) {
     return (
-      <div className="rounded border border-dashed border-white/20 bg-black p-4 text-xs leading-5 text-[#b3b3b3]">
+      <div className="break-words rounded border border-dashed border-white/20 bg-black p-4 text-xs leading-5 text-[#b3b3b3]">
         Add <code className="text-[#e50914]">UPLOADTHING_TOKEN</code> to <code className="text-[#e50914]">.env</code> to upload thumbnails.
       </div>
     );
@@ -22,8 +22,8 @@ export function ThumbnailUpload({
 
   return (
     <div className="space-y-3">
-      {thumbnailUrl && <p className="truncate text-xs text-[#b3b3b3]">Current thumbnail: {thumbnailUrl}</p>}
-      <div className="rounded border border-dashed border-white/20 bg-black p-3">
+      {thumbnailUrl && <p className="break-all text-xs text-[#b3b3b3]">Current thumbnail: {thumbnailUrl}</p>}
+      <div className="min-w-0 overflow-hidden rounded border border-dashed border-white/20 bg-black p-2 sm:p-3">
         <UploadDropzone
           endpoint="thumbnailUploader"
           onClientUploadComplete={() => router.refresh()}

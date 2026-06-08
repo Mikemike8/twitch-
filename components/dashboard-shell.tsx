@@ -29,11 +29,11 @@ export function DashboardShell({
   return (
     <div className="min-h-screen bg-[#141414] text-white">
       <div className="pointer-events-none fixed inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_18%_0%,rgba(229,9,20,0.2),transparent_24rem),linear-gradient(180deg,rgba(0,0,0,0.96),rgba(20,20,20,0))]" />
-      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-white/10 bg-black/78 px-3 backdrop-blur-xl sm:gap-4 sm:px-5">
-        <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded border border-white/10 bg-white/5 hover:bg-white/10 lg:hidden" aria-label="Open creator navigation"><MenuIcon className="h-5 w-5" /></button>
-        <Link href="/" aria-label="Argus home" className="flex items-center gap-2"><BrandLogo className="h-8 w-auto" /></Link>
-        <span className="truncate text-sm font-black uppercase tracking-normal text-[#e5e5e5] sm:text-base">Creator Studio</span>
-        <Link href="/" className="ml-auto rounded bg-white px-3 py-2 text-xs font-black text-black hover:bg-[#e5e5e5]">Exit</Link>
+      <header className="fixed inset-x-0 top-0 z-40 flex h-16 min-w-0 items-center gap-2 border-b border-white/10 bg-black/78 px-2 backdrop-blur-xl sm:gap-4 sm:px-5">
+        <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 shrink-0 place-items-center rounded border border-white/10 bg-white/5 hover:bg-white/10 lg:hidden" aria-label="Open creator navigation"><MenuIcon className="h-5 w-5" /></button>
+        <Link href="/" aria-label="Argus home" className="flex min-w-0 shrink items-center"><BrandLogo className="h-7 w-auto max-w-[112px] sm:h-8 sm:max-w-none" /></Link>
+        <span className="min-w-0 truncate text-xs font-black uppercase tracking-normal text-[#e5e5e5] sm:text-base">Creator Studio</span>
+        <Link href="/" className="ml-auto shrink-0 rounded bg-white px-2.5 py-2 text-xs font-black text-black hover:bg-[#e5e5e5] sm:px-3">Exit</Link>
       </header>
       {mobileOpen && <button onClick={() => setMobileOpen(false)} className="fixed inset-0 top-16 z-30 bg-black/70 lg:hidden" aria-label="Close creator navigation" />}
       <aside className={`${collapsed ? "lg:w-[68px]" : "lg:w-[236px]"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed bottom-0 left-0 top-16 z-30 w-[min(292px,88vw)] border-r border-white/10 bg-black/88 shadow-[18px_0_48px_rgba(0,0,0,0.36)] backdrop-blur-xl transition-[transform,width] lg:translate-x-0`}>
@@ -48,7 +48,7 @@ export function DashboardShell({
           return <Link key={label} href={path} onClick={() => setMobileOpen(false)} className={`mx-2 mb-1 flex h-12 items-center gap-3 rounded border-l-2 px-4 text-sm font-bold ${active ? "border-[#e50914] bg-white/12 text-white" : "border-transparent text-[#b3b3b3] hover:bg-white/8 hover:text-white"}`}><Icon className="h-4 w-4 shrink-0" />{!collapsed && label}</Link>;
         })}
       </aside>
-      <main className={`${collapsed ? "lg:ml-[68px]" : "lg:ml-[236px]"} relative pt-16 transition-[margin]`}>{children}</main>
+      <main className={`${collapsed ? "lg:ml-[68px]" : "lg:ml-[236px]"} relative min-w-0 overflow-x-hidden pt-16 transition-[margin]`}>{children}</main>
     </div>
   );
 }
