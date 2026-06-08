@@ -86,9 +86,9 @@ function ChannelArtwork({ channel, className = "" }: { channel: Channel; classNa
   const thumbnailUrl = channel.hostIdentity ? null : channel.thumbnailUrl;
 
   return (
-    <div className={className}>
-      <div className="relative h-full w-full overflow-hidden bg-[#171720]" style={{ position: "relative" }}>
-        {thumbnailUrl ? <Image src={thumbnailUrl} alt="" fill sizes="(max-width: 1023px) 100vw, 33vw" className="object-cover" /> : (
+    <div className={`relative h-full w-full min-w-0 overflow-hidden ${className}`}>
+      <div className="absolute inset-0 overflow-hidden bg-[#171720]">
+        {thumbnailUrl ? <Image src={thumbnailUrl} alt="" fill sizes="(max-width: 1023px) 100vw, 33vw" className="h-full w-full object-cover object-center" /> : (
           <>
             <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${channel.colors[0]}, ${channel.colors[1]})` }} />
             <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_34%),linear-gradient(0deg,rgba(0,0,0,0.22),transparent)]" />
@@ -111,9 +111,9 @@ function CatalogArtwork({ channel, className = "" }: { channel: Channel; classNa
   if (!artworkUrl) return <ChannelArtwork channel={channel} className={className} />;
 
   return (
-    <div className={className}>
-      <div className="relative h-full w-full overflow-hidden bg-[#171720]" style={{ position: "relative" }}>
-        <Image src={artworkUrl} alt="" fill sizes="(max-width: 1023px) 100vw, 33vw" className="object-cover" />
+    <div className={`relative h-full w-full min-w-0 overflow-hidden ${className}`}>
+      <div className="absolute inset-0 overflow-hidden bg-[#171720]">
+        <Image src={artworkUrl} alt="" fill sizes="(max-width: 1023px) 100vw, 33vw" className="h-full w-full object-cover object-center" />
       </div>
     </div>
   );
@@ -614,7 +614,7 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, 
               if (player) syncProgress(player, "VIDEO_SEEKED");
             }}
             onTimeUpdate={syncWhilePlaying}
-            className="block h-full w-full bg-black [--media-object-fit:cover] md:[--media-object-fit:contain]"
+            className="absolute inset-0 block h-full w-full bg-black [--media-object-fit:contain]"
             style={{
               width: "100%",
               height: "100%",

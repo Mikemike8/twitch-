@@ -57,7 +57,7 @@ function BroadcastVideo({ fallback, preview }: { fallback: React.ReactNode; prev
 
   if (!videoTrack) return fallback;
 
-  return <VideoTrack trackRef={videoTrack} autoPlay muted={preview} controls={false} className="h-full w-full object-contain" />;
+  return <VideoTrack trackRef={videoTrack} autoPlay muted={preview} controls={false} className="absolute inset-0 h-full w-full object-contain" />;
 }
 
 function ViewerCount() {

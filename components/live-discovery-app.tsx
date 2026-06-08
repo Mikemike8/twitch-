@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Show, SignInButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Avatar } from "@/components/avatar";
@@ -197,8 +198,17 @@ function StreamerBackdrop({ channel }: { channel: Channel }) {
 }
 
 function BackdropFallback({ channel }: { channel: Channel }) {
+  if (channel.thumbnailUrl) {
+    return (
+      <div className="absolute inset-0 overflow-hidden bg-black">
+        <Image src={channel.thumbnailUrl} alt="" fill sizes="100vw" className="h-full w-full object-cover object-center opacity-85" />
+        <div className="absolute inset-0 bg-black/20" />
+      </div>
+    );
+  }
+
   return (
-    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `${channel.thumbnailUrl ? `linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)), url("${channel.thumbnailUrl}")` : `radial-gradient(circle at 72% 46%, ${channel.colors[0]}, transparent 30%), radial-gradient(circle at 58% 72%, ${channel.colors[1]}, transparent 32%), linear-gradient(135deg, #020203, #111119)`}` }} />
+    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `radial-gradient(circle at 72% 46%, ${channel.colors[0]}, transparent 30%), radial-gradient(circle at 58% 72%, ${channel.colors[1]}, transparent 32%), linear-gradient(135deg, #020203, #111119)` }} />
   );
 }
 
