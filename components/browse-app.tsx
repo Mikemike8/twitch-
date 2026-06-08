@@ -123,7 +123,7 @@ function HeroTrailerBackground({ channel, className = "", showMuteControl = fals
   const [muted, setMuted] = useState(true);
 
   return (
-    <div className={`${className} overflow-hidden bg-black`}>
+    <div className={`${className} relative h-full w-full overflow-hidden bg-black`}>
       <MuxPlayer
         playbackId={heroTrailerPlaybackId}
         streamType="on-demand"
@@ -132,8 +132,14 @@ function HeroTrailerBackground({ channel, className = "", showMuteControl = fals
         loop
         playsInline
         metadata={{ video_title: `${heroTrailerTitle} trailer` }}
-        className="block h-full w-full [--media-object-fit:cover] [--media-object-position:center]"
-        style={{ width: "100%", height: "100%" }}
+        className="absolute inset-0 block h-full w-full max-w-none [--media-object-fit:cover] [--media-object-position:center]"
+        style={{
+          width: "100%",
+          height: "100%",
+          aspectRatio: "auto",
+          ["--media-object-fit" as string]: "cover",
+          ["--media-object-position" as string]: "center",
+        }}
       />
       {channel && <CatalogArtwork channel={channel} className="absolute inset-0 opacity-0" />}
       {showMuteControl && (
