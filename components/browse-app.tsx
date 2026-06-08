@@ -9,8 +9,9 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboa
 import { useRouter } from "next/navigation";
 import { recordVideoEvent, savePlaybackProgress } from "@/actions/catalog";
 import { createEpisodeChatToken } from "@/actions/episode-token";
+import { BrandLogo } from "@/components/brand-logo";
 import { ChannelPage } from "@/components/channel-page";
-import { BellIcon, MoreIcon, SearchIcon } from "@/components/icons";
+import { BellIcon, SearchIcon } from "@/components/icons";
 import { SiteTopbar, type SiteTopbarMode } from "@/components/site-topbar";
 import { channels, formatViewers, type Channel } from "@/lib/channels";
 import { normalizeLiveKitWsUrl } from "@/lib/livekit-url";
@@ -49,6 +50,7 @@ type PlayerProgressTarget = {
 };
 
 const heroTrailerPlaybackId = "xEjUkmnCYchvtR5CnnWc6QxGwko027FsIfrE7dBRLeKw";
+const heroTrailerTitle = "Dandadan";
 
 function getPlayerProgressTarget(event: { currentTarget: EventTarget | null }) {
   const target = event.currentTarget as (EventTarget & Partial<PlayerProgressTarget>) | null;
@@ -129,7 +131,7 @@ function HeroTrailerBackground({ channel, className = "", showMuteControl = fals
         muted={muted}
         loop
         playsInline
-        metadata={{ video_title: "ARGUS hero trailer" }}
+        metadata={{ video_title: `${heroTrailerTitle} trailer` }}
         className="block h-full w-full [--media-object-fit:cover] [--media-object-position:center]"
         style={{ width: "100%", height: "100%" }}
       />
@@ -209,11 +211,11 @@ function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channe
   return (
     <section className="relative -mx-7 -mt-4 hidden min-h-[640px] overflow-hidden bg-black lg:block">
       <HeroTrailerBackground channel={channel} className="absolute inset-0" showMuteControl />
-      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/72 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-black/25" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/72 via-black/32 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#141414]/82 via-transparent to-black/10" />
       <div className="relative z-10 flex min-h-[640px] max-w-2xl flex-col justify-end px-10 pb-24 xl:px-14">
         <div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase text-[#b3b3b3]"><span className="h-2.5 w-2.5 rounded bg-[#e50914]" />Most watched live anime</div>
-        <h1 className="text-5xl font-black leading-none tracking-normal xl:text-7xl">{channel.catalogTitle}</h1>
+        <h1 className="text-5xl font-black leading-none tracking-normal xl:text-7xl">{heroTrailerTitle}</h1>
         <p className="mt-5 text-xl font-medium text-white">Streaming now on ARGUS</p>
         <p className="mt-3 max-w-xl text-base leading-6 text-[#bcbcbc]">Join the live watch room, react with the community, and follow the conversation in real time.</p>
         <div className="mt-5 flex flex-wrap items-center gap-2 text-sm"><span className="rounded bg-[#e50914] px-2 py-1 font-bold text-white">LIVE</span><span className="text-[#b3b3b3]">1M viewers</span></div>
@@ -244,7 +246,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
       <div className="relative">
         <header className="sticky top-0 z-30 bg-gradient-to-b from-black via-black/92 to-black/0 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
           <div className="flex items-center justify-center">
-            <span className="text-3xl font-black text-[#e50914]">ARGUS</span>
+            <BrandLogo className="h-9 w-auto" />
             <button type="button" className="absolute right-5 grid h-10 w-10 place-items-center text-white/85" aria-label="Cast"><CastIcon className="h-7 w-7" /></button>
           </div>
         </header>
@@ -253,11 +255,11 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
           <div className="relative block h-[62vh] min-h-[480px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left shadow-[0_22px_60px_rgba(0,0,0,0.5)]">
             <HeroTrailerBackground channel={spotlight} className="absolute inset-0" showMuteControl />
             <button type="button" onClick={() => onOpen(spotlight)} className="absolute inset-0 z-10" aria-label={`Watch ${animeTitle(spotlight, 0)}`} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/5 to-transparent" />
             <LiveViewerBadge viewers={spotlight.viewers} className="absolute left-4 top-4" />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-5">
               <p className="text-xs font-medium uppercase text-[#b3b3b3]">Streaming now</p>
-              <h1 className="mt-2 text-4xl font-black uppercase leading-none tracking-normal">{spotlight.catalogTitle ?? spotlight.displayName}</h1>
+              <h1 className="mt-2 text-4xl font-black uppercase leading-none tracking-normal">{heroTrailerTitle}</h1>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium text-[#d2d2d2]">
                 <span className="border border-[#bcbcbc] px-1.5 py-0.5 text-[#bcbcbc]">TV-14</span>
                 <span>2026</span>
@@ -313,7 +315,7 @@ function MobileTopTenRail({ title, channels: railChannels, onOpen }: { title: st
 
 function MobileFeatureBlock({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channel) => void }) {
   if (!channel) return null;
-  return <section className="px-5"><button type="button" onClick={() => onOpen(channel)} className="relative min-h-[260px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left"><HeroTrailerBackground channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/54 to-black/10" /><div className="relative z-10 flex min-h-[260px] max-w-[70%] flex-col justify-end p-5"><p className="text-xs font-bold uppercase text-[#e50914]">Featured Movie Block</p><h2 className="mt-2 text-3xl font-black uppercase leading-none">{channel.catalogTitle ?? channel.displayName}</h2><p className="mt-3 text-sm leading-5 text-[#d2d2d2]">A sharper mobile feature card for promoted movies and live series.</p><span className="mt-5 w-fit rounded bg-white px-4 py-2 text-sm font-bold text-black">More Info</span></div></button></section>;
+  return <section className="px-5"><button type="button" onClick={() => onOpen(channel)} className="relative min-h-[220px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left"><HeroTrailerBackground channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent" /><div className="relative z-10 flex min-h-[220px] max-w-[66%] flex-col justify-end p-4"><p className="text-[11px] font-bold uppercase text-[#e50914]">Featured Movie Block</p><h2 className="mt-1.5 text-2xl font-black uppercase leading-none">{heroTrailerTitle}</h2><p className="mt-2 text-xs leading-5 text-[#d2d2d2]">A sharper mobile feature card for promoted movies and live series.</p><span className="mt-4 w-fit rounded bg-white px-3.5 py-2 text-xs font-bold text-black">More Info</span></div></button></section>;
 }
 
 function LiveViewerBadge({ viewers, className = "" }: { viewers: number; className?: string }) {
@@ -322,35 +324,46 @@ function LiveViewerBadge({ viewers, className = "" }: { viewers: number; classNa
 
 function MobileChannelFeed({ query, onQuery, data, onOpen, searchable = false }: { query: string; onQuery: (value: string) => void; data: Channel[]; onOpen: (channel: Channel) => void; searchable?: boolean }) {
   const router = useRouter();
+  const normalizedQuery = query.trim();
+  const topSearches = data.slice(0, 12);
+  const nextWatch = [...data].reverse().slice(0, 12);
+  const independent = data.filter((channel) => channel.category !== "Anime").slice(0, 12);
+
+  useEffect(() => {
+    if (!searchable) return;
+
+    const timeout = window.setTimeout(() => {
+      const target = normalizedQuery ? `/search?term=${encodeURIComponent(normalizedQuery)}` : "/search";
+      router.replace(target, { scroll: false });
+    }, 450);
+
+    return () => window.clearTimeout(timeout);
+  }, [normalizedQuery, router, searchable]);
 
   return (
-    <section className="-mx-4 -mt-4 min-h-screen bg-black text-white lg:hidden">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-black/95 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="text-3xl font-black text-[#e50914]">ARGUS</Link>
-          <h1 className="text-base font-bold">{searchable ? "Search" : "Live Channels"}</h1>
-        </div>
-        {searchable && <form onSubmit={(event) => { event.preventDefault(); router.push(`/search?term=${encodeURIComponent(query)}`); }} className="mt-5 flex h-12 items-center gap-3 rounded border border-white/30 bg-[#181818] px-3">
-          <SearchIcon className="h-6 w-6 shrink-0 text-[#b3b3b3]" />
-          <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search titles, genres, live" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-[#808080]" />
+    <section className="-mx-4 -mt-4 min-h-screen overflow-hidden bg-[#111] pb-24 text-white lg:hidden">
+      <header className="px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
+        {searchable && <form onSubmit={(event) => { event.preventDefault(); router.push(normalizedQuery ? `/search?term=${encodeURIComponent(normalizedQuery)}` : "/search"); }} className="flex h-16 items-center gap-3 rounded bg-[#1d1d1f] px-4 shadow-[0_14px_44px_rgba(0,0,0,0.28)]">
+          <SearchIcon className="h-6 w-6 shrink-0 text-[#a9a9ad]" />
+          <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search" autoFocus className="min-w-0 flex-1 bg-transparent text-2xl font-medium text-white outline-none placeholder:text-[#a9a9ad]" />
         </form>}
-        <div className="scroll-fade-x mt-4 flex gap-2 overflow-x-auto text-xs font-bold [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {["All", "Series", "Movies", "Live", "Anime"].map((item, index) => <button key={item} type="button" className={`shrink-0 rounded border px-3 py-2 ${index === 0 ? "border-white bg-white text-black" : "border-white/15 bg-[#181818] text-[#bcbcbc]"}`}>{item}</button>)}
-          <button type="button" aria-label="Filter channels" className="grid h-9 w-9 shrink-0 place-items-center rounded border border-white/15 bg-[#181818] text-[#bcbcbc]"><FilterIcon /></button>
+        <div className="scroll-fade-x mt-5 flex gap-7 overflow-x-auto pr-4 text-sm font-semibold text-[#b9b9bd] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {["New & Popular", "Originals", "Kids & Family", "Action & Adventure", "Comedy", "Documentary", "Drama", "Horror", "Reality", "Sci-Fi & Fantasy", "Thriller", "Showtime", "Sports"].map((item) => (
+            <button key={item} type="button" onClick={() => onQuery(item)} className="shrink-0 whitespace-nowrap hover:text-white">{item}</button>
+          ))}
         </div>
       </header>
-      <div className="pt-2">
-        {data.length ? data.slice(0, 18).map((channel, index) => <button key={channel.username} onClick={() => onOpen(channel)} className="block w-full border-b border-white/10 bg-[#141414] text-left">
-          <div className="relative aspect-video overflow-hidden bg-black"><CatalogArtwork channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10" /><span className={`absolute left-3 top-3 rounded px-2 py-1 text-xs font-bold text-white ${channel.hostIdentity ? "bg-[#e50914]" : "bg-[#333]"}`}>{channel.hostIdentity ? "LIVE" : "SERIES"}</span><span className="absolute bottom-3 left-3 text-lg font-black uppercase leading-none">{channel.catalogTitle ?? channel.displayName}</span><span className="absolute bottom-3 right-3 rounded bg-black/80 px-2 py-1 text-xs font-semibold text-white">{formatViewers(channel.viewers || 24)}</span></div>
-          <div className="flex gap-3 px-4 py-3"><CatalogArtwork channel={channel} className="h-12 w-12 shrink-0 rounded border border-white/10" /><span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><strong className="truncate text-base">{channel.catalogTitle ?? channel.displayName}</strong>{channel.hostIdentity && <i className="h-3 w-3 shrink-0 rounded-full bg-[#46d369]" />}</span><span className="mt-1 block truncate text-sm text-[#b3b3b3]">{channel.hostIdentity ? animeTitle(channel, index) : channel.category}</span><span className="mt-2 flex flex-wrap gap-1.5">{[...channel.tags, channel.category].slice(0, 4).map((tag, tagIndex) => <i key={`${tag}-${tagIndex}`} className="rounded bg-[#2a2a2a] px-3 py-1 text-xs font-bold not-italic text-[#bcbcbc]">{tag}</i>)}</span></span><MoreIcon className="mt-1 h-6 w-6 shrink-0 text-[#b3b3b3]" /></div>
-        </button>) : <div className="p-12 text-center text-sm text-[#b3b3b3]">No results found.</div>}
+      <div className="space-y-8">
+        {data.length ? (
+          <>
+            <MobilePosterRail title={normalizedQuery ? "Results" : "Top Searches"} channels={topSearches} onOpen={onOpen} />
+            <MobilePosterRail title="Your Next Watch" channels={nextWatch} onOpen={onOpen} />
+            <MobilePosterRail title="Independent Films" channels={independent.length ? independent : data.slice(3, 15)} onOpen={onOpen} />
+          </>
+        ) : <div className="px-5 py-12 text-sm font-semibold text-[#b3b3b3]">No results found.</div>}
       </div>
     </section>
   );
-}
-
-function FilterIcon() {
-  return <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h10M18 18h2" /><circle cx="16" cy="6" r="2" /><circle cx="8" cy="12" r="2" /><circle cx="16" cy="18" r="2" /></svg>;
 }
 
 function RailCard({ channel, index, onOpen, horizontal = false }: { channel: Channel; index: number; onOpen: () => void; horizontal?: boolean }) {
@@ -763,11 +776,11 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
   return (
     <div className="min-h-screen bg-[#141414] pb-24 text-white">
       <section className="relative min-h-[620px] overflow-hidden bg-black">
-        <HeroTrailerBackground channel={channel} className="absolute inset-0 opacity-75" showMuteControl />
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/82 to-black/20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/30 to-black/30" />
+        <HeroTrailerBackground channel={channel} className="absolute inset-0" showMuteControl />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/38 to-black/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#141414]/88 via-[#141414]/16 to-black/8" />
         <header className="relative z-10 flex items-center gap-6 px-5 py-5 text-sm font-bold text-white/72 sm:px-8 lg:px-14">
-          <button type="button" onClick={onBack} className="text-[#e50914]">ARGUS</button>
+          <button type="button" onClick={onBack} aria-label="Back to browse"><BrandLogo className="h-7 w-auto" /></button>
           <span className="text-white">{title}</span>
           <a href="#episodes" className="hover:text-white">Episodes</a>
           <a href="#about" className="hover:text-white">About</a>

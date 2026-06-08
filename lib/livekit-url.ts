@@ -9,7 +9,8 @@ export function normalizeLiveKitWsUrl(value: string | null | undefined) {
   try {
     const url = new URL(wsUrl);
     if (url.protocol !== "wss:" && url.protocol !== "ws:") return null;
-    return url.toString();
+    const normalized = url.toString();
+    return url.pathname === "/" && !url.search && !url.hash ? normalized.slice(0, -1) : normalized;
   } catch {
     return null;
   }

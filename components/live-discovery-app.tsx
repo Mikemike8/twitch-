@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Show, SignInButton } from "@clerk/nextjs";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Avatar } from "@/components/avatar";
+import { BrandLogo } from "@/components/brand-logo";
 import { FullscreenIcon, HeartIcon, SearchIcon, VolumeIcon } from "@/components/icons";
 import { LiveKitSession } from "@/components/livekit-session";
 import { LiveVideoPlayer } from "@/components/live-video-player";
@@ -68,7 +69,7 @@ export function LiveDiscoveryApp({ liveChannels, followedChannels, clerkConfigur
         <div className={`absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/30 transition-opacity duration-300 ${chromeVisible ? "opacity-100" : "opacity-0"}`} />
         <button onMouseEnter={() => setNavVisible(true)} className={`fixed left-1/2 top-6 z-40 -translate-x-1/2 text-sm font-medium text-white/90 transition-opacity duration-300 ${chromeVisible && !guideVisible && !navVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}>Menu</button>
         <header onMouseLeave={() => setNavVisible(false)} className={`fixed inset-x-0 top-0 z-30 flex h-16 items-center gap-7 border-b border-white/10 bg-black/80 px-5 backdrop-blur-lg transition-opacity duration-300 sm:px-10 lg:px-16 ${navVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}>
-          <Link href="/" className="text-xl font-black tracking-tight">ARGUS</Link>
+          <Link href="/" aria-label="Argus home"><BrandLogo className="h-8 w-auto" /></Link>
           <nav className="hidden items-center gap-7 text-sm font-bold text-white/75 md:flex">
             <Link href="/" className="hover:text-white">Home</Link>
             <Link href="/" className="hover:text-white">Browse</Link>
@@ -98,7 +99,7 @@ function MobileLiveTv({ selected, channels, clerkConfigured, viewerUsername, onS
   return <div className="min-h-[100svh] bg-black pb-[78px] text-white lg:hidden landscape:fixed landscape:inset-0 landscape:z-50 landscape:min-h-0 landscape:pb-0">
     <header className="sticky top-0 z-30 bg-gradient-to-b from-black via-black/92 to-black/0 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] landscape:hidden">
       <div className="flex items-center justify-center">
-        <Link href="/" className="text-3xl font-black text-[#e50914]">ARGUS</Link>
+        <Link href="/" aria-label="Argus home"><BrandLogo className="h-9 w-auto" /></Link>
         <SearchIcon className="absolute right-5 h-6 w-6 text-white/80" />
       </div>
       <nav className="scroll-fade-x mt-6 flex items-center gap-5 overflow-x-auto text-sm font-medium [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

@@ -1,6 +1,7 @@
 import { SignUp } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { authAppearance } from "@/lib/clerk-appearance";
 import { isClerkConfigured } from "@/lib/clerk-config";
 
 export default async function SignUpPage() {
@@ -19,5 +20,5 @@ export default async function SignUpPage() {
   const { userId } = await auth();
   if (userId) redirect("/");
 
-  return <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" fallbackRedirectUrl="/" />;
+  return <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" fallbackRedirectUrl="/" appearance={authAppearance} />;
 }

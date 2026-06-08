@@ -27,27 +27,28 @@ export function DashboardShell({
   const base = `/u/${username}`;
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-white/10 bg-black/92 px-3 backdrop-blur-xl sm:gap-4 sm:px-5">
-        <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded hover:bg-white/10 lg:hidden" aria-label="Open creator navigation"><MenuIcon className="h-5 w-5" /></button>
-        <Link href="/" aria-label="Argus home" className="flex items-center gap-2"><BrandLogo className="h-8 w-8 rounded" /><span className="hidden text-xl font-black text-[#e50914] sm:block">ARGUS</span></Link>
-        <span className="truncate font-bold text-[#e5e5e5]"><span className="hidden sm:inline">Creator </span>Dashboard</span>
-        <Link href="/" className="ml-auto rounded bg-white/15 px-3 py-2 text-xs font-bold hover:bg-white/20">Exit</Link>
+    <div className="min-h-screen bg-[#141414] text-white">
+      <div className="pointer-events-none fixed inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_18%_0%,rgba(229,9,20,0.2),transparent_24rem),linear-gradient(180deg,rgba(0,0,0,0.96),rgba(20,20,20,0))]" />
+      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-white/10 bg-black/78 px-3 backdrop-blur-xl sm:gap-4 sm:px-5">
+        <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded border border-white/10 bg-white/5 hover:bg-white/10 lg:hidden" aria-label="Open creator navigation"><MenuIcon className="h-5 w-5" /></button>
+        <Link href="/" aria-label="Argus home" className="flex items-center gap-2"><BrandLogo className="h-8 w-auto" /></Link>
+        <span className="truncate text-sm font-black uppercase tracking-normal text-[#e5e5e5] sm:text-base">Creator Studio</span>
+        <Link href="/" className="ml-auto rounded bg-white px-3 py-2 text-xs font-black text-black hover:bg-[#e5e5e5]">Exit</Link>
       </header>
       {mobileOpen && <button onClick={() => setMobileOpen(false)} className="fixed inset-0 top-16 z-30 bg-black/70 lg:hidden" aria-label="Close creator navigation" />}
-      <aside className={`${collapsed ? "lg:w-[60px]" : "lg:w-[220px]"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed bottom-0 left-0 top-16 z-30 w-[min(280px,85vw)] border-r border-white/10 bg-[#141414] transition-[transform,width] lg:translate-x-0`}>
-        <div className="flex h-12 items-center px-3">
-          {!collapsed && <p className="truncate text-xs font-bold uppercase text-[#808080]">Creator tools</p>}
-          <button onClick={() => setMobileOpen(false)} className="ml-auto rounded p-2 hover:bg-white/10 lg:hidden" aria-label="Close creator navigation">×</button>
-          <button onClick={() => setCollapsed(!collapsed)} className="ml-auto hidden rounded p-2 hover:bg-white/10 lg:block" aria-label="Toggle creator navigation"><ChevronIcon className={`h-4 w-4 ${collapsed ? "rotate-180" : ""}`} /></button>
+      <aside className={`${collapsed ? "lg:w-[68px]" : "lg:w-[236px]"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed bottom-0 left-0 top-16 z-30 w-[min(292px,88vw)] border-r border-white/10 bg-black/88 shadow-[18px_0_48px_rgba(0,0,0,0.36)] backdrop-blur-xl transition-[transform,width] lg:translate-x-0`}>
+        <div className="flex h-16 items-center px-4">
+          {!collapsed && <div className="min-w-0"><p className="truncate text-[11px] font-black uppercase text-[#e50914]">Creator tools</p><p className="mt-1 truncate text-xs text-[#8c8c8c]">@{username}</p></div>}
+          <button onClick={() => setMobileOpen(false)} className="ml-auto rounded p-2 text-2xl leading-none hover:bg-white/10 lg:hidden" aria-label="Close creator navigation">×</button>
+          <button onClick={() => setCollapsed(!collapsed)} className="ml-auto hidden rounded border border-white/10 bg-white/5 p-2 hover:bg-white/10 lg:block" aria-label="Toggle creator navigation"><ChevronIcon className={`h-4 w-4 ${collapsed ? "rotate-180" : ""}`} /></button>
         </div>
         {items.map(({ label, href, icon: Icon }) => {
           const path = `${base}${href}`;
           const active = pathname === path;
-          return <Link key={label} href={path} onClick={() => setMobileOpen(false)} className={`flex h-11 items-center gap-3 border-l-2 px-5 text-sm font-semibold ${active ? "border-[#e50914] bg-[#232323] text-white" : "border-transparent text-[#b3b3b3] hover:bg-[#181818] hover:text-white"}`}><Icon className="h-4 w-4 shrink-0" />{!collapsed && label}</Link>;
+          return <Link key={label} href={path} onClick={() => setMobileOpen(false)} className={`mx-2 mb-1 flex h-12 items-center gap-3 rounded border-l-2 px-4 text-sm font-bold ${active ? "border-[#e50914] bg-white/12 text-white" : "border-transparent text-[#b3b3b3] hover:bg-white/8 hover:text-white"}`}><Icon className="h-4 w-4 shrink-0" />{!collapsed && label}</Link>;
         })}
       </aside>
-      <main className={`${collapsed ? "lg:ml-[60px]" : "lg:ml-[220px]"} pt-16 transition-[margin]`}>{children}</main>
+      <main className={`${collapsed ? "lg:ml-[68px]" : "lg:ml-[236px]"} relative pt-16 transition-[margin]`}>{children}</main>
     </div>
   );
 }

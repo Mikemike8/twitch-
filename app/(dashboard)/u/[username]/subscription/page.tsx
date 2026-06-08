@@ -21,8 +21,7 @@ export default async function SubscriptionPage({
       <div className="mx-auto flex w-full max-w-5xl flex-col px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
         <header className="flex items-center justify-between border-b border-white/10 pb-5">
           <Link href="/" aria-label="Argus home" className="flex items-center gap-3">
-            <BrandLogo />
-            <span className="text-sm font-black uppercase tracking-[0.18em] text-white/80">Argus</span>
+            <BrandLogo className="h-8 w-auto" />
           </Link>
           <Link href={`/u/${username}`} className="rounded-md border border-white/10 px-3 py-2 text-xs font-bold text-[#d6d6df] hover:bg-white/5">Dashboard</Link>
         </header>

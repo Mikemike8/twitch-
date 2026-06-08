@@ -37,8 +37,7 @@ export function SiteTopbar({
   return (
     <header className={`${fixed ? "fixed inset-x-0 top-0" : "sticky top-0"} z-40 flex h-[68px] items-center gap-5 border-b border-white/10 ${translucent ? "bg-black/72" : "bg-black/88"} px-8 text-white backdrop-blur-xl`}>
       <Link href="/" className="flex items-center gap-2" aria-label="Argus home">
-        <BrandLogo className="h-9 w-9 rounded" />
-        <span className="hidden text-2xl font-black tracking-normal text-[#e50914] sm:block">ARGUS</span>
+        <BrandLogo className="h-9 w-auto" />
       </Link>
       <nav className="ml-3 hidden items-center gap-6 text-sm font-medium xl:flex">
         <Link href="/" className={`transition ${navClass("home")}`}>Home</Link>
