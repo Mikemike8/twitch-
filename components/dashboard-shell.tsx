@@ -27,27 +27,27 @@ export function DashboardShell({
   const base = `/u/${username}`;
 
   return (
-    <div className="min-h-screen bg-[#0e0e10]">
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 border-b border-[#29292e] bg-[#18181b] px-3 sm:gap-4 sm:px-4">
-        <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded hover:bg-[#303038] lg:hidden" aria-label="Open creator navigation"><MenuIcon className="h-5 w-5" /></button>
-        <Link href="/" aria-label="Argus home"><BrandLogo /></Link>
-        <span className="truncate font-black"><span className="hidden sm:inline">Creator </span>Dashboard</span>
-        <Link href="/" className="ml-auto rounded bg-[#2f2f35] px-3 py-2 text-xs font-bold hover:bg-[#3b3b44]">Exit</Link>
+    <div className="min-h-screen bg-black text-white">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-white/10 bg-black/92 px-3 backdrop-blur-xl sm:gap-4 sm:px-5">
+        <button onClick={() => setMobileOpen(true)} className="grid h-10 w-10 place-items-center rounded hover:bg-white/10 lg:hidden" aria-label="Open creator navigation"><MenuIcon className="h-5 w-5" /></button>
+        <Link href="/" aria-label="Argus home" className="flex items-center gap-2"><BrandLogo className="h-8 w-8 rounded" /><span className="hidden text-xl font-black text-[#e50914] sm:block">ARGUS</span></Link>
+        <span className="truncate font-bold text-[#e5e5e5]"><span className="hidden sm:inline">Creator </span>Dashboard</span>
+        <Link href="/" className="ml-auto rounded bg-white/15 px-3 py-2 text-xs font-bold hover:bg-white/20">Exit</Link>
       </header>
-      {mobileOpen && <button onClick={() => setMobileOpen(false)} className="fixed inset-0 top-14 z-30 bg-black/60 lg:hidden" aria-label="Close creator navigation" />}
-      <aside className={`${collapsed ? "lg:w-[60px]" : "lg:w-[220px]"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed bottom-0 left-0 top-14 z-30 w-[min(280px,85vw)] border-r border-[#29292e] bg-[#1f1f23] transition-[transform,width] lg:translate-x-0`}>
+      {mobileOpen && <button onClick={() => setMobileOpen(false)} className="fixed inset-0 top-16 z-30 bg-black/70 lg:hidden" aria-label="Close creator navigation" />}
+      <aside className={`${collapsed ? "lg:w-[60px]" : "lg:w-[220px]"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed bottom-0 left-0 top-16 z-30 w-[min(280px,85vw)] border-r border-white/10 bg-[#141414] transition-[transform,width] lg:translate-x-0`}>
         <div className="flex h-12 items-center px-3">
-          {!collapsed && <p className="truncate text-xs font-bold uppercase text-[#adadb8]">Creator tools</p>}
-          <button onClick={() => setMobileOpen(false)} className="ml-auto rounded p-2 hover:bg-[#303038] lg:hidden" aria-label="Close creator navigation">×</button>
-          <button onClick={() => setCollapsed(!collapsed)} className="ml-auto hidden rounded p-2 hover:bg-[#303038] lg:block" aria-label="Toggle creator navigation"><ChevronIcon className={`h-4 w-4 ${collapsed ? "rotate-180" : ""}`} /></button>
+          {!collapsed && <p className="truncate text-xs font-bold uppercase text-[#808080]">Creator tools</p>}
+          <button onClick={() => setMobileOpen(false)} className="ml-auto rounded p-2 hover:bg-white/10 lg:hidden" aria-label="Close creator navigation">×</button>
+          <button onClick={() => setCollapsed(!collapsed)} className="ml-auto hidden rounded p-2 hover:bg-white/10 lg:block" aria-label="Toggle creator navigation"><ChevronIcon className={`h-4 w-4 ${collapsed ? "rotate-180" : ""}`} /></button>
         </div>
         {items.map(({ label, href, icon: Icon }) => {
           const path = `${base}${href}`;
           const active = pathname === path;
-          return <Link key={label} href={path} onClick={() => setMobileOpen(false)} className={`flex h-11 items-center gap-3 px-5 text-sm font-semibold ${active ? "bg-[#303038] text-white" : "text-[#adadb8] hover:bg-[#29292e] hover:text-white"}`}><Icon className="h-4 w-4 shrink-0" />{!collapsed && label}</Link>;
+          return <Link key={label} href={path} onClick={() => setMobileOpen(false)} className={`flex h-11 items-center gap-3 border-l-2 px-5 text-sm font-semibold ${active ? "border-[#e50914] bg-[#232323] text-white" : "border-transparent text-[#b3b3b3] hover:bg-[#181818] hover:text-white"}`}><Icon className="h-4 w-4 shrink-0" />{!collapsed && label}</Link>;
         })}
       </aside>
-      <main className={`${collapsed ? "lg:ml-[60px]" : "lg:ml-[220px]"} pt-14 transition-[margin]`}>{children}</main>
+      <main className={`${collapsed ? "lg:ml-[60px]" : "lg:ml-[220px]"} pt-16 transition-[margin]`}>{children}</main>
     </div>
   );
 }

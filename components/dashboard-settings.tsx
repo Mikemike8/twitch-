@@ -84,35 +84,35 @@ export function DashboardSettings({ username, bio: initialBio, persistChanges, s
   };
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-10">
+    <div className="space-y-6 bg-[#141414] p-4 text-white sm:p-6 lg:p-10">
       <div>
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#bf94ff]">Stream</p>
-        <h1 className="mt-2 break-words text-2xl font-black sm:text-3xl">{currentUsername}&apos;s stream</h1>
-        <p className="mt-2 text-sm text-[#adadb8]">Manage your stream information and live chat rules.</p>
+        <p className="text-xs font-bold uppercase text-[#e50914]">Stream</p>
+        <h1 className="mt-2 break-words text-3xl font-black uppercase leading-none sm:text-5xl">{currentUsername}&apos;s stream</h1>
+        <p className="mt-3 text-sm leading-6 text-[#b3b3b3]">Manage your stream information and live chat rules.</p>
       </div>
-      <section className="rounded-lg border border-[#303038] bg-[#18181b] p-5">
-        <h2 className="font-black">Stream information</h2>
-        <label className="mt-4 block text-xs font-bold text-[#adadb8]">Username</label>
+      <section className="rounded border border-white/10 bg-[#181818] p-5">
+        <h2 className="text-xl font-bold">Stream information</h2>
+        <label className="mt-4 block text-xs font-bold text-[#b3b3b3]">Username</label>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-          <input value={usernameValue} maxLength={inputLimits.username} onChange={(event) => setUsernameValue(event.target.value)} className="min-w-0 flex-1 rounded-md border border-[#3f3f46] bg-[#242429] px-3 py-2 text-sm outline-none focus:border-[#9147ff]" />
-          <button onClick={saveUsername} disabled={isPending} className="rounded bg-[#2f2f35] px-3 py-2 text-xs font-bold hover:bg-[#3b3b44] disabled:opacity-50">Save username</button>
+          <input value={usernameValue} maxLength={inputLimits.username} onChange={(event) => setUsernameValue(event.target.value)} className="min-w-0 flex-1 rounded border border-white/20 bg-black px-3 py-2 text-sm outline-none focus:border-[#e50914]" />
+          <button onClick={saveUsername} disabled={isPending} className="rounded bg-white/15 px-3 py-2 text-xs font-bold hover:bg-white/20 disabled:opacity-50">Save username</button>
         </div>
-        <p className="mt-2 text-xs text-[#85858f]">Use 3-24 letters, numbers, underscores, or hyphens.</p>
-        <label className="mt-4 block text-xs font-bold text-[#adadb8]">Title</label>
-        <input value={title} maxLength={inputLimits.streamName} onChange={(event) => setTitle(event.target.value)} className="mt-2 w-full rounded-md border border-[#3f3f46] bg-[#242429] px-3 py-2 text-sm outline-none focus:border-[#9147ff]" />
-        <button onClick={saveTitle} disabled={isPending} className="mt-3 rounded bg-[#9147ff] px-3 py-2 text-xs font-bold hover:bg-[#a970ff] disabled:opacity-50">Save title</button>
-        <label className="mt-5 block text-xs font-bold text-[#adadb8]">Creator bio</label>
-        <textarea value={bio} maxLength={inputLimits.bio} onChange={(event) => setBio(event.target.value)} rows={3} className="mt-2 w-full rounded-md border border-[#3f3f46] bg-[#242429] px-3 py-2 text-sm outline-none focus:border-[#9147ff]" />
-        <button onClick={saveBio} disabled={isPending} className="mt-3 rounded bg-[#2f2f35] px-3 py-2 text-xs font-bold hover:bg-[#3b3b44] disabled:opacity-50">Save bio</button>
-        {status && <p className="mt-3 text-xs text-[#adadb8]">{status}</p>}
+        <p className="mt-2 text-xs text-[#808080]">Use 3-24 letters, numbers, underscores, or hyphens.</p>
+        <label className="mt-4 block text-xs font-bold text-[#b3b3b3]">Title</label>
+        <input value={title} maxLength={inputLimits.streamName} onChange={(event) => setTitle(event.target.value)} className="mt-2 w-full rounded border border-white/20 bg-black px-3 py-2 text-sm outline-none focus:border-[#e50914]" />
+        <button onClick={saveTitle} disabled={isPending} className="mt-3 rounded bg-[#e50914] px-3 py-2 text-xs font-bold hover:bg-[#f50723] disabled:opacity-50">Save title</button>
+        <label className="mt-5 block text-xs font-bold text-[#b3b3b3]">Creator bio</label>
+        <textarea value={bio} maxLength={inputLimits.bio} onChange={(event) => setBio(event.target.value)} rows={3} className="mt-2 w-full rounded border border-white/20 bg-black px-3 py-2 text-sm outline-none focus:border-[#e50914]" />
+        <button onClick={saveBio} disabled={isPending} className="mt-3 rounded bg-white/15 px-3 py-2 text-xs font-bold hover:bg-white/20 disabled:opacity-50">Save bio</button>
+        {status && <p className="mt-3 text-xs text-[#b3b3b3]">{status}</p>}
         <div className="mt-5">
-          <label className="mb-2 block text-xs font-bold text-[#adadb8]">Thumbnail</label>
+          <label className="mb-2 block text-xs font-bold text-[#b3b3b3]">Thumbnail</label>
           <ThumbnailUpload configured={uploadConfigured && persistChanges} thumbnailUrl={stream.thumbnailUrl} />
         </div>
       </section>
-      <section className="rounded-lg border border-[#303038] bg-[#18181b] p-5">
-        <h2 className="font-black">Chat settings</h2>
-        <div className="mt-4 divide-y divide-[#303038]">
+      <section className="rounded border border-white/10 bg-[#181818] p-5">
+        <h2 className="text-xl font-bold">Chat settings</h2>
+        <div className="mt-4 divide-y divide-white/10">
           <Setting label="Enable chat" description="Allow viewers to send messages." enabled={settings.isChatEnabled} disabled={isPending} onToggle={() => toggle("isChatEnabled")} />
           <Setting label="Slow mode" description="Allow one server-validated message per viewer every 15 seconds." enabled={settings.isChatDelayed} disabled={isPending} onToggle={() => toggle("isChatDelayed")} />
           <Setting label="Followers only" description="Only followers can send messages." enabled={settings.isChatFollowersOnly} disabled={isPending} onToggle={() => toggle("isChatFollowersOnly")} />
@@ -123,5 +123,5 @@ export function DashboardSettings({ username, bio: initialBio, persistChanges, s
 }
 
 function Setting({ label, description, enabled, disabled, onToggle }: { label: string; description: string; enabled: boolean; disabled: boolean; onToggle: () => void }) {
-  return <div className="flex items-center gap-4 py-4"><div className="flex-1"><p className="text-sm font-bold">{label}</p><p className="mt-1 text-xs text-[#adadb8]">{description}</p></div><button onClick={onToggle} disabled={disabled} className={`relative h-6 w-11 rounded-full transition disabled:opacity-50 ${enabled ? "bg-[#9147ff]" : "bg-[#4a4a52]"}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-[left] ${enabled ? "left-6" : "left-1"}`} /></button></div>;
+  return <div className="flex items-center gap-4 py-4"><div className="flex-1"><p className="text-sm font-bold">{label}</p><p className="mt-1 text-xs text-[#b3b3b3]">{description}</p></div><button onClick={onToggle} disabled={disabled} className={`relative h-6 w-11 rounded-full transition disabled:opacity-50 ${enabled ? "bg-[#e50914]" : "bg-[#4a4a52]"}`}><span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-[left] ${enabled ? "left-6" : "left-1"}`} /></button></div>;
 }

@@ -32,7 +32,7 @@ export function SiteTopbar({
 }) {
   const canSearch = Boolean(onQuery);
   const navClass = (item: SiteTopbarActive) => item === active ? "text-white" : "text-[#b3b3b3] hover:text-white";
-  const profileHref = viewerUsername ? `/${viewerUsername}` : "/sign-in";
+  const profileInitial = (viewerUsername?.slice(0, 1) || "A").toUpperCase();
 
   return (
     <header className={`${fixed ? "fixed inset-x-0 top-0" : "sticky top-0"} z-40 flex h-[68px] items-center gap-5 border-b border-white/10 ${translucent ? "bg-black/72" : "bg-black/88"} px-8 text-white backdrop-blur-xl`}>
@@ -46,7 +46,6 @@ export function SiteTopbar({
         <Link href="/#categories" className={`transition ${navClass("categories")}`}>Categories</Link>
         <Link href="/search" className={`transition ${navClass("search")}`}>Search</Link>
         <button type="button" className="cursor-not-allowed text-[#777]" title="Downloads are coming soon">Downloads</button>
-        <Link href={profileHref} className={`transition ${navClass("profile")}`}>Profile</Link>
         {onMode && mode && <button type="button" onClick={() => onMode(mode === "following" ? "browse" : "following")} className={`transition ${mode === "following" ? "text-white" : "text-[#b3b3b3] hover:text-white"}`}>My List</button>}
       </nav>
       {canSearch && <form action="/search" className="ml-2 hidden h-10 min-w-[180px] max-w-xs flex-1 items-center rounded border border-white/30 bg-black/60 2xl:flex">
@@ -64,14 +63,23 @@ export function SiteTopbar({
           </Show>
           <Show when="signed-in">
             <div className="flex items-center gap-2">
-              {viewerUsername && (
-                <>
-                  <Link href={`/${viewerUsername}`} className="hidden rounded border border-white/15 px-3 py-2 text-xs font-bold text-[#b3b3b3] hover:bg-white/10 hover:text-white xl:block">Profile</Link>
-                  <Link href={`/u/${viewerUsername}`} className="hidden rounded bg-[#e50914] px-3 py-2 text-xs font-bold hover:bg-[#f50723] xl:block">Creator Dashboard</Link>
-                </>
+              {viewerUsername ? (
+                <details className="group relative">
+                  <summary className="flex h-9 list-none items-center gap-2 rounded text-sm font-bold text-white marker:hidden [&::-webkit-details-marker]:hidden">
+                    <span className="grid h-8 w-8 place-items-center rounded bg-[#e50914] text-sm font-black text-white">{profileInitial}</span>
+                    <span className="hidden text-[#b3b3b3] group-open:rotate-180 sm:inline">⌄</span>
+                  </summary>
+                  <div className="absolute right-0 top-11 w-56 overflow-hidden rounded border border-white/15 bg-black/95 py-2 shadow-[0_18px_44px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+                    <Link href={`/${viewerUsername}`} className="block px-4 py-3 text-sm font-bold text-white hover:bg-white/10">Profile</Link>
+                    <Link href="/search" className="block px-4 py-3 text-sm text-[#b3b3b3] hover:bg-white/10 hover:text-white">Search</Link>
+                    <Link href="/" className="block px-4 py-3 text-sm text-[#b3b3b3] hover:bg-white/10 hover:text-white">Home</Link>
+                    <div className="my-2 h-px bg-white/10" />
+                    <SignOutButton><button className="block w-full px-4 py-3 text-left text-sm text-[#b3b3b3] hover:bg-white/10 hover:text-white">Log out</button></SignOutButton>
+                  </div>
+                </details>
+              ) : (
+                <UserButton />
               )}
-              <SignOutButton><button className="hidden rounded bg-white/10 px-3 py-2 text-xs font-bold hover:bg-white/15 sm:block">Log out</button></SignOutButton>
-              <UserButton />
             </div>
           </Show>
         </>

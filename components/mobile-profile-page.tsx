@@ -5,7 +5,7 @@ import { SignOutButton } from "@clerk/nextjs";
 import { useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { FollowButton } from "@/components/follow-button";
-import { BellIcon, SearchIcon, VideoIcon } from "@/components/icons";
+import { BellIcon } from "@/components/icons";
 import { SiteTopbar } from "@/components/site-topbar";
 import type { Channel } from "@/lib/channels";
 
@@ -34,7 +34,7 @@ export function MobileProfilePage({
       <main className="mx-auto w-full max-w-[1180px] px-5 py-5 sm:px-8 sm:py-10 lg:px-10">
         <div className="mb-8 flex items-center justify-between gap-4 lg:hidden">
           <Link href="/" className="text-sm font-bold text-[#b3b3b3]">Back</Link>
-          {isSelf ? <Link href={dashboardHref} className="rounded bg-[#e50914] px-4 py-2 text-sm font-bold text-white">Creator Dashboard</Link> : <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
+          {!isSelf && <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
         </div>
 
         <section className="overflow-hidden rounded border border-white/10 bg-[#181818]">
@@ -58,11 +58,7 @@ export function MobileProfilePage({
                 <Link href={liveHref} className="rounded bg-white px-5 py-3 text-sm font-bold text-black hover:bg-white/80">
                   {channel.live ? "Watch Live" : "View Channel"}
                 </Link>
-                {isSelf ? (
-                  <Link href={dashboardHref} className="rounded bg-[#e50914] px-5 py-3 text-sm font-bold text-white hover:bg-[#f50723]">Creator Dashboard</Link>
-                ) : (
-                  <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />
-                )}
+                {!isSelf && <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
               </div>
             </div>
           </div>
@@ -98,14 +94,8 @@ export function MobileProfilePage({
           <ProfileMenuLink href="/search" icon={<ClipsIcon />} title="Watchlist" detail="Save anime, movies, and series for later" />
           <ProfileMenuLink href="/" icon={<HomeIcon />} title="Continue Watching" detail="Resume episodes and live watch rooms" />
           <ProfileMenuLink href="/live" icon={<LiveTvIcon />} title="Live Rooms" detail="Jump back into active community streams" />
-          <ProfileMenuLink href={isSelf ? dashboardHref : `/${channel.username}`} icon={<ProfileIcon />} title={isSelf ? "Edit Profile" : "View Channel"} detail={isSelf ? "Update your public identity" : "Open this creator channel"} />
+          <ProfileMenuLink href={isSelf ? `${dashboardHref}` : `/${channel.username}`} icon={<ProfileIcon />} title={isSelf ? "Edit Profile" : "View Channel"} detail={isSelf ? "Update your public identity" : "Open this creator channel"} />
         </section>
-
-        {isSelf && <section className="mt-6 overflow-hidden rounded border border-white/10 bg-[#181818]">
-          <ProfileMenuLink href={`/u/${channel.username}/keys`} icon={<VideoIcon className="h-5 w-5" />} title="Connection Keys" detail="Manage stream connection details" />
-          <ProfileMenuLink href={`/u/${channel.username}/chat`} icon={<SearchIcon className="h-5 w-5" />} title="Chat Moderation" detail="Review chat controls and community safety" />
-          <ProfileMenuLink href={dashboardHref} icon={<BellIcon className="h-5 w-5" />} title="Creator Dashboard" detail="Open the full creator workspace" />
-        </section>}
 
         <section className="mt-6 overflow-hidden rounded border border-white/10 bg-[#181818]">
           <label className="flex min-h-16 items-center gap-4 border-b border-white/10 px-4 py-4 text-left">

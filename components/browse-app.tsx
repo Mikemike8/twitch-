@@ -286,21 +286,24 @@ function MobileChannelFeed({ query, onQuery, data, onOpen, searchable = false }:
 
   return (
     <section className="-mx-4 -mt-4 min-h-screen bg-black text-white lg:hidden">
-      <div className="flex h-14 items-center justify-center border-b border-white/10 bg-black/90 px-4 backdrop-blur-xl"><h1 className="text-lg font-bold">{searchable ? "Search" : "Live Channels"}</h1></div>
-      {searchable && <form onSubmit={(event) => { event.preventDefault(); router.push(`/search?term=${encodeURIComponent(query)}`); }} className="mx-4 mt-3 flex items-center gap-3 rounded border border-white/30 bg-black px-3 py-3">
-        <SearchIcon className="h-6 w-6 shrink-0 text-[#b3b3b3]" />
-        <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search anime, series, live" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-[#808080]" />
-      </form>}
-      <div className="mt-2 flex items-end border-b border-white/10 px-4 text-base font-bold">
-        <span className="border-b-[3px] border-[#e50914] px-1 pb-3 pt-2 text-white">All</span>
-        <span className="px-7 pb-3 pt-2 text-[#808080]">Series</span>
-        <span className="pb-3 pt-2 text-[#808080]">Live</span>
-        <button type="button" aria-label="Filter channels" className="ml-auto mb-1 grid h-11 w-11 place-items-center"><FilterIcon /></button>
-      </div>
-      <div>
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-black/95 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-xl">
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-3xl font-black text-[#e50914]">ARGUS</Link>
+          <h1 className="text-base font-bold">{searchable ? "Search" : "Live Channels"}</h1>
+        </div>
+        {searchable && <form onSubmit={(event) => { event.preventDefault(); router.push(`/search?term=${encodeURIComponent(query)}`); }} className="mt-5 flex h-12 items-center gap-3 rounded border border-white/30 bg-[#181818] px-3">
+          <SearchIcon className="h-6 w-6 shrink-0 text-[#b3b3b3]" />
+          <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search titles, genres, live" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-[#808080]" />
+        </form>}
+        <div className="scroll-fade-x mt-4 flex gap-2 overflow-x-auto text-xs font-bold [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {["All", "Series", "Movies", "Live", "Anime"].map((item, index) => <button key={item} type="button" className={`shrink-0 rounded border px-3 py-2 ${index === 0 ? "border-white bg-white text-black" : "border-white/15 bg-[#181818] text-[#bcbcbc]"}`}>{item}</button>)}
+          <button type="button" aria-label="Filter channels" className="grid h-9 w-9 shrink-0 place-items-center rounded border border-white/15 bg-[#181818] text-[#bcbcbc]"><FilterIcon /></button>
+        </div>
+      </header>
+      <div className="pt-2">
         {data.length ? data.slice(0, 18).map((channel, index) => <button key={channel.username} onClick={() => onOpen(channel)} className="block w-full border-b border-white/10 bg-[#141414] text-left">
-          <div className="relative aspect-video overflow-hidden bg-black"><CatalogArtwork channel={channel} className="absolute inset-0" /><span className={`absolute left-3 top-3 rounded px-2 py-1 text-xs font-bold text-white ${channel.hostIdentity ? "bg-[#e50914]" : "bg-[#333]"}`}>{channel.hostIdentity ? "LIVE" : "SERIES"}</span><span className="absolute bottom-2 left-3 rounded bg-black/80 px-2 py-1 text-sm font-semibold text-white">{formatViewers(channel.viewers || 24)} watching</span></div>
-          <div className="flex gap-3 px-4 py-3"><CatalogArtwork channel={channel} className="h-12 w-12 shrink-0 rounded border border-white/10" /><span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><strong className="truncate text-base">{channel.catalogTitle ?? channel.displayName}</strong>{channel.hostIdentity && <i className="h-3 w-3 shrink-0 rounded-full bg-[#46d369]" />}</span><span className="mt-1 block truncate text-base text-[#b3b3b3]">{channel.hostIdentity ? animeTitle(channel, index) : channel.category}</span><span className="mt-2 flex flex-wrap gap-1.5">{[...channel.tags, channel.category].slice(0, 4).map((tag, tagIndex) => <i key={`${tag}-${tagIndex}`} className="rounded bg-[#2a2a2a] px-3 py-1 text-xs font-bold not-italic text-[#bcbcbc]">{tag}</i>)}</span></span><MoreIcon className="mt-1 h-6 w-6 shrink-0 text-[#b3b3b3]" /></div>
+          <div className="relative aspect-video overflow-hidden bg-black"><CatalogArtwork channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10" /><span className={`absolute left-3 top-3 rounded px-2 py-1 text-xs font-bold text-white ${channel.hostIdentity ? "bg-[#e50914]" : "bg-[#333]"}`}>{channel.hostIdentity ? "LIVE" : "SERIES"}</span><span className="absolute bottom-3 left-3 text-lg font-black uppercase leading-none">{channel.catalogTitle ?? channel.displayName}</span><span className="absolute bottom-3 right-3 rounded bg-black/80 px-2 py-1 text-xs font-semibold text-white">{formatViewers(channel.viewers || 24)}</span></div>
+          <div className="flex gap-3 px-4 py-3"><CatalogArtwork channel={channel} className="h-12 w-12 shrink-0 rounded border border-white/10" /><span className="min-w-0 flex-1"><span className="flex items-center gap-1.5"><strong className="truncate text-base">{channel.catalogTitle ?? channel.displayName}</strong>{channel.hostIdentity && <i className="h-3 w-3 shrink-0 rounded-full bg-[#46d369]" />}</span><span className="mt-1 block truncate text-sm text-[#b3b3b3]">{channel.hostIdentity ? animeTitle(channel, index) : channel.category}</span><span className="mt-2 flex flex-wrap gap-1.5">{[...channel.tags, channel.category].slice(0, 4).map((tag, tagIndex) => <i key={`${tag}-${tagIndex}`} className="rounded bg-[#2a2a2a] px-3 py-1 text-xs font-bold not-italic text-[#bcbcbc]">{tag}</i>)}</span></span><MoreIcon className="mt-1 h-6 w-6 shrink-0 text-[#b3b3b3]" /></div>
         </button>) : <div className="p-12 text-center text-sm text-[#b3b3b3]">No results found.</div>}
       </div>
     </section>
