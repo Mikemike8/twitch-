@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Show, SignInButton, SignOutButton, UserButton } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { SearchIcon } from "@/components/icons";
 import { inputLimits } from "@/lib/validation";
@@ -33,9 +34,21 @@ export function SiteTopbar({
   const canSearch = Boolean(onQuery);
   const navClass = (item: SiteTopbarActive) => item === active ? "text-white" : "text-[#b3b3b3] hover:text-white";
   const profileInitial = (viewerUsername?.slice(0, 1) || "A").toUpperCase();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 8);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+
+  const chromeClass = scrolled
+    ? `border-white/10 ${translucent ? "bg-black/72" : "bg-black/88"} backdrop-blur-xl shadow-[0_12px_34px_rgba(0,0,0,0.28)]`
+    : "border-transparent bg-transparent backdrop-blur-none";
 
   return (
-    <header className={`${fixed ? "fixed inset-x-0 top-0" : "sticky top-0"} z-40 flex h-[68px] items-center gap-5 border-b border-white/10 ${translucent ? "bg-black/72" : "bg-black/88"} px-8 text-white backdrop-blur-xl`}>
+    <header className={`${fixed ? "fixed inset-x-0 top-0" : "sticky top-0"} z-40 flex h-[68px] items-center gap-5 border-b px-8 text-white transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 ${chromeClass}`}>
       <Link href="/" className="flex items-center gap-2" aria-label="Argus home">
         <BrandLogo className="h-9 w-auto" />
       </Link>

@@ -237,8 +237,16 @@ function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channe
 function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured, viewerUsername }: { channels: Channel[]; onOpen: (channel: Channel) => void; clerkConfigured: boolean; viewerUsername?: string }) {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [listed, setListed] = useState(false);
+  const [navScrolled, setNavScrolled] = useState(false);
   const featured = mobileChannels.slice(0, 4);
   const spotlight = featured[featuredIndex] ?? mobileChannels[0];
+
+  useEffect(() => {
+    const update = () => setNavScrolled(window.scrollY > 8);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
 
   if (!spotlight) return <div className="-mx-4 -mt-4 grid min-h-screen place-items-center bg-black text-sm text-white/65 lg:hidden">No channels available.</div>;
 
@@ -250,7 +258,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
   return (
     <section className="-mx-4 -mt-4 mobile-app-stage min-h-screen overflow-hidden pb-24 text-white lg:hidden">
       <div className="relative">
-        <header className="sticky top-0 z-30 bg-gradient-to-b from-black via-black/92 to-black/0 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
+        <header className={`sticky top-0 z-30 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] transition-[background-color,box-shadow,backdrop-filter] duration-300 ${navScrolled ? "bg-black/86 shadow-[0_12px_34px_rgba(0,0,0,0.32)] backdrop-blur-xl" : "bg-transparent"}`}>
           <div className="flex items-center justify-center">
             <BrandLogo className="h-9 w-auto" />
             <button type="button" className="absolute right-5 grid h-10 w-10 place-items-center text-white/85" aria-label="Cast"><CastIcon className="h-7 w-7" /></button>
