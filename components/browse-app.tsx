@@ -48,6 +48,8 @@ type PlayerProgressTarget = {
   duration: number;
 };
 
+const heroTrailerPlaybackId = "xEjUkmnCYchvtR5CnnWc6QxGwko027FsIfrE7dBRLeKw";
+
 function getPlayerProgressTarget(event: { currentTarget: EventTarget | null }) {
   const target = event.currentTarget as (EventTarget & Partial<PlayerProgressTarget>) | null;
 
@@ -115,6 +117,40 @@ function CatalogArtwork({ channel, className = "" }: { channel: Channel; classNa
   );
 }
 
+function HeroTrailerBackground({ channel, className = "", showMuteControl = false }: { channel?: Channel; className?: string; showMuteControl?: boolean }) {
+  const [muted, setMuted] = useState(true);
+
+  return (
+    <div className={`${className} overflow-hidden bg-black`}>
+      <MuxPlayer
+        playbackId={heroTrailerPlaybackId}
+        streamType="on-demand"
+        autoPlay
+        muted={muted}
+        loop
+        playsInline
+        metadata={{ video_title: "ARGUS hero trailer" }}
+        className="block h-full w-full [--media-object-fit:cover] [--media-object-position:center]"
+        style={{ width: "100%", height: "100%" }}
+      />
+      {channel && <CatalogArtwork channel={channel} className="absolute inset-0 opacity-0" />}
+      {showMuteControl && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            setMuted((current) => !current);
+          }}
+          className="absolute bottom-5 right-5 z-30 grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-black/45 text-white backdrop-blur transition hover:border-white/70 hover:bg-white/20"
+          aria-label={muted ? "Unmute trailer" : "Mute trailer"}
+        >
+          {muted ? <MutedIcon /> : <SoundIcon />}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "home" }: { viewerUsername?: string; clerkConfigured?: boolean; active?: "home" | "search" | "live" | "profile" }) {
   const itemClass = "relative flex min-h-[72px] flex-col items-center justify-center gap-1.5 px-1 pb-1 pt-2 text-[10px] font-bold uppercase";
   const color = (item: typeof active) => item === active ? "text-white" : "text-white/55";
@@ -152,6 +188,14 @@ function CastIcon({ className = "h-5 w-5" }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M4 19a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" /><path d="M3 13a6 6 0 0 1 6 6M3 8a11 11 0 0 1 11 11" /><path d="M5 5h15a1 1 0 0 1 1 1v11" /></svg>;
 }
 
+function MutedIcon() {
+  return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M11 5 6 9H3v6h3l5 4V5Z" /><path d="m20 9-6 6M14 9l6 6" /></svg>;
+}
+
+function SoundIcon() {
+  return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M11 5 6 9H3v6h3l5 4V5Z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M18.5 5.5a9 9 0 0 1 0 13" /></svg>;
+}
+
 function PlayIcon({ className = "h-4 w-4" }: { className?: string }) {
   return <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7Z" /></svg>;
 }
@@ -164,7 +208,7 @@ function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channe
   if (!channel) return null;
   return (
     <section className="relative -mx-7 -mt-4 hidden min-h-[640px] overflow-hidden bg-black lg:block">
-      <CatalogArtwork channel={channel} className="absolute inset-0" />
+      <HeroTrailerBackground channel={channel} className="absolute inset-0" showMuteControl />
       <div className="absolute inset-0 bg-gradient-to-r from-black via-black/72 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-black/25" />
       <div className="relative z-10 flex min-h-[640px] max-w-2xl flex-col justify-end px-10 pb-24 xl:px-14">
@@ -203,20 +247,15 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
             <span className="text-3xl font-black text-[#e50914]">ARGUS</span>
             <button type="button" className="absolute right-5 grid h-10 w-10 place-items-center text-white/85" aria-label="Cast"><CastIcon className="h-7 w-7" /></button>
           </div>
-          <nav className="scroll-fade-x mt-6 flex items-center gap-5 overflow-x-auto text-center text-sm font-medium [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Link href="/" className="shrink-0 text-white">Home</Link>
-            <Link href="/search" className="shrink-0 text-[#b3b3b3]">Search</Link>
-            <button type="button" className="shrink-0 text-white/70">Movies & Series</button>
-            <button type="button" className="shrink-0 text-white/70">Categories</button>
-          </nav>
         </header>
 
         <div className="px-5 pt-1">
-          <button type="button" onClick={() => onOpen(spotlight)} className="relative block h-[62vh] min-h-[480px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left shadow-[0_22px_60px_rgba(0,0,0,0.5)]" aria-label={`Watch ${animeTitle(spotlight, 0)}`}>
-            <CatalogArtwork channel={spotlight} className="absolute inset-0" />
+          <div className="relative block h-[62vh] min-h-[480px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left shadow-[0_22px_60px_rgba(0,0,0,0.5)]">
+            <HeroTrailerBackground channel={spotlight} className="absolute inset-0" showMuteControl />
+            <button type="button" onClick={() => onOpen(spotlight)} className="absolute inset-0 z-10" aria-label={`Watch ${animeTitle(spotlight, 0)}`} />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/10" />
             <LiveViewerBadge viewers={spotlight.viewers} className="absolute left-4 top-4" />
-            <div className="absolute inset-x-0 bottom-0 p-5">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-5">
               <p className="text-xs font-medium uppercase text-[#b3b3b3]">Streaming now</p>
               <h1 className="mt-2 text-4xl font-black uppercase leading-none tracking-normal">{spotlight.catalogTitle ?? spotlight.displayName}</h1>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium text-[#d2d2d2]">
@@ -227,7 +266,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
               </div>
               <p className="mt-4 max-w-[18rem] text-sm leading-5 text-[#d2d2d2]">Live watch room, episodes, and chat in one place.</p>
             </div>
-          </button>
+          </div>
           <div className="mt-3 flex justify-center gap-1.5">
             {featured.map((channel, index) => <button key={`featured-dot-${channel.username}`} type="button" onClick={() => setFeaturedIndex(index)} className={`h-1.5 rounded-full transition ${index === featuredIndex ? "w-7 bg-[#e50914]" : "w-1.5 bg-white/35"}`} aria-label={`Feature ${animeTitle(channel, index)}`} />)}
           </div>
@@ -274,7 +313,7 @@ function MobileTopTenRail({ title, channels: railChannels, onOpen }: { title: st
 
 function MobileFeatureBlock({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channel) => void }) {
   if (!channel) return null;
-  return <section className="px-5"><button type="button" onClick={() => onOpen(channel)} className="relative min-h-[260px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left"><CatalogArtwork channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/54 to-black/10" /><div className="relative z-10 flex min-h-[260px] max-w-[70%] flex-col justify-end p-5"><p className="text-xs font-bold uppercase text-[#e50914]">Featured Movie Block</p><h2 className="mt-2 text-3xl font-black uppercase leading-none">{channel.catalogTitle ?? channel.displayName}</h2><p className="mt-3 text-sm leading-5 text-[#d2d2d2]">A sharper mobile feature card for promoted movies and live series.</p><span className="mt-5 w-fit rounded bg-white px-4 py-2 text-sm font-bold text-black">More Info</span></div></button></section>;
+  return <section className="px-5"><button type="button" onClick={() => onOpen(channel)} className="relative min-h-[260px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left"><HeroTrailerBackground channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/54 to-black/10" /><div className="relative z-10 flex min-h-[260px] max-w-[70%] flex-col justify-end p-5"><p className="text-xs font-bold uppercase text-[#e50914]">Featured Movie Block</p><h2 className="mt-2 text-3xl font-black uppercase leading-none">{channel.catalogTitle ?? channel.displayName}</h2><p className="mt-3 text-sm leading-5 text-[#d2d2d2]">A sharper mobile feature card for promoted movies and live series.</p><span className="mt-5 w-fit rounded bg-white px-4 py-2 text-sm font-bold text-black">More Info</span></div></button></section>;
 }
 
 function LiveViewerBadge({ viewers, className = "" }: { viewers: number; className?: string }) {
@@ -724,7 +763,7 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
   return (
     <div className="min-h-screen bg-[#141414] pb-24 text-white">
       <section className="relative min-h-[620px] overflow-hidden bg-black">
-        <CatalogArtwork channel={channel} className="absolute inset-0 opacity-55" />
+        <HeroTrailerBackground channel={channel} className="absolute inset-0 opacity-75" showMuteControl />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/82 to-black/20" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/30 to-black/30" />
         <header className="relative z-10 flex items-center gap-6 px-5 py-5 text-sm font-bold text-white/72 sm:px-8 lg:px-14">
