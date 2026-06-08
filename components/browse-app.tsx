@@ -87,8 +87,7 @@ function ChannelArtwork({ channel, className = "" }: { channel: Channel; classNa
         {thumbnailUrl ? <Image src={thumbnailUrl} alt="" fill sizes="(max-width: 1023px) 100vw, 33vw" className="object-cover" /> : (
           <>
             <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${channel.colors[0]}, ${channel.colors[1]})` }} />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_18%,rgba(255,255,255,0.3),transparent_17%),radial-gradient(circle_at_74%_64%,rgba(255,255,255,0.18),transparent_20%)]" />
-            <div className="absolute -right-5 top-5 h-20 w-20 rounded-full bg-white/20 blur-2xl" />
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_34%),linear-gradient(0deg,rgba(0,0,0,0.22),transparent)]" />
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute inset-0 grid place-items-center text-center">
               <span>
@@ -194,6 +193,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
   const nextWatch = mobileChannels.slice(1, 7);
   const keepWatching = [...mobileChannels].reverse().slice(0, 5);
   const comedy = [...mobileChannels.slice(3), ...mobileChannels.slice(0, 3)];
+  const topTen = mobileChannels.slice(0, 10);
 
   return (
     <section className="-mx-4 -mt-4 mobile-app-stage min-h-screen overflow-hidden pb-24 text-white lg:hidden">
@@ -219,6 +219,12 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
             <div className="absolute inset-x-0 bottom-0 p-5">
               <p className="text-xs font-medium uppercase text-[#b3b3b3]">Streaming now</p>
               <h1 className="mt-2 text-4xl font-black uppercase leading-none tracking-normal">{spotlight.catalogTitle ?? spotlight.displayName}</h1>
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium text-[#d2d2d2]">
+                <span className="border border-[#bcbcbc] px-1.5 py-0.5 text-[#bcbcbc]">TV-14</span>
+                <span>2026</span>
+                <span>1 Season</span>
+                <span className="text-[#46d369]">New</span>
+              </div>
               <p className="mt-4 max-w-[18rem] text-sm leading-5 text-[#d2d2d2]">Live watch room, episodes, and chat in one place.</p>
             </div>
           </button>
@@ -234,9 +240,17 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
           </div>
         </div>
 
+        <div className="relative z-10 mt-8 px-5">
+          <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold">
+            {["Series", "Anime", "Live"].map((item) => <button key={item} type="button" className="rounded border border-white/15 bg-[#181818] px-2 py-2 text-[#e5e5e5]">{item}</button>)}
+          </div>
+        </div>
+
         <div className="relative z-10 mt-9 space-y-9">
-          <MobilePosterRail title="Your Next Watch" channels={nextWatch} onOpen={onOpen} />
-          <MobileLandscapeRail title="Keep Watching" channels={keepWatching} onOpen={onOpen} />
+          <MobileLandscapeRail title="Continue Watching" channels={keepWatching} onOpen={onOpen} compact />
+          <MobileTopTenRail title="Top 10 Today" channels={topTen} onOpen={onOpen} />
+          <MobilePosterRail title="Movies & Series" channels={nextWatch} onOpen={onOpen} />
+          <MobileFeatureBlock channel={comedy[0]} onOpen={onOpen} />
           <MobilePosterRail title="Comedy Shows" channels={comedy} onOpen={onOpen} />
           <MobilePosterRail title="Most-Watched Classics" channels={[...mobileChannels].reverse()} onOpen={onOpen} />
         </div>
@@ -247,11 +261,20 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
 }
 
 function MobilePosterRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
-  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-2.5 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative aspect-[2/3] w-[29vw] max-w-36 shrink-0 overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute bottom-2 left-2" /></button>)}</div></section>;
+  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-2.5 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative aspect-[2/3] w-[30vw] max-w-36 shrink-0 overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 to-transparent" /><LiveViewerBadge viewers={channel.viewers} className="absolute bottom-2 left-2" /></button>)}</div></section>;
 }
 
-function MobileLandscapeRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
-  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="w-[48vw] max-w-64 shrink-0 text-left"><span className="relative block aspect-video overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute left-2 top-2" /><i className="absolute inset-x-0 bottom-0 h-1 bg-[#e50914]" /></span><span className="mt-2 block text-xs text-[#808080]">{2022 + index} · {96 + index * 9}min</span><strong className="mt-1 block truncate text-sm font-medium">{animeTitle(channel, index)}</strong></button>)}</div></section>;
+function MobileLandscapeRail({ title, channels: railChannels, onOpen, compact = false }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void; compact?: boolean }) {
+  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className={`${compact ? "w-[68vw]" : "w-[50vw]"} max-w-72 shrink-0 text-left`}><span className="relative block aspect-video overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute left-2 top-2" /><i className="absolute inset-x-0 bottom-0 h-1 bg-[#e50914]" /></span><span className="mt-2 block text-xs text-[#808080]">{2022 + index} · {96 + index * 9}min</span><strong className="mt-1 block truncate text-sm font-medium">{animeTitle(channel, index)}</strong></button>)}</div></section>;
+}
+
+function MobileTopTenRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
+  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative flex w-[44vw] max-w-56 shrink-0 items-end text-left"><span className="mr-[-0.65rem] min-w-[2.8rem] text-7xl font-black leading-none text-black [-webkit-text-stroke:1.5px_#808080]">{index + 1}</span><span className="relative block aspect-[2/3] w-full overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><span className="absolute left-2 top-2 rounded bg-[#e50914] px-1.5 py-1 text-[9px] font-bold uppercase">Top 10</span></span></button>)}</div></section>;
+}
+
+function MobileFeatureBlock({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channel) => void }) {
+  if (!channel) return null;
+  return <section className="px-5"><button type="button" onClick={() => onOpen(channel)} className="relative min-h-[260px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left"><CatalogArtwork channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/54 to-black/10" /><div className="relative z-10 flex min-h-[260px] max-w-[70%] flex-col justify-end p-5"><p className="text-xs font-bold uppercase text-[#e50914]">Featured Movie Block</p><h2 className="mt-2 text-3xl font-black uppercase leading-none">{channel.catalogTitle ?? channel.displayName}</h2><p className="mt-3 text-sm leading-5 text-[#d2d2d2]">A sharper mobile feature card for promoted movies and live series.</p><span className="mt-5 w-fit rounded bg-white px-4 py-2 text-sm font-bold text-black">More Info</span></div></button></section>;
 }
 
 function LiveViewerBadge({ viewers, className = "" }: { viewers: number; className?: string }) {

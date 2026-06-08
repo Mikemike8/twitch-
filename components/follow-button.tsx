@@ -44,7 +44,7 @@ export function FollowButton({
     });
   };
 
-  if (compact) return <button disabled={disabled || isPending} onClick={toggle} className={`grid h-12 w-12 shrink-0 place-items-center rounded-full disabled:cursor-not-allowed disabled:opacity-50 ${following ? "bg-[#2f2f35] text-[#bf94ff]" : "bg-[#9147ff] text-white hover:bg-[#a970ff]"}`} aria-label={disabled ? "You cannot follow your own channel" : following ? "Unfollow channel" : "Follow channel"} title={disabled ? "Your channel" : following ? "Following" : "Follow"}><HeartIcon className={`h-6 w-6 ${following ? "fill-[#bf94ff]" : ""}`} /></button>;
+  if (compact) return <button disabled={disabled || isPending} onClick={toggle} className={`grid h-12 w-12 shrink-0 place-items-center rounded-full disabled:cursor-not-allowed disabled:opacity-50 ${following ? "bg-[#2a2a2a] text-[#e50914]" : "bg-[#e50914] text-white hover:bg-[#f50723]"}`} aria-label={disabled ? "You cannot follow your own channel" : following ? "Unfollow channel" : "Follow channel"} title={disabled ? "Your channel" : following ? "Following" : "Follow"}><HeartIcon className={`h-6 w-6 ${following ? "fill-[#e50914]" : ""}`} /></button>;
 
-  return <button disabled={disabled || isPending} onClick={toggle} className={`flex items-center gap-2 rounded px-3 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50 ${following ? "bg-[#2f2f35]" : "bg-[#9147ff] hover:bg-[#a970ff]"}`}><HeartIcon className={`h-4 w-4 ${following ? "fill-[#bf94ff] text-[#bf94ff]" : ""}`} />{following ? "Following" : "Follow"}</button>;
+  return <button disabled={disabled || isPending} onClick={toggle} className={`flex items-center gap-2 rounded px-3 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50 ${following ? "bg-[#2a2a2a]" : "bg-[#e50914] hover:bg-[#f50723]"}`}><HeartIcon className={`h-4 w-4 ${following ? "fill-[#e50914] text-[#e50914]" : ""}`} />{following ? "Following" : "Follow"}</button>;
 }

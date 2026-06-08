@@ -94,32 +94,58 @@ export function LiveDiscoveryApp({ liveChannels, followedChannels, clerkConfigur
 }
 
 function MobileLiveTv({ selected, channels, clerkConfigured, viewerUsername, onSelect }: { selected: Channel; channels: Channel[]; clerkConfigured: boolean; viewerUsername?: string; onSelect: (channel: Channel) => void }) {
-  return <div className="min-h-[100svh] bg-[#0c0c0d] pb-[78px] text-white lg:hidden landscape:fixed landscape:inset-0 landscape:z-50 landscape:min-h-0 landscape:pb-0">
-    <section className="relative aspect-video w-full overflow-hidden bg-black landscape:h-full landscape:aspect-auto">
+  const featured = channels.slice(0, 6);
+  return <div className="min-h-[100svh] bg-black pb-[78px] text-white lg:hidden landscape:fixed landscape:inset-0 landscape:z-50 landscape:min-h-0 landscape:pb-0">
+    <header className="sticky top-0 z-30 bg-gradient-to-b from-black via-black/92 to-black/0 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] landscape:hidden">
+      <div className="flex items-center justify-center">
+        <Link href="/" className="text-3xl font-black text-[#e50914]">ARGUS</Link>
+        <SearchIcon className="absolute right-5 h-6 w-6 text-white/80" />
+      </div>
+      <nav className="scroll-fade-x mt-6 flex items-center gap-5 overflow-x-auto text-sm font-medium [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {["All", "Following", "Gaming", "Music", "IRL"].map((item, index) => <button key={item} type="button" className={`shrink-0 ${index === 0 ? "text-white" : "text-[#b3b3b3]"}`}>{item}</button>)}
+      </nav>
+    </header>
+    <section className="relative mx-5 h-[58vh] min-h-[410px] overflow-hidden rounded border border-white/10 bg-[#181818] landscape:mx-0 landscape:h-full landscape:rounded-none landscape:border-0">
       <StreamerBackdrop channel={selected} />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/15" />
       <div className="absolute inset-x-0 top-0 flex items-start gap-3 bg-gradient-to-b from-black/75 to-transparent px-4 py-4 landscape:px-6">
-        <span className="rounded bg-red-600 px-2 py-1 text-[10px] font-black tracking-[0.14em]">LIVE</span>
-        <span className="min-w-0"><strong className="block truncate text-sm">{selected.displayName}</strong><i className="mt-0.5 block truncate text-[11px] not-italic text-white/70">{selected.title}</i></span>
+        <span className="rounded bg-[#e50914] px-2 py-1 text-[10px] font-bold uppercase">LIVE</span>
         <CastIcon className="ml-auto h-6 w-6" />
         <FullscreenIcon className="h-6 w-6" />
       </div>
+      <div className="absolute inset-x-0 bottom-0 p-5">
+        <p className="text-xs font-bold uppercase text-[#e50914]">Live now</p>
+        <h1 className="mt-2 text-4xl font-black uppercase leading-none">{selected.displayName}</h1>
+        <p className="mt-3 line-clamp-2 text-sm leading-5 text-[#d2d2d2]">{selected.title}</p>
+        <p className="mt-3 text-xs text-[#b3b3b3]">{selected.category} · {formatViewers(selected.viewers)} watching</p>
+      </div>
     </section>
     <div className="landscape:hidden">
-      <nav className="flex gap-7 overflow-x-auto border-b border-white/5 px-5 py-4 text-base text-white/60 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {["All", "Gaming", "Music", "Art", "IRL"].map((item, index) => <span key={item} className={`shrink-0 pb-1 ${index === 0 ? "border-b-2 border-white text-white" : ""}`}>{item}</span>)}
-      </nav>
-      <div>{channels.map((channel, index) => <MobileLiveRow key={channel.username} channel={channel} selected={channel.username === selected.username} index={index} onSelect={() => onSelect(channel)} />)}</div>
+      <div className="mt-5 grid grid-cols-2 gap-3 px-5">
+        <button type="button" className="rounded bg-white px-3 py-3 text-sm font-bold text-black">Watch</button>
+        <button type="button" className="rounded bg-white/20 px-3 py-3 text-sm font-bold text-white">Notify Me</button>
+      </div>
+      <section className="mt-8">
+        <h2 className="px-5 text-xl font-bold">Featured Live</h2>
+        <div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {featured.map((channel, index) => <button type="button" key={`featured-${channel.username}`} onClick={() => onSelect(channel)} className="w-[58vw] max-w-72 shrink-0 text-left"><span className="relative block aspect-video overflow-hidden rounded border border-white/8 bg-[#181818]"><StreamerBackdrop channel={channel} /><span className="absolute left-2 top-2 rounded bg-[#e50914] px-2 py-1 text-[10px] font-bold uppercase">Live</span><i className="absolute inset-x-0 bottom-0 h-1 bg-[#e50914]" /></span><strong className="mt-2 block truncate text-sm">{channel.displayName}</strong><span className="mt-1 block truncate text-xs text-[#808080]">{formatViewers(channel.viewers || 40 + index * 9)} watching</span></button>)}
+        </div>
+      </section>
+      <section className="mt-7">
+        <h2 className="px-5 text-xl font-bold">All Live Rooms</h2>
+        <div className="mt-2">{channels.map((channel, index) => <MobileLiveRow key={channel.username} channel={channel} selected={channel.username === selected.username} index={index} onSelect={() => onSelect(channel)} />)}</div>
+      </section>
       <MobileLiveBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} />
     </div>
   </div>;
 }
 
 function MobileLiveRow({ channel, selected, index, onSelect }: { channel: Channel; selected: boolean; index: number; onSelect: () => void }) {
-  return <button type="button" onClick={onSelect} className={`flex min-h-24 w-full items-center gap-4 border-b border-white/5 px-5 py-4 text-left ${selected ? "bg-white/[0.07]" : ""}`}><Avatar channel={channel} size="md" /><span className="min-w-0 flex-1"><strong className="block truncate text-base font-semibold">{channel.displayName}</strong><span className="mt-1 block truncate text-xs text-white/50">{channel.category} · {formatViewers(channel.viewers || 40 + index * 9)} watching</span></span>{selected && <span className="rounded-full bg-red-600 px-3 py-2 text-[10px] font-black uppercase tracking-wide">Watching</span>}<span className="text-xl text-white/65">☷</span></button>;
+  return <button type="button" onClick={onSelect} className={`flex min-h-24 w-full items-center gap-4 border-b border-white/10 px-5 py-4 text-left ${selected ? "bg-[#181818]" : "bg-black"}`}><Avatar channel={channel} size="md" /><span className="min-w-0 flex-1"><strong className="block truncate text-base font-semibold">{channel.displayName}</strong><span className="mt-1 block truncate text-xs text-[#808080]">{channel.category} · {formatViewers(channel.viewers || 40 + index * 9)} watching</span></span>{selected && <span className="rounded bg-[#e50914] px-3 py-2 text-[10px] font-bold uppercase">Watching</span>}<span className="text-xl text-white/45">›</span></button>;
 }
 
 function MobileLiveBottomNav({ viewerUsername, clerkConfigured }: { viewerUsername?: string; clerkConfigured: boolean }) {
-  const itemClass = "relative flex min-h-[76px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-black uppercase tracking-wide";
+  const itemClass = "relative flex min-h-[72px] flex-col items-center justify-center gap-1.5 pb-1 pt-2 text-[10px] font-bold uppercase";
   const profileItem = clerkConfigured ? (
     <>
       <Show when="signed-in">
@@ -134,7 +160,7 @@ function MobileLiveBottomNav({ viewerUsername, clerkConfigured }: { viewerUserna
   ) : (
     <Link href="/sign-in" className={itemClass}><ProfileIcon />Profile</Link>
   );
-  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-white/10 bg-[#0f0f12]/98 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 shadow-[0_-18px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl"><Link href="/" className={itemClass}><HomeIcon />Home</Link><Link href="/search" className={itemClass}><SearchIcon className="h-7 w-7" />Search</Link><span className={`${itemClass} text-white`}><i className="absolute top-0 h-0.5 w-8 rounded-full bg-white" /><LiveTvIcon />Live</span>{profileItem}</nav>;
+  return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-white/10 bg-black/92 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 backdrop-blur-xl"><Link href="/" className={itemClass}><HomeIcon />Home</Link><Link href="/search" className={itemClass}><SearchIcon className="h-7 w-7" />Search</Link><span className={`${itemClass} text-white`}><i className="absolute top-0 h-0.5 w-8 rounded-full bg-[#e50914]" /><LiveTvIcon />Live</span>{profileItem}</nav>;
 }
 
 function CastIcon({ className = "h-5 w-5" }: { className?: string }) {
@@ -143,10 +169,6 @@ function CastIcon({ className = "h-5 w-5" }: { className?: string }) {
 
 function HomeIcon() {
   return <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2"><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10" /></svg>;
-}
-
-function ClipsIcon() {
-  return <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M7 4h10M5 8h14v12H5z" /><path d="m10 11 5 3-5 3Z" /></svg>;
 }
 
 function LiveTvIcon() {
