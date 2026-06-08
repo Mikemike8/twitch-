@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Show, SignInButton } from "@clerk/nextjs";
 import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
-import MuxPlayer from "@mux/mux-player-react";
+import MuxPlayer, { type MuxPlayerRefAttributes } from "@mux/mux-player-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { recordVideoEvent, savePlaybackProgress } from "@/actions/catalog";
@@ -121,16 +121,36 @@ function CatalogArtwork({ channel, className = "" }: { channel: Channel; classNa
 
 function HeroTrailerBackground({ channel, className = "", showMuteControl = false }: { channel?: Channel; className?: string; showMuteControl?: boolean }) {
   const [muted, setMuted] = useState(true);
+  const playerRef = useRef<MuxPlayerRefAttributes | null>(null);
+  const poster = channel?.posterUrl ?? channel?.thumbnailUrl ?? undefined;
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      const player = playerRef.current;
+      if (!player) return;
+      player.muted = true;
+      player.play().catch(() => undefined);
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   return (
     <div className={`${className} relative h-full w-full overflow-hidden bg-black`}>
       <MuxPlayer
+        ref={playerRef}
         playbackId={heroTrailerPlaybackId}
         streamType="on-demand"
-        autoPlay
+        autoPlay="muted"
+        preload="auto"
         muted={muted}
         loop
         playsInline
+        poster={poster}
+        onCanPlay={() => {
+          if (!muted) return;
+          playerRef.current?.play().catch(() => undefined);
+        }}
         metadata={{ video_title: `${heroTrailerTitle} trailer` }}
         className="absolute inset-0 block h-full w-full max-w-none [--media-object-fit:cover] [--media-object-position:center]"
         style={{
