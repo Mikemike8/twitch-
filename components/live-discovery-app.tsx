@@ -122,7 +122,7 @@ function MobileLiveTv({ selected, channels, clerkConfigured, viewerUsername, onS
     </section>
     <div className="landscape:hidden">
       <div className="mt-5 grid grid-cols-2 gap-3 px-5">
-        <button type="button" className="rounded bg-white px-3 py-3 text-sm font-bold text-black">Watch</button>
+        <Link href={`/${selected.username}`} className="rounded bg-white px-3 py-3 text-center text-sm font-bold text-black">Watch</Link>
         <button type="button" className="rounded bg-white/20 px-3 py-3 text-sm font-bold text-white">Notify Me</button>
       </div>
       <section className="mt-8">
