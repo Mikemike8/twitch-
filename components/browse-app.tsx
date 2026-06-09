@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { catalogTitle, prioritizePlayableCatalog } from "@/components/browse/catalog-utils";
 import { CatalogArtwork, HeroTrailerBackground, heroTrailerTitle } from "@/components/browse/catalog-media";
 import { EpisodePlaybackOverlay } from "@/components/browse/episode-playback-overlay";
+import { ContinueWatchingMovieBlock, MovieBlockRail } from "@/components/browse/movie-blocks";
 import { BrandLogo } from "@/components/brand-logo";
 import { ChannelPage } from "@/components/channel-page";
 import { BellIcon, SearchIcon } from "@/components/icons";
@@ -309,32 +310,6 @@ function MobileChannelFeed({ query, onQuery, data, onOpen, searchable = false }:
   );
 }
 
-function RailCard({ channel, index, onOpen, horizontal = false }: { channel: Channel; index: number; onOpen: () => void; horizontal?: boolean }) {
-  return <button onClick={onOpen} aria-label={`Watch ${catalogTitle(channel, index)}`} className="group min-w-0 transition duration-300 hover:z-10 hover:scale-[1.035] focus:z-10 focus:scale-[1.035] focus:outline-none"><div className={`relative overflow-hidden rounded border border-white/8 bg-[#181818] ${horizontal ? "aspect-video" : "aspect-[2/3]"}`}><CatalogArtwork channel={channel} className="absolute inset-0 transition duration-500 group-hover:scale-110" /><div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" /></div></button>;
-}
-
-function ContentRail({ title, channels: railChannels, onOpen, horizontal = false }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void; horizontal?: boolean }) {
-  if (!railChannels.length) return null;
-  return <section className="relative mt-8 hidden lg:block"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Explore ARGUS</p><h2 className="mt-1 text-xl font-bold">{title}</h2></div><Link href={`/search?term=${encodeURIComponent(title)}`} className="text-xs font-bold text-[#b3b3b3] transition hover:text-white">See all</Link></div><div className={`scroll-fade-x grid grid-flow-col gap-3 overflow-x-auto pb-5 ${horizontal ? "auto-cols-[260px] xl:auto-cols-[310px]" : "auto-cols-[180px] xl:auto-cols-[205px]"}`}>{railChannels.map((channel, index) => <RailCard key={`${title}-${channel.username}`} channel={channel} index={index} onOpen={() => onOpen(channel)} horizontal={horizontal} />)}</div></section>;
-}
-
-function MovieFeatureGrid({ channels: featureChannels, onOpen }: { channels: Channel[]; onOpen: (channel: Channel) => void }) {
-  const channelsToShow = featureChannels.filter(Boolean).slice(0, 4);
-  if (!channelsToShow.length) return null;
-
-  return (
-    <section className="mt-8 hidden lg:block">
-      <div className="mb-4">
-        <p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Featured picks</p>
-        <h2 className="mt-1 text-xl font-bold">Independent Films</h2>
-      </div>
-      <div className="grid gap-3 xl:grid-cols-2">
-        {channelsToShow.map((channel, index) => <MovieFeatureBlock key={`desktop-feature-${channel.username}-${index}`} channel={channel} index={index} onOpen={onOpen} />)}
-      </div>
-    </section>
-  );
-}
-
 function CategoriesRail({ channels: categoryChannels, onSelect }: { channels: Channel[]; onSelect: (category: string) => void }) {
   const categories = Array.from(new Set(categoryChannels.flatMap((channel) => [channel.category, ...channel.tags]))).filter(Boolean).slice(0, 14);
   if (!categories.length) return null;
@@ -498,34 +473,6 @@ function EpisodeCard({ episode, onPlay }: { episode: CatalogEpisode; onPlay: () 
   return <a href={episode.trailerUrl} target="_blank" rel="noreferrer" className="group text-left">{cardBody}</a>;
 }
 
-function ContinueWatchingRail({ items, onOpen }: { items: ContinueWatchingItem[]; onOpen: (channel: Channel) => void }) {
-  if (!items.length) return null;
-
-  return (
-    <section id="continue-watching" className="relative mt-8 hidden scroll-mt-24 lg:block">
-      <div className="mb-4 flex items-end justify-between">
-        <div>
-          <p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Resume</p>
-          <h2 className="mt-1 text-xl font-bold">Continue watching</h2>
-        </div>
-      </div>
-      <div className="grid grid-flow-col auto-cols-[260px] gap-3 overflow-x-auto pb-5 xl:auto-cols-[310px]">
-        {items.map((item) => (
-          <button key={item.episodeId} type="button" onClick={() => onOpen(item.channel)} className="group min-w-0 text-left transition duration-300 hover:z-10 hover:scale-105 focus:z-10 focus:scale-105 focus:outline-none">
-            <span className="relative block aspect-video overflow-hidden rounded bg-[#181818]">
-              <CatalogArtwork channel={item.channel} className="absolute inset-0 transition duration-500 group-hover:scale-110" />
-              <span className="absolute inset-x-0 bottom-0 h-1 bg-white/20"><i className="block h-full bg-[#e50914]" style={{ width: `${item.progressPercent}%` }} /></span>
-              <span className="absolute bottom-3 left-3 rounded bg-black/75 px-2 py-1 text-[10px] font-bold uppercase text-white">{item.progressPercent}% watched</span>
-            </span>
-            <strong className="mt-3 block truncate text-sm">{item.channel.catalogTitle ?? item.channel.displayName}</strong>
-            <span className="mt-1 block truncate text-xs font-semibold text-[#b3b3b3]">{item.episodeCode} {item.episodeTitle}</span>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export function BrowseApp({ persistedChannels = [], followedChannels = [], recommendedChannels = [], catalogChannels = [], continueWatching = [], demoFallback = true, initialQuery = "", clerkConfigured = false, viewerIdentity, viewerUsername, mobileBrowse = false, pagination }: BrowseAppProps) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
@@ -540,6 +487,9 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
     .sort(prioritizePlayableCatalog);
   const searchResultChannels = animeChannels;
   const spotlightChannel = animeChannels[0];
+  const independentFilms = [...animeChannels.slice(2), ...animeChannels.slice(0, 2)];
+  const creatorFilms = animeChannels.filter((channel) => channel.kind === "creator");
+  const creatorFilmBlock = creatorFilms.length ? creatorFilms : animeChannels;
   const openChannel = useCallback((channel: Channel) => {
     setSelected(channel);
     pushBrowseHistory("detail");
@@ -575,12 +525,13 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
           <main className="min-w-0">
             {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={searchResultChannels} onOpen={openChannel} searchable /> : <MobileStreamingHome channels={animeChannels} liveFeatures={false} onOpen={openChannel} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
             <Hero channel={spotlightChannel} liveFeatures={false} onOpen={openChannel} />
-            <ContinueWatchingRail items={continueWatching} onOpen={openChannel} />
-            <div id="movies-series" className="scroll-mt-24"><ContentRail title="Movies & Series" channels={animeChannels.slice(0, 12)} onOpen={openChannel} horizontal /></div>
-            <MovieFeatureGrid channels={[...animeChannels.slice(2), ...animeChannels.slice(0, 2)]} onOpen={openChannel} />
+            <MovieBlockRail id="movies-series" title="Movies & Series" channels={animeChannels.slice(0, 14)} variant="first" onOpen={openChannel} />
+            <ContinueWatchingMovieBlock items={continueWatching} onOpen={openChannel} />
+            <MovieBlockRail title="Independent Films" channels={independentFilms} onOpen={openChannel} />
+            <MovieBlockRail title="Top 10 Today" channels={animeChannels.slice(0, 10)} variant="top10" onOpen={openChannel} />
             <CategoriesRail channels={animeChannels} onSelect={setQuery} />
-            <div id="creator-films"><ContentRail title="Creator Films" channels={animeChannels} onOpen={openChannel} /></div>
-            <ContentRail title="Because you watch anime" channels={[...animeChannels].reverse()} onOpen={openChannel} />
+            <MovieBlockRail id="creator-films" title="Creator Films" channels={creatorFilmBlock} onOpen={openChannel} />
+            <MovieBlockRail title="Because you watch anime" channels={[...animeChannels].reverse()} onOpen={openChannel} />
             {pagination && (pagination.page > 1 || pagination.hasNext) && <nav className="mt-6 flex items-center justify-center gap-3" aria-label="Channel pages">{pagination.page > 1 && <Link href={`${pagination.baseHref}${pagination.page - 1}`} onClick={(event) => { event.preventDefault(); startPageTransition(() => { router.push(`${pagination.baseHref}${pagination.page - 1}`); }); }} className="rounded bg-white/10 px-4 py-2 text-xs font-bold">Previous</Link>}<span className="text-xs text-[#94949f]">Page {pagination.page}</span>{pagination.hasNext && <Link href={`${pagination.baseHref}${pagination.page + 1}`} onClick={(event) => { event.preventDefault(); startPageTransition(() => { router.push(`${pagination.baseHref}${pagination.page + 1}`); }); }} className="rounded bg-[#e50914] px-4 py-2 text-xs font-bold">Next</Link>}</nav>}
           </main>
         </div>
