@@ -50,6 +50,23 @@ type PlayerProgressTarget = {
   duration: number;
 };
 
+const browseHistoryKey = "argusBrowseView";
+
+type BrowseHistoryView = "detail" | "episode";
+
+function pushBrowseHistory(view: BrowseHistoryView) {
+  window.history.pushState({ ...(window.history.state ?? {}), [browseHistoryKey]: view }, "", window.location.href);
+}
+
+function backThroughBrowseHistory(view: BrowseHistoryView, fallback: () => void) {
+  if (window.history.state?.[browseHistoryKey] === view) {
+    window.history.back();
+    return;
+  }
+
+  fallback();
+}
+
 const heroTrailerPlaybackId = "xEjUkmnCYchvtR5CnnWc6QxGwko027FsIfrE7dBRLeKw";
 const heroTrailerTitle = "Dandadan";
 
@@ -127,38 +144,41 @@ function HeroTrailerBackground({ channel, className = "", showMuteControl = fals
   const playerRef = useRef<MuxPlayerRefAttributes | null>(null);
   const poster = channel?.posterUrl ?? channel?.thumbnailUrl ?? undefined;
   const positioned = /\b(absolute|fixed|sticky)\b/.test(className);
+  const applyTrailerAudio = useCallback((player: MuxPlayerRefAttributes | null, nextMuted: boolean) => {
+    if (!player) return;
+
+    player.muted = nextMuted;
+    player.volume = nextMuted ? 0 : 1;
+    (player as MuxPlayerRefAttributes & { defaultMuted?: boolean }).defaultMuted = nextMuted;
+  }, []);
   const startPlayback = useCallback(() => {
     const player = playerRef.current;
+    applyTrailerAudio(player, muted);
     if (!player) return;
-    player.muted = muted;
-    (player as MuxPlayerRefAttributes & { defaultMuted?: boolean }).defaultMuted = true;
     player.play().catch(() => undefined);
-  }, [muted]);
+  }, [applyTrailerAudio, muted]);
   const setPlayerRef = useCallback((player: MuxPlayerRefAttributes | null) => {
     playerRef.current = player;
     if (!player) return;
-    player.muted = muted;
-    (player as MuxPlayerRefAttributes & { defaultMuted?: boolean }).defaultMuted = true;
+    applyTrailerAudio(player, muted);
     window.requestAnimationFrame(() => {
       player.play().catch(() => undefined);
     });
-  }, [muted]);
+  }, [applyTrailerAudio, muted]);
   const toggleTrailerAudio = useCallback(() => {
     setMuted((current) => {
       const nextMuted = !current;
       const player = playerRef.current;
 
+      applyTrailerAudio(player, nextMuted);
+
       if (player) {
-        player.muted = nextMuted;
-        player.volume = nextMuted ? 0 : 1;
-        if (!nextMuted) {
-          player.play().catch(() => undefined);
-        }
+        player.play().catch(() => undefined);
       }
 
       return nextMuted;
     });
-  }, []);
+  }, [applyTrailerAudio]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -235,9 +255,12 @@ function HeroTrailerBackground({ channel, className = "", showMuteControl = fals
           ref={setPlayerRef}
           playbackId={heroTrailerPlaybackId}
           streamType="on-demand"
-          autoPlay="muted"
+          autoPlay
           preload="auto"
           muted={muted}
+          volume={muted ? 0 : 1}
+          noMutedPref
+          noVolumePref
           loop
           playsInline
           poster={poster}
@@ -337,6 +360,10 @@ function TransitionLoader({ label = "Loading" }: { label?: string }) {
 
 function PlayIcon({ className = "h-4 w-4" }: { className?: string }) {
   return <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7Z" /></svg>;
+}
+
+function BackArrowIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>;
 }
 
 function ForwardIcon({ className = "h-4 w-4", direction = "next" }: { className?: string; direction?: "next" | "previous" }) {
@@ -687,7 +714,7 @@ function episodeRoomName(title: string, episode: SeriesEpisode) {
   return `anime:${episodeSlug(title)}:s1:e${episodeNumber(episode)}`;
 }
 
-function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, viewerUsername, onNext }: { title: string; episode: SeriesEpisode; nextEpisode?: SeriesEpisode; previousEpisode?: SeriesEpisode; viewerUsername?: string; onNext?: (episode: SeriesEpisode) => void }) {
+function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, viewerUsername, onClose, onNext }: { title: string; episode: SeriesEpisode; nextEpisode?: SeriesEpisode; previousEpisode?: SeriesEpisode; viewerUsername?: string; onClose: () => void; onNext?: (episode: SeriesEpisode) => void }) {
   const [session, setSession] = useState<EpisodeChatToken | null>(null);
   const lastProgressSyncAt = useRef(0);
   const resumed = useRef(false);
@@ -776,6 +803,18 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, 
 
   return (
     <div className="fixed inset-0 z-50 h-[100dvh] overflow-hidden bg-black text-white">
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          onClose();
+        }}
+        className="absolute left-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] flex h-11 items-center gap-2 rounded-full border border-white/20 bg-black/70 px-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(0,0,0,0.45)] backdrop-blur transition hover:bg-white/15 sm:left-5 sm:px-4"
+        aria-label="Back to episode details"
+      >
+        <BackArrowIcon className="h-5 w-5" />
+        <span className="hidden sm:inline">Back</span>
+      </button>
       <div className="flex h-full min-h-0 flex-col overscroll-none md:flex-row">
         <div className="relative min-h-0 flex-1 md:basis-auto">
           <MuxPlayer
@@ -959,7 +998,10 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
   const totalWatching = episodes.reduce((sum, episode) => sum + episode.viewers, 0);
   const openEpisode = (episode: SeriesEpisode) => {
     setPlayingEpisode(episode);
+    pushBrowseHistory("episode");
   };
+  const closeEpisode = useCallback(() => setPlayingEpisode(null), []);
+  const goBackFromEpisode = useCallback(() => backThroughBrowseHistory("episode", closeEpisode), [closeEpisode]);
 
   useEffect(() => {
     if (!playingEpisode) return;
@@ -972,14 +1014,31 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [playingEpisode]);
 
+  useEffect(() => {
+    if (!playingEpisode) return;
+
+    const closeOnHistoryBack = (event: PopStateEvent) => {
+      if (event.state?.[browseHistoryKey] !== "episode") {
+        closeEpisode();
+      }
+    };
+
+    window.addEventListener("popstate", closeOnHistoryBack);
+    return () => window.removeEventListener("popstate", closeOnHistoryBack);
+  }, [closeEpisode, playingEpisode]);
+
   return (
     <div className="min-h-screen bg-[#141414] pb-24 text-white">
       <section className="relative min-h-[620px] overflow-hidden bg-black">
         <HeroTrailerBackground channel={channel} className="absolute inset-0" showMuteControl />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/38 to-black/5" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#141414]/88 via-[#141414]/16 to-black/8" />
-        <header className="relative z-10 flex items-center gap-6 px-5 py-5 text-sm font-bold text-white/72 sm:px-8 lg:px-14">
-          <button type="button" onClick={onBack} aria-label="Back to browse"><BrandLogo className="h-7 w-auto" /></button>
+        <header className="relative z-10 flex items-center gap-4 px-5 py-5 text-sm font-bold text-white/72 sm:gap-6 sm:px-8 lg:px-14">
+          <button type="button" onClick={onBack} className="flex h-11 items-center gap-2 rounded-full bg-black/55 px-3 text-white backdrop-blur transition hover:bg-white/15 sm:px-4" aria-label="Back to browse">
+            <BackArrowIcon className="h-5 w-5" />
+            <span className="text-sm font-bold">Back</span>
+          </button>
+          <BrandLogo className="h-7 w-auto" />
           <span className="text-white">{title}</span>
           <a href="#episodes" className="hover:text-white">Episodes</a>
           <a href="#about" className="hover:text-white">About</a>
@@ -1033,7 +1092,7 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
         </div>
       </section>
 
-      {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} nextEpisode={nextPlayableEpisode} previousEpisode={previousPlayableEpisode} viewerUsername={viewerUsername} onNext={setPlayingEpisode} />}
+      {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} nextEpisode={nextPlayableEpisode} previousEpisode={previousPlayableEpisode} viewerUsername={viewerUsername} onClose={goBackFromEpisode} onNext={setPlayingEpisode} />}
 
       <MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} />
     </div>
@@ -1117,9 +1176,28 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
     .sort(prioritizePlayableCatalog);
   const searchResultChannels = Array.from(new Map([...animeChannels, ...displayChannels].map((channel) => [channel.username, channel])).values());
   const spotlightChannel = animeChannels[0];
+  const openChannel = useCallback((channel: Channel) => {
+    setSelected(channel);
+    pushBrowseHistory("detail");
+  }, []);
+  const closeSelected = useCallback(() => setSelected(null), []);
+  const goBackFromSelected = useCallback(() => backThroughBrowseHistory("detail", closeSelected), [closeSelected]);
+
+  useEffect(() => {
+    if (!selected) return;
+
+    const closeOnHistoryBack = (event: PopStateEvent) => {
+      if (event.state?.[browseHistoryKey] !== "detail" && event.state?.[browseHistoryKey] !== "episode") {
+        closeSelected();
+      }
+    };
+
+    window.addEventListener("popstate", closeOnHistoryBack);
+    return () => window.removeEventListener("popstate", closeOnHistoryBack);
+  }, [closeSelected, selected]);
 
   if (selected && !selected.hostIdentity) {
-    return <SeriesDetailPage channel={selected} continueWatching={continueWatching} onBack={() => setSelected(null)} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />;
+    return <SeriesDetailPage channel={selected} continueWatching={continueWatching} onBack={goBackFromSelected} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />;
   }
 
   if (selected) return <div className="min-h-screen bg-black"><ChannelPage channel={selected} initialFollowing={followedUsernames.has(selected.username)} canFollow={!selected.hostIdentity || selected.hostIdentity !== viewerIdentity} authenticated={Boolean(viewerIdentity)} /><MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} /></div>;
@@ -1131,14 +1209,14 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
       <div>
         <div className="px-4 pb-24 pt-4 lg:px-7 lg:pb-6">
           <main className="min-w-0">
-            {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={searchResultChannels} onOpen={setSelected} searchable /> : <MobileStreamingHome channels={animeChannels} onOpen={setSelected} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
-            <Hero channel={spotlightChannel} onOpen={setSelected} />
-            <ContinueWatchingRail items={continueWatching} onOpen={setSelected} />
-            <div id="movies-series" className="scroll-mt-24"><ContentRail title="Movies & Series" channels={animeChannels.slice(0, 12)} onOpen={setSelected} horizontal /></div>
-            <MovieFeatureGrid channels={[...animeChannels.slice(2), ...animeChannels.slice(0, 2)]} onOpen={setSelected} />
+            {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={searchResultChannels} onOpen={openChannel} searchable /> : <MobileStreamingHome channels={animeChannels} onOpen={openChannel} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
+            <Hero channel={spotlightChannel} onOpen={openChannel} />
+            <ContinueWatchingRail items={continueWatching} onOpen={openChannel} />
+            <div id="movies-series" className="scroll-mt-24"><ContentRail title="Movies & Series" channels={animeChannels.slice(0, 12)} onOpen={openChannel} horizontal /></div>
+            <MovieFeatureGrid channels={[...animeChannels.slice(2), ...animeChannels.slice(0, 2)]} onOpen={openChannel} />
             <CategoriesRail channels={animeChannels} onSelect={setQuery} />
-            <div id="live-anime"><ContentRail title="Live anime" channels={animeChannels} onOpen={setSelected} /></div>
-            <ContentRail title="Because you watch anime" channels={[...animeChannels].reverse()} onOpen={setSelected} />
+            <div id="live-anime"><ContentRail title="Live anime" channels={animeChannels} onOpen={openChannel} /></div>
+            <ContentRail title="Because you watch anime" channels={[...animeChannels].reverse()} onOpen={openChannel} />
             {mode === "browse" && pagination && (pagination.page > 1 || pagination.hasNext) && <nav className="mt-6 flex items-center justify-center gap-3" aria-label="Channel pages">{pagination.page > 1 && <Link href={`${pagination.baseHref}${pagination.page - 1}`} onClick={(event) => { event.preventDefault(); startPageTransition(() => { router.push(`${pagination.baseHref}${pagination.page - 1}`); }); }} className="rounded bg-white/10 px-4 py-2 text-xs font-bold">Previous</Link>}<span className="text-xs text-[#94949f]">Page {pagination.page}</span>{pagination.hasNext && <Link href={`${pagination.baseHref}${pagination.page + 1}`} onClick={(event) => { event.preventDefault(); startPageTransition(() => { router.push(`${pagination.baseHref}${pagination.page + 1}`); }); }} className="rounded bg-[#e50914] px-4 py-2 text-xs font-bold">Next</Link>}</nav>}
           </main>
         </div>
