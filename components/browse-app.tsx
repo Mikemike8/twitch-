@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Show, SignInButton } from "@clerk/nextjs";
 import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
 import MuxPlayer, { type MuxPlayerRefAttributes } from "@mux/mux-player-react";
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { recordVideoEvent, savePlaybackProgress } from "@/actions/catalog";
 import { createEpisodeChatToken } from "@/actions/episode-token";
@@ -30,6 +30,7 @@ type BrowseAppProps = {
   clerkConfigured?: boolean;
   viewerIdentity?: string;
   viewerUsername?: string;
+  liveFeatures?: boolean;
   mobileBrowse?: boolean;
   pagination?: { page: number; hasNext: boolean; baseHref: string };
 };
@@ -121,55 +122,151 @@ function CatalogArtwork({ channel, className = "" }: { channel: Channel; classNa
 
 function HeroTrailerBackground({ channel, className = "", showMuteControl = false }: { channel?: Channel; className?: string; showMuteControl?: boolean }) {
   const [muted, setMuted] = useState(true);
+  const [shouldLoadTrailer, setShouldLoadTrailer] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<MuxPlayerRefAttributes | null>(null);
   const poster = channel?.posterUrl ?? channel?.thumbnailUrl ?? undefined;
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      const player = playerRef.current;
-      if (!player) return;
-      player.muted = true;
+  const positioned = /\b(absolute|fixed|sticky)\b/.test(className);
+  const startPlayback = useCallback(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    player.muted = muted;
+    (player as MuxPlayerRefAttributes & { defaultMuted?: boolean }).defaultMuted = true;
+    player.play().catch(() => undefined);
+  }, [muted]);
+  const setPlayerRef = useCallback((player: MuxPlayerRefAttributes | null) => {
+    playerRef.current = player;
+    if (!player) return;
+    player.muted = muted;
+    (player as MuxPlayerRefAttributes & { defaultMuted?: boolean }).defaultMuted = true;
+    window.requestAnimationFrame(() => {
       player.play().catch(() => undefined);
-    }, 0);
+    });
+  }, [muted]);
+  const toggleTrailerAudio = useCallback(() => {
+    setMuted((current) => {
+      const nextMuted = !current;
+      const player = playerRef.current;
 
-    return () => window.clearTimeout(timeout);
+      if (player) {
+        player.muted = nextMuted;
+        player.volume = nextMuted ? 0 : 1;
+        if (!nextMuted) {
+          player.play().catch(() => undefined);
+        }
+      }
+
+      return nextMuted;
+    });
   }, []);
 
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const updateLoadState = () => {
+      const rect = root.getBoundingClientRect();
+      const hasLayout = rect.width > 0 && rect.height > 0;
+      const inViewport = rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth;
+      setShouldLoadTrailer(hasLayout && inViewport);
+    };
+
+    updateLoadState();
+
+    if (typeof window.IntersectionObserver === "undefined") {
+      window.addEventListener("resize", updateLoadState);
+      window.addEventListener("scroll", updateLoadState, { passive: true });
+      return () => {
+        window.removeEventListener("resize", updateLoadState);
+        window.removeEventListener("scroll", updateLoadState);
+      };
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const rect = entry.boundingClientRect;
+        setShouldLoadTrailer(entry.isIntersecting && rect.width > 0 && rect.height > 0);
+      },
+      { rootMargin: "160px 0px", threshold: 0.01 },
+    );
+
+    observer.observe(root);
+    window.addEventListener("resize", updateLoadState);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateLoadState);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoadTrailer) return;
+
+    const retryDelays = [0, 200, 600, 1200, 2400];
+    const timeouts = retryDelays.map((delay) => window.setTimeout(startPlayback, delay));
+    const playWhenVisible = () => {
+      if (document.visibilityState === "visible") startPlayback();
+    };
+
+    document.addEventListener("visibilitychange", playWhenVisible);
+    window.addEventListener("focus", startPlayback);
+
+    return () => {
+      timeouts.forEach((timeout) => window.clearTimeout(timeout));
+      document.removeEventListener("visibilitychange", playWhenVisible);
+      window.removeEventListener("focus", startPlayback);
+    };
+  }, [shouldLoadTrailer, startPlayback]);
+
   return (
-    <div className={`${className} relative h-full w-full overflow-hidden bg-black`}>
-      <MuxPlayer
-        ref={playerRef}
-        playbackId={heroTrailerPlaybackId}
-        streamType="on-demand"
-        autoPlay="muted"
-        preload="auto"
-        muted={muted}
-        loop
-        playsInline
-        poster={poster}
-        onCanPlay={() => {
-          if (!muted) return;
-          playerRef.current?.play().catch(() => undefined);
-        }}
-        metadata={{ video_title: `${heroTrailerTitle} trailer` }}
-        className="absolute inset-0 block h-full w-full max-w-none [--media-object-fit:cover] [--media-object-position:center]"
-        style={{
-          width: "100%",
-          height: "100%",
-          aspectRatio: "auto",
-          ["--media-object-fit" as string]: "cover",
-          ["--media-object-position" as string]: "center",
-        }}
-      />
-      {channel && <CatalogArtwork channel={channel} className="absolute inset-0 opacity-0" />}
+    <div ref={rootRef} className={`${className} ${positioned ? "" : "relative"} h-full w-full overflow-hidden bg-black`}>
+      {poster && (
+        <Image
+          src={poster}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="absolute inset-0 z-0 h-full w-full object-cover object-center"
+        />
+      )}
+      {shouldLoadTrailer && (
+        <MuxPlayer
+          ref={setPlayerRef}
+          playbackId={heroTrailerPlaybackId}
+          streamType="on-demand"
+          autoPlay="muted"
+          preload="auto"
+          muted={muted}
+          loop
+          playsInline
+          poster={poster}
+          onLoadStart={startPlayback}
+          onLoadedMetadata={startPlayback}
+          onLoadedData={startPlayback}
+          onCanPlay={startPlayback}
+          onCanPlayThrough={startPlayback}
+          metadata={{ video_title: `${heroTrailerTitle} trailer` }}
+          className="pointer-events-none absolute inset-0 z-10 block h-full min-h-full w-full min-w-full max-w-none bg-black [--controls:none] [--media-object-fit:cover] [--media-object-position:center]"
+          style={{
+            width: "100%",
+            height: "100%",
+            minWidth: "100%",
+            minHeight: "100%",
+            aspectRatio: "auto",
+            ["--media-object-fit" as string]: "cover",
+            ["--media-object-position" as string]: "center",
+          }}
+        />
+      )}
       {showMuteControl && (
         <button
           type="button"
           onClick={(event) => {
             event.stopPropagation();
-            setMuted((current) => !current);
+            toggleTrailerAudio();
           }}
-          className="absolute bottom-5 right-5 z-30 grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-black/45 text-white backdrop-blur transition hover:border-white/70 hover:bg-white/20"
+          className="absolute bottom-5 right-5 z-50 grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-black/45 text-white backdrop-blur transition hover:border-white/70 hover:bg-white/20"
           aria-label={muted ? "Unmute trailer" : "Mute trailer"}
         >
           {muted ? <MutedIcon /> : <SoundIcon />}
@@ -190,16 +287,16 @@ function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "ho
     {clerkConfigured ? (
       <>
         <Show when="signed-in">
-          <Link href={viewerUsername ? `/${viewerUsername}` : "/"} className={`${itemClass} ${color("profile")}`}>{marker("profile")}<ProfileIcon className="h-7 w-7" />Profile</Link>
+          <Link href={viewerUsername ? `/${viewerUsername}` : "/profile"} className={`${itemClass} ${color("profile")}`}>{marker("profile")}<ProfileIcon className="h-7 w-7" />Profile</Link>
         </Show>
         <Show when="signed-out">
-          <SignInButton>
+          <SignInButton fallbackRedirectUrl="/profile">
             <button type="button" className={`${itemClass} ${color("profile")}`}>{marker("profile")}<ProfileIcon className="h-7 w-7" />Profile</button>
           </SignInButton>
         </Show>
       </>
     ) : (
-      <Link href="/sign-in" className={`${itemClass} ${color("profile")}`}>{marker("profile")}<ProfileIcon className="h-7 w-7" />Profile</Link>
+      <Link href="/profile" className={`${itemClass} ${color("profile")}`}>{marker("profile")}<ProfileIcon className="h-7 w-7" />Profile</Link>
     )}
   </nav>;
 }
@@ -224,6 +321,20 @@ function SoundIcon() {
   return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M11 5 6 9H3v6h3l5 4V5Z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M18.5 5.5a9 9 0 0 1 0 13" /></svg>;
 }
 
+function TransitionLoader({ label = "Loading" }: { label?: string }) {
+  return (
+    <div className="fixed inset-0 z-[70] grid place-items-center bg-black/68 text-white backdrop-blur-sm">
+      <div className="flex min-w-40 flex-col items-center gap-4 rounded border border-white/10 bg-[#141414]/92 px-6 py-5 shadow-[0_22px_60px_rgba(0,0,0,0.55)]">
+        <span className="relative h-10 w-10">
+          <span className="absolute inset-0 rounded-full border-2 border-white/15" />
+          <span className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-[#e50914]" />
+        </span>
+        <span className="text-xs font-black uppercase tracking-[0.22em] text-white/75">{label}</span>
+      </div>
+    </div>
+  );
+}
+
 function PlayIcon({ className = "h-4 w-4" }: { className?: string }) {
   return <svg className={className} fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7Z" /></svg>;
 }
@@ -232,7 +343,7 @@ function ForwardIcon({ className = "h-4 w-4", direction = "next" }: { className?
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4"><g className={direction === "previous" ? "origin-center rotate-180" : ""}><path d="M5 6l8 6-8 6V6Z" fill="currentColor" stroke="none" /><path d="M16 6v12" strokeLinecap="round" /></g></svg>;
 }
 
-function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channel) => void }) {
+function Hero({ channel, liveFeatures = true, onOpen }: { channel?: Channel; liveFeatures?: boolean; onOpen: (channel: Channel) => void }) {
   if (!channel) return null;
   return (
     <section className="relative -mx-7 -mt-4 hidden min-h-[640px] overflow-hidden bg-black lg:block">
@@ -240,13 +351,13 @@ function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channe
       <div className="absolute inset-0 bg-gradient-to-r from-black/72 via-black/32 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#141414]/82 via-transparent to-black/10" />
       <div className="relative z-10 flex min-h-[640px] max-w-2xl flex-col justify-end px-10 pb-24 xl:px-14">
-        <div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase text-[#b3b3b3]"><span className="h-2.5 w-2.5 rounded bg-[#e50914]" />Most watched live anime</div>
+        <div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase text-[#b3b3b3]"><span className="h-2.5 w-2.5 rounded bg-[#e50914]" />Featured anime</div>
         <h1 className="text-5xl font-black leading-none tracking-normal xl:text-7xl">{heroTrailerTitle}</h1>
-        <p className="mt-5 text-xl font-medium text-white">Streaming now on ARGUS</p>
-        <p className="mt-3 max-w-xl text-base leading-6 text-[#bcbcbc]">Join the live watch room, react with the community, and follow the conversation in real time.</p>
-        <div className="mt-5 flex flex-wrap items-center gap-2 text-sm"><span className="rounded bg-[#e50914] px-2 py-1 font-bold text-white">LIVE</span><span className="text-[#b3b3b3]">1M viewers</span></div>
+        <p className="mt-5 text-xl font-medium text-white">{liveFeatures ? "Streaming now on ARGUS" : "Watch episodes and featured series on ARGUS"}</p>
+        <p className="mt-3 max-w-xl text-base leading-6 text-[#bcbcbc]">{liveFeatures ? "Join the live watch room, react with the community, and follow the conversation in real time." : "Browse the anime library, resume episodes, and discover what to watch next."}</p>
+        {liveFeatures && <div className="mt-5 flex flex-wrap items-center gap-2 text-sm"><span className="rounded bg-[#e50914] px-2 py-1 font-bold text-white">LIVE</span><span className="text-[#b3b3b3]">1M viewers</span></div>}
         <div className="mt-7 flex gap-3">
-          <button onClick={() => onOpen(channel)} className="flex items-center gap-2 rounded bg-white px-6 py-3 text-base font-bold text-black transition hover:bg-white/80"><PlayIcon />Watch live</button>
+          <button onClick={() => onOpen(channel)} className="flex items-center gap-2 rounded bg-white px-6 py-3 text-base font-bold text-black transition hover:bg-white/80"><PlayIcon />{liveFeatures ? "Watch live" : "Watch now"}</button>
           <button onClick={() => onOpen(channel)} className="rounded bg-white/20 px-6 py-3 text-base font-bold text-white transition hover:bg-white/30">More info</button>
         </div>
       </div>
@@ -254,7 +365,7 @@ function Hero({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channe
   );
 }
 
-function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured, viewerUsername }: { channels: Channel[]; onOpen: (channel: Channel) => void; clerkConfigured: boolean; viewerUsername?: string }) {
+function MobileStreamingHome({ channels: mobileChannels, liveFeatures = true, onOpen, clerkConfigured, viewerUsername }: { channels: Channel[]; liveFeatures?: boolean; onOpen: (channel: Channel) => void; clerkConfigured: boolean; viewerUsername?: string }) {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [listed, setListed] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
@@ -290,9 +401,9 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
             <HeroTrailerBackground channel={spotlight} className="absolute inset-0" showMuteControl />
             <button type="button" onClick={() => onOpen(spotlight)} className="absolute inset-0 z-10" aria-label={`Watch ${animeTitle(spotlight, 0)}`} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/5 to-transparent" />
-            <LiveViewerBadge viewers={spotlight.viewers} className="absolute left-4 top-4" />
+            {liveFeatures && <LiveViewerBadge viewers={spotlight.viewers} className="absolute left-4 top-4" />}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-5">
-              <p className="text-xs font-medium uppercase text-[#b3b3b3]">Streaming now</p>
+              <p className="text-xs font-medium uppercase text-[#b3b3b3]">{liveFeatures ? "Streaming now" : "Featured series"}</p>
               <h1 className="mt-2 text-4xl font-black uppercase leading-none tracking-normal">{heroTrailerTitle}</h1>
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-medium text-[#d2d2d2]">
                 <span className="border border-[#bcbcbc] px-1.5 py-0.5 text-[#bcbcbc]">TV-14</span>
@@ -300,7 +411,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
                 <span>1 Season</span>
                 <span className="text-[#46d369]">New</span>
               </div>
-              <p className="mt-4 max-w-[18rem] text-sm leading-5 text-[#d2d2d2]">Live watch room, episodes, and chat in one place.</p>
+              <p className="mt-4 max-w-[18rem] text-sm leading-5 text-[#d2d2d2]">{liveFeatures ? "Live watch room, episodes, and chat in one place." : "Episodes, trailers, and series details in one place."}</p>
             </div>
           </div>
           <div className="mt-3 flex justify-center gap-1.5">
@@ -317,7 +428,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
 
         <div className="relative z-10 mt-8 px-5">
           <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold">
-            {["Series", "Anime", "Live"].map((item) => <button key={item} type="button" className="rounded border border-white/15 bg-[#181818] px-2 py-2 text-[#e5e5e5]">{item}</button>)}
+            {(liveFeatures ? ["Series", "Anime", "Live"] : ["Series", "Anime", "Movies"]).map((item) => <button key={item} type="button" className="rounded border border-white/15 bg-[#181818] px-2 py-2 text-[#e5e5e5]">{item}</button>)}
           </div>
         </div>
 
@@ -325,7 +436,7 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
           <MobileLandscapeRail title="Continue Watching" channels={keepWatching} onOpen={onOpen} compact />
           <MobileTopTenRail title="Top 10 Today" channels={topTen} onOpen={onOpen} />
           <MobilePosterRail title="Movies & Series" channels={nextWatch} onOpen={onOpen} />
-          <MobileFeatureBlock channel={comedy[0]} onOpen={onOpen} />
+          <MobileFeatureBlocks channels={comedy.slice(0, 3)} onOpen={onOpen} />
           <MobilePosterRail title="Comedy Shows" channels={comedy} onOpen={onOpen} />
           <MobilePosterRail title="Most-Watched Classics" channels={[...mobileChannels].reverse()} onOpen={onOpen} />
         </div>
@@ -335,21 +446,32 @@ function MobileStreamingHome({ channels: mobileChannels, onOpen, clerkConfigured
   );
 }
 
-function MobilePosterRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
-  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-2.5 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative aspect-[2/3] w-[30vw] max-w-36 shrink-0 overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 to-transparent" /><LiveViewerBadge viewers={channel.viewers} className="absolute bottom-2 left-2" /></button>)}</div></section>;
+function MobilePosterRail({ title, channels: railChannels, liveFeatures = true, onOpen }: { title: string; channels: Channel[]; liveFeatures?: boolean; onOpen: (channel: Channel) => void }) {
+  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-2.5 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative aspect-[2/3] w-[30vw] max-w-36 shrink-0 overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 to-transparent" />{liveFeatures && <LiveViewerBadge viewers={channel.viewers} className="absolute bottom-2 left-2" />}</button>)}</div></section>;
 }
 
-function MobileLandscapeRail({ title, channels: railChannels, onOpen, compact = false }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void; compact?: boolean }) {
-  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className={`${compact ? "w-[68vw]" : "w-[50vw]"} max-w-72 shrink-0 text-left`}><span className="relative block aspect-video overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><LiveViewerBadge viewers={channel.viewers} className="absolute left-2 top-2" /><i className="absolute inset-x-0 bottom-0 h-1 bg-[#e50914]" /></span><span className="mt-2 block text-xs text-[#808080]">{2022 + index} · {96 + index * 9}min</span><strong className="mt-1 block truncate text-sm font-medium">{animeTitle(channel, index)}</strong></button>)}</div></section>;
+function MobileLandscapeRail({ title, channels: railChannels, liveFeatures = true, onOpen, compact = false }: { title: string; channels: Channel[]; liveFeatures?: boolean; onOpen: (channel: Channel) => void; compact?: boolean }) {
+  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className={`${compact ? "w-[68vw]" : "w-[50vw]"} max-w-72 shrink-0 text-left`}><span className="relative block aspect-video overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" />{liveFeatures && <LiveViewerBadge viewers={channel.viewers} className="absolute left-2 top-2" />}<i className="absolute inset-x-0 bottom-0 h-1 bg-[#e50914]" /></span><span className="mt-2 block text-xs text-[#808080]">{2022 + index} · {96 + index * 9}min</span><strong className="mt-1 block truncate text-sm font-medium">{animeTitle(channel, index)}</strong></button>)}</div></section>;
 }
 
 function MobileTopTenRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
   return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative flex w-[44vw] max-w-56 shrink-0 items-end text-left"><span className="mr-[-0.65rem] min-w-[2.8rem] text-7xl font-black leading-none text-black [-webkit-text-stroke:1.5px_#808080]">{index + 1}</span><span className="relative block aspect-[2/3] w-full overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><span className="absolute left-2 top-2 rounded bg-[#e50914] px-1.5 py-1 text-[9px] font-bold uppercase">Top 10</span></span></button>)}</div></section>;
 }
 
-function MobileFeatureBlock({ channel, onOpen }: { channel?: Channel; onOpen: (channel: Channel) => void }) {
-  if (!channel) return null;
-  return <section className="px-5"><button type="button" onClick={() => onOpen(channel)} className="relative min-h-[220px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left"><HeroTrailerBackground channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-transparent" /><div className="relative z-10 flex min-h-[220px] max-w-[66%] flex-col justify-end p-4"><p className="text-[11px] font-bold uppercase text-[#e50914]">Featured Movie Block</p><h2 className="mt-1.5 text-2xl font-black uppercase leading-none">{heroTrailerTitle}</h2><p className="mt-2 text-xs leading-5 text-[#d2d2d2]">A sharper mobile feature card for promoted movies and live series.</p><span className="mt-4 w-fit rounded bg-white px-3.5 py-2 text-xs font-bold text-black">More Info</span></div></button></section>;
+function MobileFeatureBlocks({ channels: featureChannels, onOpen }: { channels: Channel[]; onOpen: (channel: Channel) => void }) {
+  const channelsToShow = featureChannels.filter(Boolean).slice(0, 3);
+  if (!channelsToShow.length) return null;
+
+  return (
+    <section className="space-y-3 px-5">
+      {channelsToShow.map((channel, index) => <MovieFeatureBlock key={`mobile-feature-${channel.username}-${index}`} channel={channel} index={index} onOpen={onOpen} compact />)}
+    </section>
+  );
+}
+
+function MovieFeatureBlock({ channel, index = 0, onOpen, compact = false }: { channel: Channel; index?: number; onOpen: (channel: Channel) => void; compact?: boolean }) {
+  const title = animeTitle(channel, index);
+  return <button type="button" onClick={() => onOpen(channel)} className={`relative w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left ${compact ? "min-h-[220px]" : "min-h-[320px]"}`}><CatalogArtwork channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-r from-black/76 via-black/28 to-transparent" /><div className={`relative z-10 flex max-w-[70%] flex-col justify-end p-4 ${compact ? "min-h-[220px]" : "min-h-[320px] p-6"}`}><p className="text-[11px] font-bold uppercase text-[#e50914]">Featured Movie</p><h2 className={`mt-1.5 font-black uppercase leading-none ${compact ? "text-2xl" : "text-4xl"}`}>{title}</h2><p className="mt-2 line-clamp-2 text-xs leading-5 text-[#d2d2d2]">{channel.title || "A featured anime title picked from the ARGUS movie library."}</p><span className="mt-4 w-fit rounded bg-white px-3.5 py-2 text-xs font-bold text-black">More Info</span></div></button>;
 }
 
 function LiveViewerBadge({ viewers, className = "" }: { viewers: number; className?: string }) {
@@ -358,6 +480,7 @@ function LiveViewerBadge({ viewers, className = "" }: { viewers: number; classNa
 
 function MobileChannelFeed({ query, onQuery, data, onOpen, searchable = false }: { query: string; onQuery: (value: string) => void; data: Channel[]; onOpen: (channel: Channel) => void; searchable?: boolean }) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const normalizedQuery = query.trim();
   const topSearches = data.slice(0, 12);
   const nextWatch = [...data].reverse().slice(0, 12);
@@ -368,16 +491,19 @@ function MobileChannelFeed({ query, onQuery, data, onOpen, searchable = false }:
 
     const timeout = window.setTimeout(() => {
       const target = normalizedQuery ? `/search?term=${encodeURIComponent(normalizedQuery)}` : "/search";
-      router.replace(target, { scroll: false });
+      startTransition(() => {
+        router.replace(target, { scroll: false });
+      });
     }, 450);
 
     return () => window.clearTimeout(timeout);
-  }, [normalizedQuery, router, searchable]);
+  }, [normalizedQuery, router, searchable, startTransition]);
 
   return (
     <section className="-mx-4 -mt-4 min-h-screen overflow-hidden bg-[#111] pb-24 text-white lg:hidden">
+      {isPending && <TransitionLoader label="Searching" />}
       <header className="px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
-        {searchable && <form onSubmit={(event) => { event.preventDefault(); router.push(normalizedQuery ? `/search?term=${encodeURIComponent(normalizedQuery)}` : "/search"); }} className="flex h-16 items-center gap-3 rounded bg-[#1d1d1f] px-4 shadow-[0_14px_44px_rgba(0,0,0,0.28)]">
+        {searchable && <form onSubmit={(event) => { event.preventDefault(); startTransition(() => { router.push(normalizedQuery ? `/search?term=${encodeURIComponent(normalizedQuery)}` : "/search"); }); }} className="flex h-16 items-center gap-3 rounded bg-[#1d1d1f] px-4 shadow-[0_14px_44px_rgba(0,0,0,0.28)]">
           <SearchIcon className="h-6 w-6 shrink-0 text-[#a9a9ad]" />
           <input value={query} maxLength={inputLimits.searchTerm} onChange={(event) => onQuery(event.target.value)} placeholder="Search" autoFocus className="min-w-0 flex-1 bg-transparent text-2xl font-medium text-white outline-none placeholder:text-[#a9a9ad]" />
         </form>}
@@ -406,7 +532,24 @@ function RailCard({ channel, index, onOpen, horizontal = false }: { channel: Cha
 
 function ContentRail({ title, channels: railChannels, onOpen, horizontal = false }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void; horizontal?: boolean }) {
   if (!railChannels.length) return null;
-  return <section className="relative mt-8 hidden lg:block"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Explore ARGUS</p><h2 className="mt-1 text-xl font-bold">{title}</h2></div><button type="button" className="text-xs font-bold text-[#b3b3b3] transition hover:text-white">See all</button></div><div className={`scroll-fade-x grid grid-flow-col gap-3 overflow-x-auto pb-5 ${horizontal ? "auto-cols-[260px] xl:auto-cols-[310px]" : "auto-cols-[180px] xl:auto-cols-[205px]"}`}>{railChannels.map((channel, index) => <RailCard key={`${title}-${channel.username}`} channel={channel} index={index} onOpen={() => onOpen(channel)} horizontal={horizontal} />)}</div></section>;
+  return <section className="relative mt-8 hidden lg:block"><div className="mb-4 flex items-end justify-between"><div><p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Explore ARGUS</p><h2 className="mt-1 text-xl font-bold">{title}</h2></div><Link href={`/search?term=${encodeURIComponent(title)}`} className="text-xs font-bold text-[#b3b3b3] transition hover:text-white">See all</Link></div><div className={`scroll-fade-x grid grid-flow-col gap-3 overflow-x-auto pb-5 ${horizontal ? "auto-cols-[260px] xl:auto-cols-[310px]" : "auto-cols-[180px] xl:auto-cols-[205px]"}`}>{railChannels.map((channel, index) => <RailCard key={`${title}-${channel.username}`} channel={channel} index={index} onOpen={() => onOpen(channel)} horizontal={horizontal} />)}</div></section>;
+}
+
+function MovieFeatureGrid({ channels: featureChannels, onOpen }: { channels: Channel[]; onOpen: (channel: Channel) => void }) {
+  const channelsToShow = featureChannels.filter(Boolean).slice(0, 4);
+  if (!channelsToShow.length) return null;
+
+  return (
+    <section className="mt-8 hidden lg:block">
+      <div className="mb-4">
+        <p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Featured picks</p>
+        <h2 className="mt-1 text-xl font-bold">Movie Blocks</h2>
+      </div>
+      <div className="grid gap-3 xl:grid-cols-2">
+        {channelsToShow.map((channel, index) => <MovieFeatureBlock key={`desktop-feature-${channel.username}-${index}`} channel={channel} index={index} onOpen={onOpen} />)}
+      </div>
+    </section>
+  );
 }
 
 function CategoriesRail({ channels: categoryChannels, onSelect }: { channels: Channel[]; onSelect: (category: string) => void }) {
@@ -548,6 +691,7 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, 
   const [session, setSession] = useState<EpisodeChatToken | null>(null);
   const lastProgressSyncAt = useRef(0);
   const resumed = useRef(false);
+  const episodePlayerRef = useRef<MuxPlayerRefAttributes | null>(null);
   const serverUrl = normalizeLiveKitWsUrl(process.env.NEXT_PUBLIC_LIVEKIT_WS_URL);
   const [error, setError] = useState(() => {
     if (serverUrl) return "";
@@ -604,9 +748,18 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, 
     }).catch(() => undefined);
   };
 
+  const enableEpisodeAudio = useCallback((player = episodePlayerRef.current) => {
+    if (!player) return;
+
+    player.muted = false;
+    player.volume = 1;
+    (player as MuxPlayerRefAttributes & { defaultMuted?: boolean }).defaultMuted = false;
+  }, []);
+
   const resumePlayback = (event: { currentTarget: EventTarget | null }) => {
     const player = getPlayerProgressTarget(event);
     if (!player || resumed.current || !episode.positionSeconds) return;
+    enableEpisodeAudio(player as MuxPlayerRefAttributes);
     player.currentTime = episode.positionSeconds;
     resumed.current = true;
   };
@@ -626,21 +779,33 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, 
       <div className="flex h-full min-h-0 flex-col overscroll-none md:flex-row">
         <div className="relative min-h-0 flex-1 md:basis-auto">
           <MuxPlayer
+            ref={episodePlayerRef}
             playbackId={episode.muxPlaybackId}
             metadata={{ video_title: `${title} ${episode.code} ${episode.name}` }}
             streamType="on-demand"
             autoPlay
+            muted={false}
+            volume={1}
+            noMutedPref
+            noVolumePref
             onEnded={(event) => {
               const player = getPlayerProgressTarget(event);
               if (player) syncProgress(player, "VIDEO_COMPLETED");
             }}
-            onLoadedMetadata={resumePlayback}
+            onLoadedMetadata={(event) => {
+              enableEpisodeAudio(event.currentTarget as MuxPlayerRefAttributes);
+              resumePlayback(event);
+            }}
+            onCanPlay={(event) => {
+              enableEpisodeAudio(event.currentTarget as MuxPlayerRefAttributes);
+            }}
             onPause={(event) => {
               const player = getPlayerProgressTarget(event);
               if (player) syncProgress(player, "VIDEO_PAUSED");
             }}
             onPlay={(event) => {
               const player = getPlayerProgressTarget(event);
+              enableEpisodeAudio(event.currentTarget as MuxPlayerRefAttributes);
               if (player) syncProgress(player, "VIDEO_STARTED");
             }}
             onSeeked={(event) => {
@@ -860,6 +1025,14 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
           </div>
       </section>
 
+      <section id="about" className="px-5 pb-12 sm:px-8 lg:px-14">
+        <div className="max-w-4xl border-t border-white/10 pt-8">
+          <p className="text-xs font-medium uppercase text-[#b3b3b3]">About</p>
+          <h2 className="mt-2 text-3xl font-bold">{title}</h2>
+          <p className="mt-4 text-base leading-7 text-[#d2d2d2]">{description}</p>
+        </div>
+      </section>
+
       {playingEpisode?.muxPlaybackId && <EpisodePlaybackOverlay key={`${title}-${playingEpisode.code}`} title={title} episode={playingEpisode} nextEpisode={nextPlayableEpisode} previousEpisode={previousPlayableEpisode} viewerUsername={viewerUsername} onNext={setPlayingEpisode} />}
 
       <MobileBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} />
@@ -894,7 +1067,7 @@ function ContinueWatchingRail({ items, onOpen }: { items: ContinueWatchingItem[]
   if (!items.length) return null;
 
   return (
-    <section className="relative mt-8 hidden lg:block">
+    <section id="continue-watching" className="relative mt-8 hidden scroll-mt-24 lg:block">
       <div className="mb-4 flex items-end justify-between">
         <div>
           <p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Resume</p>
@@ -919,9 +1092,11 @@ function ContinueWatchingRail({ items, onOpen }: { items: ContinueWatchingItem[]
 }
 
 export function BrowseApp({ persistedChannels = [], followedChannels = [], recommendedChannels = [], catalogChannels = [], continueWatching = [], demoFallback = true, initialQuery = "", clerkConfigured = false, viewerIdentity, viewerUsername, mobileBrowse = false, pagination }: BrowseAppProps) {
+  const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [selected, setSelected] = useState<Channel | null>(null);
   const [mode, setMode] = useState<BrowseMode>("browse");
+  const [isPagePending, startPageTransition] = useTransition();
   const availableChannels = useMemo(() => {
     const recommendedUsernames = new Set(recommendedChannels.map((channel) => channel.username));
     if (!demoFallback) return persistedChannels;
@@ -936,8 +1111,6 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
   const visibleChannels = mode === "following" ? followedChannels : availableChannels;
   const filtered = useMemo(() => visibleChannels.filter((channel) => `${channel.displayName} ${channel.title} ${channel.category} ${channel.catalogTitle ?? ""}`.toLowerCase().includes(query.toLowerCase())), [visibleChannels, query]);
   const displayChannels = filtered.length ? filtered : visibleChannels;
-  const liveStreamerChannels = persistedChannels.filter((channel) => channel.live);
-  const recommendedDisplayChannels = recommendedChannels.length ? recommendedChannels : displayChannels.filter((channel) => channel.live).slice(0, 8);
   const catalogSource = catalogChannels.length ? catalogChannels : channels;
   const animeChannels = catalogSource
     .filter((channel) => !query.trim() || channel.catalogTitle?.toLowerCase().includes(query.trim().toLowerCase()))
@@ -953,6 +1126,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
 
   return (
     <div className="app-shell min-h-screen text-[#f1f1f3]">
+      {isPagePending && <TransitionLoader />}
       <div className="hidden lg:block"><SiteTopbar query={query} onQuery={setQuery} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} mode={mode} onMode={setMode} active={mobileBrowse ? "search" : "home"} /></div>
       <div>
         <div className="px-4 pb-24 pt-4 lg:px-7 lg:pb-6">
@@ -960,12 +1134,12 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
             {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={searchResultChannels} onOpen={setSelected} searchable /> : <MobileStreamingHome channels={animeChannels} onOpen={setSelected} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
             <Hero channel={spotlightChannel} onOpen={setSelected} />
             <ContinueWatchingRail items={continueWatching} onOpen={setSelected} />
-            <div id="movies-series" className="scroll-mt-24"><ContentRail title="Movies & Series" channels={recommendedDisplayChannels.slice(0, 12)} onOpen={setSelected} horizontal /></div>
+            <div id="movies-series" className="scroll-mt-24"><ContentRail title="Movies & Series" channels={animeChannels.slice(0, 12)} onOpen={setSelected} horizontal /></div>
+            <MovieFeatureGrid channels={[...animeChannels.slice(2), ...animeChannels.slice(0, 2)]} onOpen={setSelected} />
             <CategoriesRail channels={animeChannels} onSelect={setQuery} />
-            <div id="live-streamers"><ContentRail title={mode === "following" ? "Your followed channels" : "Live streamers"} channels={(mode === "following" ? followedChannels : liveStreamerChannels).slice(0, 12)} onOpen={setSelected} horizontal /></div>
             <div id="live-anime"><ContentRail title="Live anime" channels={animeChannels} onOpen={setSelected} /></div>
             <ContentRail title="Because you watch anime" channels={[...animeChannels].reverse()} onOpen={setSelected} />
-            {mode === "browse" && pagination && (pagination.page > 1 || pagination.hasNext) && <nav className="mt-6 flex items-center justify-center gap-3" aria-label="Channel pages">{pagination.page > 1 && <Link href={`${pagination.baseHref}${pagination.page - 1}`} className="rounded bg-white/10 px-4 py-2 text-xs font-bold">Previous</Link>}<span className="text-xs text-[#94949f]">Page {pagination.page}</span>{pagination.hasNext && <Link href={`${pagination.baseHref}${pagination.page + 1}`} className="rounded bg-[#e50914] px-4 py-2 text-xs font-bold">Next</Link>}</nav>}
+            {mode === "browse" && pagination && (pagination.page > 1 || pagination.hasNext) && <nav className="mt-6 flex items-center justify-center gap-3" aria-label="Channel pages">{pagination.page > 1 && <Link href={`${pagination.baseHref}${pagination.page - 1}`} onClick={(event) => { event.preventDefault(); startPageTransition(() => { router.push(`${pagination.baseHref}${pagination.page - 1}`); }); }} className="rounded bg-white/10 px-4 py-2 text-xs font-bold">Previous</Link>}<span className="text-xs text-[#94949f]">Page {pagination.page}</span>{pagination.hasNext && <Link href={`${pagination.baseHref}${pagination.page + 1}`} onClick={(event) => { event.preventDefault(); startPageTransition(() => { router.push(`${pagination.baseHref}${pagination.page + 1}`); }); }} className="rounded bg-[#e50914] px-4 py-2 text-xs font-bold">Next</Link>}</nav>}
           </main>
         </div>
       </div>
