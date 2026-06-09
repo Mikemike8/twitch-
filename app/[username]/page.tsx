@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { MobileProfilePage } from "@/components/mobile-profile-page";
-import { channels, type Channel } from "@/lib/channels";
+import { demoLiveChannels, type Channel } from "@/lib/channels";
 import { isBlockedByUser } from "@/lib/block-service";
 import { getUserByUsername } from "@/lib/user-service";
 import { isFollowingUser } from "@/lib/follow-service";
@@ -15,7 +15,7 @@ export default async function UserPage({
 }) {
   const { username } = await params;
   const demoChannel = process.env.NODE_ENV !== "production"
-    ? channels.find((channel) => channel.username === username)
+    ? demoLiveChannels.find((channel) => channel.username === username)
     : undefined;
   const user = await getUserByUsername(username);
 
@@ -56,6 +56,8 @@ function toChannel(user: {
 }): Channel {
   const username = publicUsername(user.username, user.externalUserId);
   return {
+    kind: "creator",
+    source: "database",
     username,
     displayName: username,
     title: redactPrivateIdentity(user.stream?.name ?? `${username}'s stream`, username),

@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { Channel } from "@/lib/channels";
+import { logger } from "@/lib/logger";
 
 type CatalogTitleRow = {
   firstEpisodeId: string | null;
@@ -28,6 +29,7 @@ type ContinueWatchingRow = CatalogTitleRow & {
   episodeNumber: number;
   episodeTitle: string;
   positionSeconds: number;
+  seasonNumber: number;
 };
 
 const pageSize = 24;
@@ -42,15 +44,21 @@ export async function getCatalogTitles(page = 1) {
         ct."category",
         ct."posterUrl",
         COALESCE(array_remove(array_agg(DISTINCT tag."name"), NULL), ARRAY[]::TEXT[]) AS "tags",
-        MIN(ep."id") AS "firstEpisodeId",
-        MIN(ep."title") AS "episodeTitle"
+        first_ep."id" AS "firstEpisodeId",
+        first_ep."title" AS "episodeTitle"
       FROM "CatalogTitle" ct
       LEFT JOIN "CatalogTitleTag" ctt ON ctt."catalogTitleId" = ct."id"
       LEFT JOIN "CatalogTag" tag ON tag."id" = ctt."tagId"
-      LEFT JOIN "Season" season ON season."catalogTitleId" = ct."id"
-      LEFT JOIN "Episode" ep ON ep."seasonId" = season."id"
+      LEFT JOIN LATERAL (
+        SELECT ep."id", ep."title"
+        FROM "Season" season
+        JOIN "Episode" ep ON ep."seasonId" = season."id"
+        WHERE season."catalogTitleId" = ct."id"
+        ORDER BY season."number" ASC, ep."number" ASC
+        LIMIT 1
+      ) first_ep ON TRUE
       WHERE ct."visibility" = 'PUBLIC'
-      GROUP BY ct."id"
+      GROUP BY ct."id", first_ep."id", first_ep."title"
       ORDER BY
         CASE WHEN ct."slug" = 'solo-leveling' THEN 0 ELSE 1 END,
         ct."updatedAt" DESC
@@ -59,7 +67,8 @@ export async function getCatalogTitles(page = 1) {
     `;
 
     return { channels: rows.slice(0, pageSize).map(rowToChannel), hasNext: rows.length > pageSize };
-  } catch {
+  } catch (error) {
+    logger.error("catalog.titles.query_failed", { error: error instanceof Error ? error.message : "Unknown error", page });
     return { channels: [] as Channel[], hasNext: false };
   }
 }
@@ -76,20 +85,26 @@ export async function searchCatalogTitles(query: string, page = 1) {
         ct."category",
         ct."posterUrl",
         COALESCE(array_remove(array_agg(DISTINCT tag."name"), NULL), ARRAY[]::TEXT[]) AS "tags",
-        MIN(ep."id") AS "firstEpisodeId",
-        MIN(ep."title") AS "episodeTitle"
+        first_ep."id" AS "firstEpisodeId",
+        first_ep."title" AS "episodeTitle"
       FROM "CatalogTitle" ct
       LEFT JOIN "CatalogTitleTag" ctt ON ctt."catalogTitleId" = ct."id"
       LEFT JOIN "CatalogTag" tag ON tag."id" = ctt."tagId"
-      LEFT JOIN "Season" season ON season."catalogTitleId" = ct."id"
-      LEFT JOIN "Episode" ep ON ep."seasonId" = season."id"
+      LEFT JOIN LATERAL (
+        SELECT ep."id", ep."title"
+        FROM "Season" season
+        JOIN "Episode" ep ON ep."seasonId" = season."id"
+        WHERE season."catalogTitleId" = ct."id"
+        ORDER BY season."number" ASC, ep."number" ASC
+        LIMIT 1
+      ) first_ep ON TRUE
       WHERE ct."visibility" = 'PUBLIC'
         AND (
           ct."title" ILIKE ${term}
           OR ct."category" ILIKE ${term}
           OR tag."name" ILIKE ${term}
         )
-      GROUP BY ct."id"
+      GROUP BY ct."id", first_ep."id", first_ep."title"
       ORDER BY
         CASE WHEN ct."slug" = 'solo-leveling' THEN 0 ELSE 1 END,
         ct."updatedAt" DESC
@@ -98,7 +113,8 @@ export async function searchCatalogTitles(query: string, page = 1) {
     `;
 
     return { channels: rows.slice(0, pageSize).map(rowToChannel), hasNext: rows.length > pageSize };
-  } catch {
+  } catch (error) {
+    logger.error("catalog.search.query_failed", { error: error instanceof Error ? error.message : "Unknown error", page });
     return { channels: [] as Channel[], hasNext: false };
   }
 }
@@ -122,6 +138,7 @@ export async function getContinueWatching(userId: string) {
           LIMIT 1
         ) AS "firstEpisodeId",
         ep."id" AS "episodeId",
+        season."number" AS "seasonNumber",
         ep."number" AS "episodeNumber",
         ep."title" AS "episodeTitle",
         progress."positionSeconds",
@@ -135,25 +152,28 @@ export async function getContinueWatching(userId: string) {
       WHERE progress."userId" = ${userId}
         AND progress."completedAt" IS NULL
         AND ct."visibility" = 'PUBLIC'
-      GROUP BY ct."id", ep."id", progress."positionSeconds", progress."durationSeconds", progress."updatedAt"
+      GROUP BY ct."id", season."number", ep."id", progress."positionSeconds", progress."durationSeconds", progress."updatedAt"
       ORDER BY progress."updatedAt" DESC
       LIMIT 12
     `;
 
     return rows.map(rowToContinueWatchingItem);
-  } catch {
+  } catch (error) {
+    logger.error("catalog.continue_watching.query_failed", { error: error instanceof Error ? error.message : "Unknown error" });
     return [] as ContinueWatchingItem[];
   }
 }
 
 function rowToChannel(row: CatalogTitleRow): Channel {
   return {
+    kind: "catalog",
+    source: "database",
     username: `catalog-${row.slug}`,
     displayName: row.title,
     title: row.episodeTitle ? `${row.title} - ${row.episodeTitle}` : row.title,
     category: row.category,
     viewers: viewersFor(row.slug),
-    live: true,
+    live: false,
     verified: true,
     tags: row.tags?.length ? row.tags : [row.category],
     colors: colorsFor(row.slug),
@@ -174,7 +194,7 @@ function rowToContinueWatchingItem(row: ContinueWatchingRow): ContinueWatchingIt
   return {
     channel: rowToChannel(row),
     durationSeconds,
-    episodeCode: `S1 E${row.episodeNumber}`,
+    episodeCode: `S${row.seasonNumber} E${row.episodeNumber}`,
     episodeId: row.episodeId,
     episodeTitle: row.episodeTitle,
     positionSeconds: row.positionSeconds,

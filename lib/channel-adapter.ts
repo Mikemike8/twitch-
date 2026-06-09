@@ -18,6 +18,8 @@ export type PublicStream = {
 export function streamToChannel(stream: PublicStream): Channel {
   const username = publicUsername(stream.user.username, stream.user.externalUserId);
   return {
+    kind: "creator",
+    source: "database",
     username,
     displayName: username,
     title: redactPrivateIdentity(stream.name, username),

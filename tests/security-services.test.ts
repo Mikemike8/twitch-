@@ -6,6 +6,9 @@ import { createMemoryRateLimiter, RateLimitError } from "../lib/rate-limit.ts";
 import { createSecretStorage } from "../lib/secret-storage.ts";
 import { getClientAddressFromHeaders } from "../lib/client-address-core.ts";
 import { resolveLiveKitTokenIssuer } from "../lib/token-issuer-service.ts";
+import { serializeAnalyticsMetadata } from "../lib/analytics-validation.ts";
+import { demoCatalogTitles, demoLiveChannels } from "../lib/channels.ts";
+import { isUsernameRootSegment } from "../lib/routes.ts";
 import { boundedPage, boundedSearchTerm, inputLimits, requireBoundedText, requireUsername, requireUuid } from "../lib/validation.ts";
 import { createViewerTokenService } from "../lib/viewer-token-service.ts";
 
@@ -95,6 +98,25 @@ test("public usernames never expose Clerk user ids", () => {
   assert.match(username, /^creator-[a-f0-9]{7}$/);
   assert.equal(publicUsername(privateIdentity, privateIdentity), username);
   assert.equal(redactPrivateIdentity(`${privateIdentity}'s stream`, username), `${username}'s stream`);
+});
+
+test("catalog and live demo fixtures expose explicit product domains", () => {
+  assert.ok(demoCatalogTitles.length > 0);
+  assert.ok(demoLiveChannels.length > 0);
+  assert.equal(demoCatalogTitles.every((item) => item.kind === "catalog" && item.source === "demo" && !item.live), true);
+  assert.equal(demoLiveChannels.every((item) => item.kind === "creator" && item.source === "demo" && item.live), true);
+});
+
+test("route registry keeps reserved app roots out of public profile matching", () => {
+  assert.equal(isUsernameRootSegment("creator-one"), true);
+  assert.equal(isUsernameRootSegment("u"), false);
+  assert.equal(isUsernameRootSegment("dashboard"), false);
+  assert.equal(isUsernameRootSegment("clerk_user"), false);
+});
+
+test("analytics metadata is serialized with a strict byte cap", () => {
+  assert.equal(serializeAnalyticsMetadata({ action: "play" }), "{\"action\":\"play\"}");
+  assert.throws(() => serializeAnalyticsMetadata({ value: "x".repeat(3000) }), /metadata is too large/);
 });
 
 test("creator token issuers override the shared LiveKit fallback", async () => {

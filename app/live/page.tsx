@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { LiveDiscoveryApp } from "@/components/live-discovery-app";
 import { streamToChannel } from "@/lib/channel-adapter";
 import { getSelf } from "@/lib/auth-service";
@@ -5,6 +6,7 @@ import { isClerkConfigured } from "@/lib/clerk-config";
 import type { Channel } from "@/lib/channels";
 import { getLiveFeed } from "@/lib/feed-service";
 import { getFollowedUsers } from "@/lib/follow-service";
+import { logger } from "@/lib/logger";
 
 export default async function LivePage() {
   const [{ streams }, viewer] = await Promise.all([getLiveFeed(), getViewerContext()]);
@@ -20,7 +22,9 @@ async function getViewerContext() {
       following.stream ? [streamToChannel({ ...following.stream, user: following })] : [],
     );
     return { identity: self.id, username: self.username, followedChannels };
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error);
+    logger.warn("live.viewer_context.unavailable", { error: error instanceof Error ? error.message : "Unknown error" });
     return { followedChannels: [] as Channel[] };
   }
 }

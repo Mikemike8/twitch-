@@ -10,9 +10,9 @@ export default async function SignInPage() {
   }
 
   const { userId } = await auth();
-  if (userId) redirect("/");
+  if (userId) redirect("/profile");
 
-  return <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" fallbackRedirectUrl="/" appearance={authAppearance} />;
+  return <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" fallbackRedirectUrl="/profile" appearance={authAppearance} />;
 }
 
 function ConfigurationNotice({ action }: { action: string }) {

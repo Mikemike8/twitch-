@@ -3,6 +3,8 @@
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
 import { getOptionalSelf, getSelf } from "@/lib/auth-service";
+import { serializeAnalyticsMetadata } from "@/lib/analytics-validation";
+import { hashRateLimitKey, rateLimiter } from "@/lib/rate-limit";
 import { requireBoundedText } from "@/lib/validation";
 
 const analyticsEventTypes = new Set([
@@ -61,10 +63,13 @@ export async function recordVideoEvent({
   type: string;
 }) {
   if (!analyticsEventTypes.has(type)) throw new Error("Analytics event type is invalid");
+  const { getClientAddress } = await import("@/lib/client-address");
+  await rateLimiter.enforce(`video-event:ip:${hashRateLimitKey(await getClientAddress())}`, 120);
   const self = await getOptionalSelf();
+  if (self) await rateLimiter.enforce(`video-event:user:${self.id}`, 240);
   const safeEpisodeId = episodeId ? requireCatalogRecordId(episodeId, "episodeId") : null;
   const safePosition = typeof positionSeconds === "number" ? requirePositiveSeconds(positionSeconds, "positionSeconds") : null;
-  const metadataJson = metadata ? JSON.stringify(metadata) : null;
+  const metadataJson = serializeAnalyticsMetadata(metadata);
 
   await db.$executeRaw`
     INSERT INTO "AnalyticsEvent" ("id", "type", "userId", "episodeId", "positionSeconds", "metadata")

@@ -1,34 +1,12 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
+import { isUsernameRootSegment, publicRoutes } from "@/lib/routes";
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/search(.*)",
-  "/live",
-  "/api/health",
-  "/api/webhooks(.*)",
-  "/api/uploadthing(.*)",
-]);
-
-const protectedRootSegments = new Set([
-  "account",
-  "admin",
-  "billing",
-  "dashboard",
-  "moderation",
-  "settings",
-]);
+const isPublicRoute = createRouteMatcher([...publicRoutes]);
 
 const configuredClerkMiddleware = clerkMiddleware(async (auth, request) => {
   const rootSegment = request.nextUrl.pathname.match(/^\/([^/]+)$/)?.[1];
-  const isPublicProfile = Boolean(
-    rootSegment
-      && /^[a-z0-9][a-z0-9_-]{2,23}$/i.test(rootSegment)
-      && !rootSegment.startsWith("clerk_")
-      && !protectedRootSegments.has(rootSegment.toLowerCase()),
-  );
+  const isPublicProfile = isUsernameRootSegment(rootSegment);
 
   if (!isPublicRoute(request) && !isPublicProfile) {
     await auth.protect();

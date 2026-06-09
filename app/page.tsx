@@ -1,13 +1,10 @@
+import { unstable_rethrow } from "next/navigation";
 import { BrowseApp } from "@/components/browse-app";
-import { streamToChannel } from "@/lib/channel-adapter";
-import { getFeed } from "@/lib/feed-service";
-import { getFollowedUsers } from "@/lib/follow-service";
 import { isClerkConfigured } from "@/lib/clerk-config";
-import type { Channel } from "@/lib/channels";
 import { getSelf } from "@/lib/auth-service";
-import { getRecommendedUsers } from "@/lib/recommended-service";
 import { boundedPage } from "@/lib/validation";
 import { getCatalogTitles, getContinueWatching } from "@/lib/catalog-service";
+import { logger } from "@/lib/logger";
 
 export default async function Home({
   searchParams,
@@ -15,34 +12,24 @@ export default async function Home({
   searchParams: Promise<{ page?: string }>;
 }) {
   const page = boundedPage((await searchParams).page);
-  const [{ streams, hasNext }, recommendedUsers, viewer, catalog] = await Promise.all([
-    getFeed(page),
-    getRecommendedUsers(),
+  const [viewer, catalog] = await Promise.all([
     getViewerContext(),
     getCatalogTitles(page),
   ]);
 
-  const recommendedChannels = recommendedUsers.flatMap((user) =>
-    user.stream ? [streamToChannel({ ...user.stream, user })] : [],
-  );
-
-  return <BrowseApp persistedChannels={streams.map(streamToChannel)} followedChannels={viewer.followedChannels} recommendedChannels={recommendedChannels} catalogChannels={catalog.channels} continueWatching={viewer.continueWatching} demoFallback={process.env.NODE_ENV !== "production"} clerkConfigured={isClerkConfigured} viewerIdentity={viewer.identity} viewerUsername={viewer.username} pagination={{ page, hasNext: hasNext || catalog.hasNext, baseHref: "/?page=" }} />;
+  return <BrowseApp catalogChannels={catalog.channels} continueWatching={viewer.continueWatching} demoFallback={process.env.NODE_ENV !== "production"} clerkConfigured={isClerkConfigured} viewerIdentity={viewer.identity} viewerUsername={viewer.username} pagination={{ page, hasNext: catalog.hasNext, baseHref: "/?page=" }} />;
 }
 
 async function getViewerContext() {
-  if (!isClerkConfigured) return { followedChannels: [] as Channel[], continueWatching: [] };
+  if (!isClerkConfigured) return { continueWatching: [] };
 
   try {
     const self = await getSelf();
-    const [followedUsers, continueWatching] = await Promise.all([
-      getFollowedUsers(),
-      getContinueWatching(self.id),
-    ]);
-    const followedChannels = followedUsers.flatMap(({ following }) =>
-      following.stream ? [streamToChannel({ ...following.stream, user: following })] : [],
-    );
-    return { identity: self.id, username: self.username, followedChannels, continueWatching };
-  } catch {
-    return { followedChannels: [] as Channel[], continueWatching: [] };
+    const continueWatching = await getContinueWatching(self.id);
+    return { identity: self.id, username: self.username, continueWatching };
+  } catch (error) {
+    unstable_rethrow(error);
+    logger.warn("home.viewer_context.unavailable", { error: error instanceof Error ? error.message : "Unknown error" });
+    return { continueWatching: [] };
   }
 }

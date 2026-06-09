@@ -18,7 +18,7 @@ export default async function SignUpPage() {
   }
 
   const { userId } = await auth();
-  if (userId) redirect("/");
+  if (userId) redirect("/profile");
 
-  return <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" fallbackRedirectUrl="/" appearance={authAppearance} />;
+  return <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" fallbackRedirectUrl="/profile" appearance={authAppearance} />;
 }

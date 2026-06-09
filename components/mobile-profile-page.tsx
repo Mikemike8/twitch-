@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SignOutButton } from "@clerk/nextjs";
+import { SignInButton, SignOutButton } from "@clerk/nextjs";
 import { useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { FollowButton } from "@/components/follow-button";
@@ -22,9 +22,18 @@ export function MobileProfilePage({
   authenticated?: boolean;
   clerkConfigured?: boolean;
 }) {
-  const [updatesEnabled, setUpdatesEnabled] = useState(true);
-  const dashboardHref = `/u/${channel.username}`;
-  const liveHref = channel.live ? `/live` : `/${channel.username}`;
+  const notificationKey = `argus:profile-notifications:${channel.username}`;
+  const [updatesEnabled, setUpdatesEnabled] = useState(() =>
+    typeof window !== "undefined" && window.localStorage.getItem(notificationKey) === "enabled",
+  );
+  const dashboardHref = isSelf ? `/u/${channel.username}` : "/u";
+  const primaryHref = isSelf ? dashboardHref : "/live";
+  const primaryLabel = isSelf ? "Edit Profile" : channel.live ? "Watch Live" : "Browse Live Rooms";
+
+  const toggleNotifications = (enabled: boolean) => {
+    setUpdatesEnabled(enabled);
+    window.localStorage.setItem(notificationKey, enabled ? "enabled" : "disabled");
+  };
 
   return (
     <div className="min-h-screen bg-[#141414] pb-24 text-white">
@@ -55,9 +64,10 @@ export function MobileProfilePage({
               <p className="mt-3 text-base font-medium text-[#b3b3b3]">@{channel.username}</p>
               <p className="mt-5 max-w-2xl text-base leading-7 text-[#e5e5e5]">{channel.bio || "Anime fan, streamer, and ARGUS community member."}</p>
               <div className="mt-7 flex flex-wrap items-center gap-3">
-                <Link href={liveHref} className="rounded bg-white px-5 py-3 text-sm font-bold text-black hover:bg-white/80">
-                  {channel.live ? "Watch Live" : "View Channel"}
+                <Link href={primaryHref} className="rounded bg-white px-5 py-3 text-sm font-bold text-black hover:bg-white/80">
+                  {primaryLabel}
                 </Link>
+                {isSelf && <Link href={`${dashboardHref}/keys`} className="rounded bg-white/15 px-5 py-3 text-sm font-bold text-white hover:bg-white/20">Stream Setup</Link>}
                 {!isSelf && <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
               </div>
             </div>
@@ -90,21 +100,22 @@ export function MobileProfilePage({
           </section>
         )}
 
-        <section className="mt-6 overflow-hidden rounded border border-white/10 bg-[#181818]">
-          <ProfileMenuLink href="/search" icon={<ClipsIcon />} title="Watchlist" detail="Save anime, movies, and series for later" />
-          <ProfileMenuLink href="/" icon={<HomeIcon />} title="Continue Watching" detail="Resume episodes and live watch rooms" />
-          <ProfileMenuLink href="/live" icon={<LiveTvIcon />} title="Live Rooms" detail="Jump back into active community streams" />
-          <ProfileMenuLink href={isSelf ? `${dashboardHref}` : `/${channel.username}`} icon={<ProfileIcon />} title={isSelf ? "Edit Profile" : "View Channel"} detail={isSelf ? "Update your public identity" : "Open this creator channel"} />
-        </section>
+        <ProfileActionList channel={channel} dashboardHref={dashboardHref} isSelf={isSelf} />
 
         <section className="mt-6 overflow-hidden rounded border border-white/10 bg-[#181818]">
           <label className="flex min-h-16 items-center gap-4 border-b border-white/10 px-4 py-4 text-left">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded bg-white/[0.08] text-white"><BellIcon className="h-5 w-5" /></span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-bold">Notifications</span>
-              <span className="mt-1 block text-xs leading-5 text-[#b3b3b3]">Stream updates and episode activity</span>
+              <span className="mt-1 block text-xs leading-5 text-[#b3b3b3]">{updatesEnabled ? "Enabled on this device" : "Stream updates and episode activity"}</span>
             </span>
-            <input checked={updatesEnabled} onChange={(event) => setUpdatesEnabled(event.target.checked)} type="checkbox" className="h-5 w-5 accent-[#e50914]" />
+            {authenticated || isSelf ? (
+              <input checked={updatesEnabled} onChange={(event) => toggleNotifications(event.target.checked)} type="checkbox" className="h-5 w-5 accent-[#e50914]" />
+            ) : (
+              <SignInButton fallbackRedirectUrl={`/${channel.username}`}>
+                <button type="button" className="rounded bg-white/10 px-3 py-2 text-xs font-bold hover:bg-white/15">Sign in</button>
+              </SignInButton>
+            )}
           </label>
           {isSelf && <div className="px-4 py-4">
             <SignOutButton>
@@ -123,6 +134,28 @@ export function MobileProfilePage({
         <span className={`${itemClass} text-white`}><i className="absolute top-0 h-0.5 w-8 rounded-full bg-[#e50914]" /><ProfileIcon />Profile</span>
       </nav>
     </div>
+  );
+}
+
+function ProfileActionList({ channel, dashboardHref, isSelf }: { channel: Channel; dashboardHref: string; isSelf: boolean }) {
+  if (isSelf) {
+    return (
+      <section className="mt-6 overflow-hidden rounded border border-white/10 bg-[#181818]">
+        <ProfileMenuLink href={dashboardHref} icon={<ProfileIcon />} title="Edit Profile" detail="Update username, bio, title, and channel artwork" />
+        <ProfileMenuLink href={`${dashboardHref}/keys`} icon={<KeyIcon />} title="Stream Setup" detail="Copy connection keys and prepare your broadcast" />
+        <ProfileMenuLink href={`${dashboardHref}/chat`} icon={<ChatIcon />} title="Chat Controls" detail="Manage slow mode, followers-only chat, and moderation" />
+        <ProfileMenuLink href={`${dashboardHref}/subscription`} icon={<PlanIcon />} title="Creator Plan" detail="Review monetization and paid creator options" />
+        <ProfileMenuLink href="/#continue-watching" icon={<HomeIcon />} title="Continue Watching" detail="Resume episodes and live watch rooms" />
+      </section>
+    );
+  }
+
+  return (
+    <section className="mt-6 overflow-hidden rounded border border-white/10 bg-[#181818]">
+      <ProfileMenuLink href="/live" icon={<LiveTvIcon />} title={channel.live ? "Watch Live" : "Live Rooms"} detail={channel.live ? "Open the live room for this creator" : "Find creators currently streaming"} />
+      <ProfileMenuLink href="/search" icon={<ClipsIcon />} title="Browse Library" detail="Find anime, movies, and series" />
+      <ProfileMenuLink href="/#continue-watching" icon={<HomeIcon />} title="Continue Watching" detail="Resume episodes and live watch rooms" />
+    </section>
   );
 }
 
@@ -146,6 +179,18 @@ function HomeIcon() {
 
 function ClipsIcon() {
   return <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M7 4h10M5 8h14v12H5z" /><path d="m10 11 5 3-5 3Z" /></svg>;
+}
+
+function KeyIcon() {
+  return <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="7.5" cy="15.5" r="5.5" /><path d="m12 12 9-9M15 9l3 3M18 6l3 3" /></svg>;
+}
+
+function ChatIcon() {
+  return <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" /></svg>;
+}
+
+function PlanIcon() {
+  return <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><rect width="18" height="14" x="3" y="5" rx="2" /><path d="M3 10h18M7 15h4" /></svg>;
 }
 
 function LiveTvIcon() {

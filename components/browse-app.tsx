@@ -3,21 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Show, SignInButton } from "@clerk/nextjs";
-import { LiveKitRoom, useChat, useParticipants } from "@livekit/components-react";
-import MuxPlayer, { type MuxPlayerRefAttributes } from "@mux/mux-player-react";
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { recordVideoEvent, savePlaybackProgress } from "@/actions/catalog";
-import { createEpisodeChatToken } from "@/actions/episode-token";
+import { catalogTitle, prioritizePlayableCatalog } from "@/components/browse/catalog-utils";
+import { CatalogArtwork, HeroTrailerBackground, heroTrailerTitle } from "@/components/browse/catalog-media";
+import { EpisodePlaybackOverlay } from "@/components/browse/episode-playback-overlay";
 import { BrandLogo } from "@/components/brand-logo";
 import { ChannelPage } from "@/components/channel-page";
 import { BellIcon, SearchIcon } from "@/components/icons";
-import { SiteTopbar, type SiteTopbarMode } from "@/components/site-topbar";
-import { channels, formatViewers, type Channel } from "@/lib/channels";
-import { normalizeLiveKitWsUrl } from "@/lib/livekit-url";
+import { SiteTopbar } from "@/components/site-topbar";
+import { demoCatalogTitles, formatViewers, type Channel } from "@/lib/channels";
+import { seriesDescriptions, seriesEpisodes, type CatalogEpisode } from "@/lib/catalog-episodes";
 import { inputLimits } from "@/lib/validation";
-
-type BrowseMode = SiteTopbarMode;
 
 type BrowseAppProps = {
   persistedChannels?: Channel[];
@@ -45,11 +42,6 @@ type ContinueWatchingItem = {
   progressPercent: number;
 };
 
-type PlayerProgressTarget = {
-  currentTime: number;
-  duration: number;
-};
-
 const browseHistoryKey = "argusBrowseView";
 
 type BrowseHistoryView = "detail" | "episode";
@@ -67,236 +59,12 @@ function backThroughBrowseHistory(view: BrowseHistoryView, fallback: () => void)
   fallback();
 }
 
-const heroTrailerPlaybackId = "xEjUkmnCYchvtR5CnnWc6QxGwko027FsIfrE7dBRLeKw";
-const heroTrailerTitle = "Dandadan";
-
-function getPlayerProgressTarget(event: { currentTarget: EventTarget | null }) {
-  const target = event.currentTarget as (EventTarget & Partial<PlayerProgressTarget>) | null;
-
-  if (!target || typeof target.currentTime !== "number" || typeof target.duration !== "number") {
-    return null;
-  }
-
-  return target as EventTarget & PlayerProgressTarget;
-}
-
-function prioritizePlayableCatalog(left: Channel, right: Channel) {
-  if (left.catalogTitle === "Solo Leveling") return -1;
-  if (right.catalogTitle === "Solo Leveling") return 1;
-
-  return right.viewers - left.viewers;
-}
-
-const animeTitles = ["Solo Leveling", "Demon Slayer", "Jujutsu Kaisen", "Attack on Titan", "My Hero Academia", "Chainsaw Man", "One Piece", "Black Clover"];
-function animeTitle(channel: Channel, index: number) {
-  return channel.hostIdentity ? channel.title : channel.catalogTitle ?? animeTitles[index % animeTitles.length];
-}
-
 function BrowseIcon({ className = "h-5 w-5" }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="6" /><path d="m16 16 5 5" /></svg>;
 }
 
 function ProfileIcon({ className = "h-5 w-5" }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="7" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>;
-}
-
-function ChannelArtwork({ channel, className = "" }: { channel: Channel; className?: string }) {
-  const thumbnailUrl = channel.hostIdentity ? null : channel.thumbnailUrl;
-
-  return (
-    <div className={`relative h-full w-full min-w-0 overflow-hidden ${className}`}>
-      <div className="absolute inset-0 overflow-hidden bg-[#171720]">
-        {thumbnailUrl ? <Image src={thumbnailUrl} alt="" fill sizes="(max-width: 1023px) 100vw, 33vw" className="h-full w-full object-cover object-center" /> : (
-          <>
-            <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${channel.colors[0]}, ${channel.colors[1]})` }} />
-            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_34%),linear-gradient(0deg,rgba(0,0,0,0.22),transparent)]" />
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute inset-0 grid place-items-center text-center">
-              <span>
-                <strong className="block text-3xl font-black text-white/90">{channel.initials}</strong>
-                <i className="mt-1 block text-[8px] font-black not-italic uppercase tracking-[0.28em] text-white/60">ARGUS Live</i>
-              </span>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CatalogArtwork({ channel, className = "" }: { channel: Channel; className?: string }) {
-  const artworkUrl = channel.posterUrl ?? (channel.hostIdentity ? null : channel.thumbnailUrl);
-  if (!artworkUrl) return <ChannelArtwork channel={channel} className={className} />;
-
-  return (
-    <div className={`relative h-full w-full min-w-0 overflow-hidden ${className}`}>
-      <div className="absolute inset-0 overflow-hidden bg-[#171720]">
-        <Image src={artworkUrl} alt="" fill sizes="(max-width: 1023px) 100vw, 33vw" className="h-full w-full object-cover object-center" />
-      </div>
-    </div>
-  );
-}
-
-function HeroTrailerBackground({ channel, className = "", showMuteControl = false }: { channel?: Channel; className?: string; showMuteControl?: boolean }) {
-  const [muted, setMuted] = useState(true);
-  const [shouldLoadTrailer, setShouldLoadTrailer] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const playerRef = useRef<MuxPlayerRefAttributes | null>(null);
-  const poster = channel?.posterUrl ?? channel?.thumbnailUrl ?? undefined;
-  const positioned = /\b(absolute|fixed|sticky)\b/.test(className);
-  const applyTrailerAudio = useCallback((player: MuxPlayerRefAttributes | null, nextMuted: boolean) => {
-    if (!player) return;
-
-    player.muted = nextMuted;
-    player.volume = nextMuted ? 0 : 1;
-    (player as MuxPlayerRefAttributes & { defaultMuted?: boolean }).defaultMuted = nextMuted;
-  }, []);
-  const startPlayback = useCallback(() => {
-    const player = playerRef.current;
-    applyTrailerAudio(player, muted);
-    if (!player) return;
-    player.play().catch(() => undefined);
-  }, [applyTrailerAudio, muted]);
-  const setPlayerRef = useCallback((player: MuxPlayerRefAttributes | null) => {
-    playerRef.current = player;
-    if (!player) return;
-    applyTrailerAudio(player, muted);
-    window.requestAnimationFrame(() => {
-      player.play().catch(() => undefined);
-    });
-  }, [applyTrailerAudio, muted]);
-  const toggleTrailerAudio = useCallback(() => {
-    setMuted((current) => {
-      const nextMuted = !current;
-      const player = playerRef.current;
-
-      applyTrailerAudio(player, nextMuted);
-
-      if (player) {
-        player.play().catch(() => undefined);
-      }
-
-      return nextMuted;
-    });
-  }, [applyTrailerAudio]);
-
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    const updateLoadState = () => {
-      const rect = root.getBoundingClientRect();
-      const hasLayout = rect.width > 0 && rect.height > 0;
-      const inViewport = rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth;
-      setShouldLoadTrailer(hasLayout && inViewport);
-    };
-
-    updateLoadState();
-
-    if (typeof window.IntersectionObserver === "undefined") {
-      window.addEventListener("resize", updateLoadState);
-      window.addEventListener("scroll", updateLoadState, { passive: true });
-      return () => {
-        window.removeEventListener("resize", updateLoadState);
-        window.removeEventListener("scroll", updateLoadState);
-      };
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        const rect = entry.boundingClientRect;
-        setShouldLoadTrailer(entry.isIntersecting && rect.width > 0 && rect.height > 0);
-      },
-      { rootMargin: "160px 0px", threshold: 0.01 },
-    );
-
-    observer.observe(root);
-    window.addEventListener("resize", updateLoadState);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateLoadState);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!shouldLoadTrailer) return;
-
-    const retryDelays = [0, 200, 600, 1200, 2400];
-    const timeouts = retryDelays.map((delay) => window.setTimeout(startPlayback, delay));
-    const playWhenVisible = () => {
-      if (document.visibilityState === "visible") startPlayback();
-    };
-
-    document.addEventListener("visibilitychange", playWhenVisible);
-    window.addEventListener("focus", startPlayback);
-
-    return () => {
-      timeouts.forEach((timeout) => window.clearTimeout(timeout));
-      document.removeEventListener("visibilitychange", playWhenVisible);
-      window.removeEventListener("focus", startPlayback);
-    };
-  }, [shouldLoadTrailer, startPlayback]);
-
-  return (
-    <div ref={rootRef} className={`${className} ${positioned ? "" : "relative"} h-full w-full overflow-hidden bg-black`}>
-      {poster && (
-        <Image
-          src={poster}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="absolute inset-0 z-0 h-full w-full object-cover object-center"
-        />
-      )}
-      {shouldLoadTrailer && (
-        <MuxPlayer
-          ref={setPlayerRef}
-          playbackId={heroTrailerPlaybackId}
-          streamType="on-demand"
-          autoPlay
-          preload="auto"
-          muted={muted}
-          volume={muted ? 0 : 1}
-          noMutedPref
-          noVolumePref
-          loop
-          playsInline
-          poster={poster}
-          onLoadStart={startPlayback}
-          onLoadedMetadata={startPlayback}
-          onLoadedData={startPlayback}
-          onCanPlay={startPlayback}
-          onCanPlayThrough={startPlayback}
-          metadata={{ video_title: `${heroTrailerTitle} trailer` }}
-          className="pointer-events-none absolute inset-0 z-10 block h-full min-h-full w-full min-w-full max-w-none bg-black [--controls:none] [--media-object-fit:cover] [--media-object-position:center]"
-          style={{
-            width: "100%",
-            height: "100%",
-            minWidth: "100%",
-            minHeight: "100%",
-            aspectRatio: "auto",
-            ["--media-object-fit" as string]: "cover",
-            ["--media-object-position" as string]: "center",
-          }}
-        />
-      )}
-      {showMuteControl && (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            toggleTrailerAudio();
-          }}
-          className="absolute bottom-5 right-5 z-50 grid h-11 w-11 place-items-center rounded-full border border-white/45 bg-black/45 text-white backdrop-blur transition hover:border-white/70 hover:bg-white/20"
-          aria-label={muted ? "Unmute trailer" : "Mute trailer"}
-        >
-          {muted ? <MutedIcon /> : <SoundIcon />}
-        </button>
-      )}
-    </div>
-  );
 }
 
 function MobileBottomNav({ viewerUsername, clerkConfigured = false, active = "home" }: { viewerUsername?: string; clerkConfigured?: boolean; active?: "home" | "search" | "live" | "profile" }) {
@@ -336,14 +104,6 @@ function CastIcon({ className = "h-5 w-5" }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M4 19a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" /><path d="M3 13a6 6 0 0 1 6 6M3 8a11 11 0 0 1 11 11" /><path d="M5 5h15a1 1 0 0 1 1 1v11" /></svg>;
 }
 
-function MutedIcon() {
-  return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M11 5 6 9H3v6h3l5 4V5Z" /><path d="m20 9-6 6M14 9l6 6" /></svg>;
-}
-
-function SoundIcon() {
-  return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M11 5 6 9H3v6h3l5 4V5Z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M18.5 5.5a9 9 0 0 1 0 13" /></svg>;
-}
-
 function TransitionLoader({ label = "Loading" }: { label?: string }) {
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center bg-black/68 text-white backdrop-blur-sm">
@@ -364,10 +124,6 @@ function PlayIcon({ className = "h-4 w-4" }: { className?: string }) {
 
 function BackArrowIcon({ className = "h-5 w-5" }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>;
-}
-
-function ForwardIcon({ className = "h-4 w-4", direction = "next" }: { className?: string; direction?: "next" | "previous" }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.4"><g className={direction === "previous" ? "origin-center rotate-180" : ""}><path d="M5 6l8 6-8 6V6Z" fill="currentColor" stroke="none" /><path d="M16 6v12" strokeLinecap="round" /></g></svg>;
 }
 
 function Hero({ channel, liveFeatures = true, onOpen }: { channel?: Channel; liveFeatures?: boolean; onOpen: (channel: Channel) => void }) {
@@ -426,7 +182,7 @@ function MobileStreamingHome({ channels: mobileChannels, liveFeatures = true, on
         <div className="px-5 pt-1">
           <div className="relative block h-[62vh] min-h-[480px] w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left shadow-[0_22px_60px_rgba(0,0,0,0.5)]">
             <HeroTrailerBackground channel={spotlight} className="absolute inset-0" showMuteControl />
-            <button type="button" onClick={() => onOpen(spotlight)} className="absolute inset-0 z-10" aria-label={`Watch ${animeTitle(spotlight, 0)}`} />
+            <button type="button" onClick={() => onOpen(spotlight)} className="absolute inset-0 z-10" aria-label={`Watch ${catalogTitle(spotlight, 0)}`} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/5 to-transparent" />
             {liveFeatures && <LiveViewerBadge viewers={spotlight.viewers} className="absolute left-4 top-4" />}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-5">
@@ -442,7 +198,7 @@ function MobileStreamingHome({ channels: mobileChannels, liveFeatures = true, on
             </div>
           </div>
           <div className="mt-3 flex justify-center gap-1.5">
-            {featured.map((channel, index) => <button key={`featured-dot-${channel.username}`} type="button" onClick={() => setFeaturedIndex(index)} className={`h-1.5 rounded-full transition ${index === featuredIndex ? "w-7 bg-[#e50914]" : "w-1.5 bg-white/35"}`} aria-label={`Feature ${animeTitle(channel, index)}`} />)}
+            {featured.map((channel, index) => <button key={`featured-dot-${channel.username}`} type="button" onClick={() => setFeaturedIndex(index)} className={`h-1.5 rounded-full transition ${index === featuredIndex ? "w-7 bg-[#e50914]" : "w-1.5 bg-white/35"}`} aria-label={`Feature ${catalogTitle(channel, index)}`} />)}
           </div>
         </div>
 
@@ -478,7 +234,7 @@ function MobilePosterRail({ title, channels: railChannels, liveFeatures = true, 
 }
 
 function MobileLandscapeRail({ title, channels: railChannels, liveFeatures = true, onOpen, compact = false }: { title: string; channels: Channel[]; liveFeatures?: boolean; onOpen: (channel: Channel) => void; compact?: boolean }) {
-  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className={`${compact ? "w-[68vw]" : "w-[50vw]"} max-w-72 shrink-0 text-left`}><span className="relative block aspect-video overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" />{liveFeatures && <LiveViewerBadge viewers={channel.viewers} className="absolute left-2 top-2" />}<i className="absolute inset-x-0 bottom-0 h-1 bg-[#e50914]" /></span><span className="mt-2 block text-xs text-[#808080]">{2022 + index} · {96 + index * 9}min</span><strong className="mt-1 block truncate text-sm font-medium">{animeTitle(channel, index)}</strong></button>)}</div></section>;
+  return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className={`${compact ? "w-[68vw]" : "w-[50vw]"} max-w-72 shrink-0 text-left`}><span className="relative block aspect-video overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" />{liveFeatures && <LiveViewerBadge viewers={channel.viewers} className="absolute left-2 top-2" />}<i className="absolute inset-x-0 bottom-0 h-1 bg-[#e50914]" /></span><span className="mt-2 block text-xs text-[#808080]">{2022 + index} · {96 + index * 9}min</span><strong className="mt-1 block truncate text-sm font-medium">{catalogTitle(channel, index)}</strong></button>)}</div></section>;
 }
 
 function MobileTopTenRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
@@ -497,7 +253,7 @@ function MobileFeatureBlocks({ channels: featureChannels, onOpen }: { channels: 
 }
 
 function MovieFeatureBlock({ channel, index = 0, onOpen, compact = false }: { channel: Channel; index?: number; onOpen: (channel: Channel) => void; compact?: boolean }) {
-  const title = animeTitle(channel, index);
+  const title = catalogTitle(channel, index);
   return <button type="button" onClick={() => onOpen(channel)} className={`relative w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left ${compact ? "min-h-[220px]" : "min-h-[320px]"}`}><CatalogArtwork channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-r from-black/76 via-black/28 to-transparent" /><div className={`relative z-10 flex max-w-[70%] flex-col justify-end p-4 ${compact ? "min-h-[220px]" : "min-h-[320px] p-6"}`}><p className="text-[11px] font-bold uppercase text-[#e50914]">Featured Movie</p><h2 className={`mt-1.5 font-black uppercase leading-none ${compact ? "text-2xl" : "text-4xl"}`}>{title}</h2><p className="mt-2 line-clamp-2 text-xs leading-5 text-[#d2d2d2]">{channel.title || "A featured anime title picked from the ARGUS movie library."}</p><span className="mt-4 w-fit rounded bg-white px-3.5 py-2 text-xs font-bold text-black">More Info</span></div></button>;
 }
 
@@ -554,7 +310,7 @@ function MobileChannelFeed({ query, onQuery, data, onOpen, searchable = false }:
 }
 
 function RailCard({ channel, index, onOpen, horizontal = false }: { channel: Channel; index: number; onOpen: () => void; horizontal?: boolean }) {
-  return <button onClick={onOpen} aria-label={`Watch ${animeTitle(channel, index)} live`} className="group min-w-0 transition duration-300 hover:z-10 hover:scale-[1.035] focus:z-10 focus:scale-[1.035] focus:outline-none"><div className={`relative overflow-hidden rounded border border-white/8 bg-[#181818] ${horizontal ? "aspect-video" : "aspect-[2/3]"}`}><CatalogArtwork channel={channel} className="absolute inset-0 transition duration-500 group-hover:scale-110" /><div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" /><span className="absolute bottom-1 left-1 flex items-center gap-0.5 rounded bg-black/80 px-1.5 py-0.5 text-[8px] font-bold leading-3 text-white"><i className="h-1 w-1 rounded-full bg-[#e50914]" />LIVE · 1M</span></div></button>;
+  return <button onClick={onOpen} aria-label={`Watch ${catalogTitle(channel, index)}`} className="group min-w-0 transition duration-300 hover:z-10 hover:scale-[1.035] focus:z-10 focus:scale-[1.035] focus:outline-none"><div className={`relative overflow-hidden rounded border border-white/8 bg-[#181818] ${horizontal ? "aspect-video" : "aspect-[2/3]"}`}><CatalogArtwork channel={channel} className="absolute inset-0 transition duration-500 group-hover:scale-110" /><div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" /></div></button>;
 }
 
 function ContentRail({ title, channels: railChannels, onOpen, horizontal = false }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void; horizontal?: boolean }) {
@@ -570,7 +326,7 @@ function MovieFeatureGrid({ channels: featureChannels, onOpen }: { channels: Cha
     <section className="mt-8 hidden lg:block">
       <div className="mb-4">
         <p className="text-[10px] font-medium uppercase text-[#b3b3b3]">Featured picks</p>
-        <h2 className="mt-1 text-xl font-bold">Movie Blocks</h2>
+        <h2 className="mt-1 text-xl font-bold">Independent Films</h2>
       </div>
       <div className="grid gap-3 xl:grid-cols-2">
         {channelsToShow.map((channel, index) => <MovieFeatureBlock key={`desktop-feature-${channel.username}-${index}`} channel={channel} index={index} onOpen={onOpen} />)}
@@ -600,389 +356,9 @@ function CategoriesRail({ channels: categoryChannels, onSelect }: { channels: Ch
   );
 }
 
-const seriesDescriptions: Record<string, string> = {
-  "Solo Leveling": "A hunter at the edge of death awakens a forbidden power and begins climbing through gates no one else can survive.",
-  "Demon Slayer": "A young swordsman enters a haunted mountain war where demons, grief, and family bonds collide beneath moonlit blades.",
-  "Jujutsu Kaisen": "Cursed energy turns a quiet school into a battlefield as students face monsters born from human fear.",
-  "Attack on Titan": "Humanity fights from behind broken walls while soldiers uncover the brutal truth hidden beyond the battlefield.",
-  "My Hero Academia": "Young heroes train under impossible pressure as villains force them to decide what power is worth.",
-  "Chainsaw Man": "A desperate fighter merges with a devil and is pulled into a violent world of contracts, blood, and ambition.",
-  "One Piece": "A fearless crew crosses dangerous seas in search of freedom, treasure, and legends older than empires.",
-  "Black Clover": "A magicless fighter challenges a kingdom of mages with stubborn will, brutal training, and an impossible dream.",
-};
-
-const trailerSources: Record<string, { embedId?: string; url: string; label: string }> = {
-  "Solo Leveling": {
-    url: "https://www.crunchyroll.com/news/latest/2023/9/10/solo-leveling-anime-trailer-premiere-januar-2024",
-    label: "Open official trailer",
-  },
-  "Demon Slayer": {
-    embedId: "23riEOmDOgM",
-    url: "https://youtu.be/23riEOmDOgM",
-    label: "Official Aniplex trailer",
-  },
-  "Jujutsu Kaisen": {
-    embedId: "MPfZhgLiK6w",
-    url: "https://www.youtube.com/watch?v=MPfZhgLiK6w",
-    label: "Official Crunchyroll trailer",
-  },
-  "Attack on Titan": {
-    url: "https://www.crunchyroll.com/news/latest/2021/12/13/prepare-for-attack-on-titan-final-season-part-2-with-crunchyrolls-appetite-trailer",
-    label: "Open official trailer",
-  },
-  "My Hero Academia": {
-    url: "https://www.youtube.com/results?search_query=My+Hero+Academia+official+trailer+Crunchyroll",
-    label: "Find official trailer",
-  },
-  "Chainsaw Man": {
-    url: "https://www.youtube.com/results?search_query=Chainsaw+Man+official+trailer+MAPPA",
-    label: "Find official trailer",
-  },
-  "One Piece": {
-    url: "https://www.youtube.com/results?search_query=One+Piece+official+trailer",
-    label: "Find official trailer",
-  },
-  "Black Clover": {
-    url: "https://www.youtube.com/results?search_query=Black+Clover+official+trailer+Crunchyroll",
-    label: "Find official trailer",
-  },
-};
-
-const muxEpisodePlaybackIds: Record<string, string[]> = {
-  // Add real Mux playback IDs after uploads, in episode order.
-  // Example:
-  // "Solo Leveling": ["PLAYBACK_ID_FOR_S1_E1", "PLAYBACK_ID_FOR_S1_E2"],
-  "Solo Leveling": [
-    "Ughp4MfIu01Nvt602FFsOLRiJ8Yo01rx7AXzE1TrL8DKZQ",
-    "JfkMiMlayLLeNLUNcWu6iMfwJ7Z4svBAkPa6ZcgsqWM",
-    "01vDllqA01v332iTjKRDQBMyWUcZWJREgimQhuBJbpxP4",
-  ],
-};
-
-function seriesEpisodes(channel: Channel, progressByEpisode = new Map<string, ContinueWatchingItem>()) {
-  const title = channel.catalogTitle ?? channel.displayName;
-  const playbackIds = muxEpisodePlaybackIds[title] ?? [];
-  const trailer = trailerSources[title] ?? {
-    url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} official trailer episode`)}`,
-    label: "Watch trailer",
-  };
-  const episodeNames = [
-    "Awakening",
-    "Zone of Shadows",
-    "Road to Nowhere",
-    "The Gathering Storm",
-    "Lost Oath",
-    "Broken Gate",
-    "Red Moon Trial",
-    "The Last Command",
-  ];
-  const thumbnails = channels.map((item) => item.posterUrl ?? item.thumbnailUrl).filter(Boolean) as string[];
-
-  return episodeNames.map((name, index) => ({
-    id: index === 0 && channel.firstEpisodeId ? channel.firstEpisodeId : `episode_${episodeSlug(title)}_${index + 1}`,
-    code: `S1 E${index + 1}`,
-    name,
-    date: `Mar ${1 + index * 7}, 2026`,
-    duration: `${42 + (index % 3)}M`,
-    description: index === 0
-      ? `${title} begins as the hero steps into a first battle that changes the entire season.`
-      : `The conflict expands as ${title} pushes its heroes into a darker and more dangerous mission.`,
-    thumbnailUrl: thumbnails[index % thumbnails.length],
-    viewers: Math.max(120, Math.round(channel.viewers * (1 - index * 0.085))),
-    muxPlaybackId: playbackIds[index],
-    positionSeconds: progressByEpisode.get(index === 0 && channel.firstEpisodeId ? channel.firstEpisodeId : `episode_${episodeSlug(title)}_${index + 1}`)?.positionSeconds ?? 0,
-    progressPercent: progressByEpisode.get(index === 0 && channel.firstEpisodeId ? channel.firstEpisodeId : `episode_${episodeSlug(title)}_${index + 1}`)?.progressPercent ?? 0,
-    trailerUrl: trailer.embedId
-      ? `https://www.youtube.com/watch?v=${trailer.embedId}`
-      : trailer.url,
-  }));
-}
-
-type SeriesEpisode = ReturnType<typeof seriesEpisodes>[number];
-type EpisodeChatToken = Awaited<ReturnType<typeof createEpisodeChatToken>>;
-
-function episodeSlug(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48) || "series";
-}
-
-function episodeNumber(episode: SeriesEpisode) {
-  const match = episode.code.match(/E(\d+)/i);
-  return match?.[1] ?? "1";
-}
-
-function episodeRoomName(title: string, episode: SeriesEpisode) {
-  return `anime:${episodeSlug(title)}:s1:e${episodeNumber(episode)}`;
-}
-
-function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, viewerUsername, onClose, onNext }: { title: string; episode: SeriesEpisode; nextEpisode?: SeriesEpisode; previousEpisode?: SeriesEpisode; viewerUsername?: string; onClose: () => void; onNext?: (episode: SeriesEpisode) => void }) {
-  const [session, setSession] = useState<EpisodeChatToken | null>(null);
-  const lastProgressSyncAt = useRef(0);
-  const resumed = useRef(false);
-  const episodePlayerRef = useRef<MuxPlayerRefAttributes | null>(null);
-  const serverUrl = normalizeLiveKitWsUrl(process.env.NEXT_PUBLIC_LIVEKIT_WS_URL);
-  const [error, setError] = useState(() => {
-    if (serverUrl) return "";
-    return process.env.NEXT_PUBLIC_LIVEKIT_WS_URL ? "Live chat URL is formatted incorrectly" : "Live chat is not configured";
-  });
-  const roomName = useMemo(() => episodeRoomName(title, episode), [title, episode]);
-
-  useEffect(() => {
-    if (!serverUrl) return;
-
-    createEpisodeChatToken(roomName)
-      .then(setSession)
-      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Unable to join live chat"));
-  }, [roomName, serverUrl]);
-
-  useEffect(() => {
-    const lockLandscapeOnFullscreen = () => {
-      const orientation = screen.orientation as ScreenOrientation & {
-        lock?: (orientation: "landscape") => Promise<void>;
-        unlock?: () => void;
-      };
-
-      if (document.fullscreenElement) {
-        orientation.lock?.("landscape").catch(() => undefined);
-        return;
-      }
-
-      orientation.unlock?.();
-    };
-
-    document.addEventListener("fullscreenchange", lockLandscapeOnFullscreen);
-    document.addEventListener("webkitfullscreenchange", lockLandscapeOnFullscreen);
-
-    return () => {
-      document.removeEventListener("fullscreenchange", lockLandscapeOnFullscreen);
-      document.removeEventListener("webkitfullscreenchange", lockLandscapeOnFullscreen);
-      (screen.orientation as ScreenOrientation & { unlock?: () => void }).unlock?.();
-    };
-  }, []);
-
-  const syncProgress = (player: PlayerProgressTarget, eventType: "VIDEO_STARTED" | "VIDEO_PAUSED" | "VIDEO_COMPLETED" | "VIDEO_SEEKED" | "WATCH_TIME_UPDATED") => {
-    const positionSeconds = Math.floor(player.currentTime || 0);
-    const durationSeconds = Number.isFinite(player.duration) ? Math.floor(player.duration) : undefined;
-
-    if (positionSeconds > 0) {
-      savePlaybackProgress({ durationSeconds, episodeId: episode.id, positionSeconds }).catch(() => undefined);
-    }
-
-    recordVideoEvent({
-      episodeId: episode.id,
-      metadata: { title, episodeCode: episode.code },
-      positionSeconds,
-      type: eventType,
-    }).catch(() => undefined);
-  };
-
-  const enableEpisodeAudio = useCallback((player = episodePlayerRef.current) => {
-    if (!player) return;
-
-    player.muted = false;
-    player.volume = 1;
-    (player as MuxPlayerRefAttributes & { defaultMuted?: boolean }).defaultMuted = false;
-  }, []);
-
-  const resumePlayback = (event: { currentTarget: EventTarget | null }) => {
-    const player = getPlayerProgressTarget(event);
-    if (!player || resumed.current || !episode.positionSeconds) return;
-    enableEpisodeAudio(player as MuxPlayerRefAttributes);
-    player.currentTime = episode.positionSeconds;
-    resumed.current = true;
-  };
-
-  const syncWhilePlaying = (event: { currentTarget: EventTarget | null }) => {
-    const player = getPlayerProgressTarget(event);
-    if (!player) return;
-
-    const now = Date.now();
-    if (now - lastProgressSyncAt.current < 10_000) return;
-    lastProgressSyncAt.current = now;
-    syncProgress(player, "WATCH_TIME_UPDATED");
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 h-[100dvh] overflow-hidden bg-black text-white">
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          onClose();
-        }}
-        className="absolute left-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] grid h-11 w-11 place-items-center text-white transition hover:text-white/75 sm:left-5"
-        aria-label="Back to episode details"
-      >
-        <BackArrowIcon className="h-5 w-5" />
-      </button>
-      <div className="flex h-full min-h-0 flex-col overscroll-none md:flex-row">
-        <div className="relative min-h-0 flex-1 md:basis-auto">
-          <MuxPlayer
-            ref={episodePlayerRef}
-            playbackId={episode.muxPlaybackId}
-            metadata={{ video_title: `${title} ${episode.code} ${episode.name}` }}
-            streamType="on-demand"
-            autoPlay
-            muted={false}
-            volume={1}
-            noMutedPref
-            noVolumePref
-            onEnded={(event) => {
-              const player = getPlayerProgressTarget(event);
-              if (player) syncProgress(player, "VIDEO_COMPLETED");
-            }}
-            onLoadedMetadata={(event) => {
-              enableEpisodeAudio(event.currentTarget as MuxPlayerRefAttributes);
-              resumePlayback(event);
-            }}
-            onCanPlay={(event) => {
-              enableEpisodeAudio(event.currentTarget as MuxPlayerRefAttributes);
-            }}
-            onPause={(event) => {
-              const player = getPlayerProgressTarget(event);
-              if (player) syncProgress(player, "VIDEO_PAUSED");
-            }}
-            onPlay={(event) => {
-              const player = getPlayerProgressTarget(event);
-              enableEpisodeAudio(event.currentTarget as MuxPlayerRefAttributes);
-              if (player) syncProgress(player, "VIDEO_STARTED");
-            }}
-            onSeeked={(event) => {
-              const player = getPlayerProgressTarget(event);
-              if (player) syncProgress(player, "VIDEO_SEEKED");
-            }}
-            onTimeUpdate={syncWhilePlaying}
-            className="absolute inset-0 block h-full w-full bg-black [--media-object-fit:contain]"
-            style={{
-              width: "100%",
-              height: "100%",
-              ["--media-object-position" as string]: "center",
-            }}
-          />
-        </div>
-        {serverUrl && session ? (
-          <LiveKitRoom token={session.token} serverUrl={serverUrl} connect video={false} audio={false} className="contents">
-            <EpisodeHoverChat episode={episode} nextEpisode={nextEpisode} previousEpisode={previousEpisode} onNext={onNext} session={session} viewerUsername={viewerUsername} error={error} />
-          </LiveKitRoom>
-        ) : (
-          <EpisodeHoverChatFallback episode={episode} nextEpisode={nextEpisode} previousEpisode={previousEpisode} onNext={onNext} error={error} />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function EpisodeChatShell({ children }: { children: React.ReactNode }) {
-  return (
-    <aside
-      className="flex h-[38dvh] max-h-[44dvh] min-h-[220px] shrink-0 flex-col overflow-hidden border-t border-white/10 bg-[#08080b] text-white md:h-full md:max-h-none md:min-h-0 md:w-[360px] md:border-l md:border-t-0"
-      onClick={(event) => event.stopPropagation()}
-    >
-      {children}
-    </aside>
-  );
-}
-
-function EpisodeHoverChat({ episode, nextEpisode, previousEpisode, onNext, session, viewerUsername, error }: { episode: SeriesEpisode; nextEpisode?: SeriesEpisode; previousEpisode?: SeriesEpisode; onNext?: (episode: SeriesEpisode) => void; session: EpisodeChatToken; viewerUsername?: string; error: string }) {
-  const [chatMessage, setChatMessage] = useState("");
-  const participants = useParticipants();
-  const { chatMessages, send, isSending } = useChat();
-  const viewerCount = participants.length || episode.viewers;
-  const displayMessages = chatMessages.slice(-40);
-  const canSend = session.canChat && chatMessage.trim().length > 0 && !isSending;
-
-  const sendChatMessage = async () => {
-    const nextMessage = chatMessage.trim();
-    if (!canSend || !nextMessage) return;
-    await send(nextMessage);
-    setChatMessage("");
-  };
-  const sendOnEnter = (event: ReactKeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
-    event.preventDefault();
-    void sendChatMessage();
-  };
-
-  return (
-    <EpisodeChatShell>
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-        <div>
-          <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
-          <p className="mt-1 text-[11px] text-white/60">{formatViewers(viewerCount)} watching</p>
-        </div>
-        <div className="flex items-center gap-1">
-          {previousEpisode?.muxPlaybackId && (
-            <button type="button" onClick={(event) => { event.stopPropagation(); onNext?.(previousEpisode); }} className="flex items-center gap-1 rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={`Play ${previousEpisode.code}`}>
-              <ForwardIcon className="h-3.5 w-3.5" direction="previous" /> Prev
-            </button>
-          )}
-          {nextEpisode?.muxPlaybackId && (
-            <button type="button" onClick={(event) => { event.stopPropagation(); onNext?.(nextEpisode); }} className="flex items-center gap-1 rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={`Play ${nextEpisode.code}`}>
-              <ForwardIcon className="h-3.5 w-3.5" /> Next
-            </button>
-          )}
-        </div>
-      </div>
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 text-xs leading-5">
-        {displayMessages.length ? displayMessages.map((message) => (
-          <p key={message.id}>
-            <strong className="mr-2 text-[#e5e5e5]">{message.from?.name ?? viewerUsername ?? "viewer"}:</strong>
-            <span className="text-white/85">{message.message}</span>
-          </p>
-        )) : (
-          <p className="text-white/55">Chat is live.</p>
-        )}
-        {error && <p className="text-white/55">{error}</p>}
-      </div>
-      <form className="border-t border-white/10 p-3" onSubmit={(event) => { event.preventDefault(); void sendChatMessage(); }}>
-        {session.canChat ? (
-          <div className="flex rounded-md border border-white/15 bg-black/35 focus-within:border-[#2f80ed]">
-            <input type="text" enterKeyHint="send" value={chatMessage} maxLength={inputLimits.chatMessage} onChange={(event) => setChatMessage(event.target.value)} onKeyDown={sendOnEnter} onPointerDown={(event) => { event.preventDefault(); event.currentTarget.focus({ preventScroll: true }); }} placeholder="Chat" className="min-w-0 flex-1 bg-transparent px-3 py-3 text-base outline-none placeholder:text-white/40 md:py-2 md:text-xs" />
-            <button type="submit" disabled={!canSend} className="px-3 text-xs font-bold text-[#e50914] disabled:cursor-not-allowed disabled:text-white/25">Send</button>
-          </div>
-        ) : (
-          <div className="rounded-md border border-white/15 bg-black/35 p-3 text-xs text-white/60">
-            <p>Sign in to chat.</p>
-            <SignInButton>
-              <button type="button" className="mt-2 rounded bg-[#e50914] px-3 py-2 font-bold text-white">Sign in</button>
-            </SignInButton>
-          </div>
-        )}
-      </form>
-    </EpisodeChatShell>
-  );
-}
-
-function EpisodeHoverChatFallback({ episode, nextEpisode, previousEpisode, onNext, error }: { episode: SeriesEpisode; nextEpisode?: SeriesEpisode; previousEpisode?: SeriesEpisode; onNext?: (episode: SeriesEpisode) => void; error: string }) {
-  return (
-    <EpisodeChatShell>
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-        <div>
-          <p className="text-xs font-black uppercase tracking-wide">Live chat</p>
-          <p className="mt-1 text-[11px] text-white/60">{formatViewers(episode.viewers)} watching</p>
-        </div>
-        <div className="flex items-center gap-1">
-          {previousEpisode?.muxPlaybackId && (
-            <button type="button" onClick={(event) => { event.stopPropagation(); onNext?.(previousEpisode); }} className="flex items-center gap-1 rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={`Play ${previousEpisode.code}`}>
-              <ForwardIcon className="h-3.5 w-3.5" direction="previous" /> Prev
-            </button>
-          )}
-          {nextEpisode?.muxPlaybackId && (
-            <button type="button" onClick={(event) => { event.stopPropagation(); onNext?.(nextEpisode); }} className="flex items-center gap-1 rounded px-3 py-2 text-[10px] font-black uppercase tracking-wide text-white/70 hover:bg-white/10 hover:text-white" aria-label={`Play ${nextEpisode.code}`}>
-              <ForwardIcon className="h-3.5 w-3.5" /> Next
-            </button>
-          )}
-        </div>
-      </div>
-      <div className="min-h-0 flex-1 px-4 py-4 text-xs leading-5 text-white/60">
-        {error || "Joining live chat..."}
-      </div>
-    </EpisodeChatShell>
-  );
-}
-
 function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, viewerUsername }: { channel: Channel; continueWatching: ContinueWatchingItem[]; onBack: () => void; clerkConfigured: boolean; viewerUsername?: string }) {
   const [listed, setListed] = useState(false);
-  const [playingEpisode, setPlayingEpisode] = useState<SeriesEpisode | null>(null);
+  const [playingEpisode, setPlayingEpisode] = useState<CatalogEpisode | null>(null);
   const title = channel.catalogTitle ?? channel.displayName;
   const progressByEpisode = useMemo(() => new Map(continueWatching.map((item) => [item.episodeId, item])), [continueWatching]);
   const episodes = seriesEpisodes(channel, progressByEpisode);
@@ -995,7 +371,7 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
     : undefined;
   const description = seriesDescriptions[title] ?? "A dark anime saga unfolds across a season of battles, secrets, and impossible choices.";
   const totalWatching = episodes.reduce((sum, episode) => sum + episode.viewers, 0);
-  const openEpisode = (episode: SeriesEpisode) => {
+  const openEpisode = (episode: CatalogEpisode) => {
     setPlayingEpisode(episode);
     pushBrowseHistory("episode");
   };
@@ -1099,7 +475,7 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
   );
 }
 
-function EpisodeCard({ episode, onPlay }: { episode: SeriesEpisode; onPlay: () => void }) {
+function EpisodeCard({ episode, onPlay }: { episode: CatalogEpisode; onPlay: () => void }) {
   const cardBody = (
     <>
                 <span className="relative block aspect-video overflow-hidden rounded bg-[#181818]">
@@ -1154,27 +530,15 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [selected, setSelected] = useState<Channel | null>(null);
-  const [mode, setMode] = useState<BrowseMode>("browse");
   const [isPagePending, startPageTransition] = useTransition();
-  const availableChannels = useMemo(() => {
-    const recommendedUsernames = new Set(recommendedChannels.map((channel) => channel.username));
-    if (!demoFallback) return persistedChannels;
-    const persistedUsernames = new Set(persistedChannels.map((channel) => channel.username));
-    return [
-      ...persistedChannels,
-      ...recommendedChannels.filter((channel) => !persistedUsernames.has(channel.username)),
-      ...channels.filter((channel) => !persistedUsernames.has(channel.username) && !recommendedUsernames.has(channel.username)),
-    ];
-  }, [demoFallback, persistedChannels, recommendedChannels]);
+  void persistedChannels;
+  void recommendedChannels;
   const followedUsernames = useMemo(() => new Set(followedChannels.map((channel) => channel.username)), [followedChannels]);
-  const visibleChannels = mode === "following" ? followedChannels : availableChannels;
-  const filtered = useMemo(() => visibleChannels.filter((channel) => `${channel.displayName} ${channel.title} ${channel.category} ${channel.catalogTitle ?? ""}`.toLowerCase().includes(query.toLowerCase())), [visibleChannels, query]);
-  const displayChannels = filtered.length ? filtered : visibleChannels;
-  const catalogSource = catalogChannels.length ? catalogChannels : channels;
+  const catalogSource = catalogChannels.length ? catalogChannels : (demoFallback ? demoCatalogTitles : []);
   const animeChannels = catalogSource
     .filter((channel) => !query.trim() || channel.catalogTitle?.toLowerCase().includes(query.trim().toLowerCase()))
     .sort(prioritizePlayableCatalog);
-  const searchResultChannels = Array.from(new Map([...animeChannels, ...displayChannels].map((channel) => [channel.username, channel])).values());
+  const searchResultChannels = animeChannels;
   const spotlightChannel = animeChannels[0];
   const openChannel = useCallback((channel: Channel) => {
     setSelected(channel);
@@ -1205,19 +569,19 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
   return (
     <div className="app-shell min-h-screen text-[#f1f1f3]">
       {isPagePending && <TransitionLoader />}
-      <div className="hidden lg:block"><SiteTopbar query={query} onQuery={setQuery} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} mode={mode} onMode={setMode} active={mobileBrowse ? "search" : "home"} /></div>
+      <div className="hidden lg:block"><SiteTopbar query={query} onQuery={setQuery} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} active={mobileBrowse ? "search" : "home"} /></div>
       <div>
         <div className="px-4 pb-24 pt-4 lg:px-7 lg:pb-6">
           <main className="min-w-0">
-            {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={searchResultChannels} onOpen={openChannel} searchable /> : <MobileStreamingHome channels={animeChannels} onOpen={openChannel} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
-            <Hero channel={spotlightChannel} onOpen={openChannel} />
+            {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={searchResultChannels} onOpen={openChannel} searchable /> : <MobileStreamingHome channels={animeChannels} liveFeatures={false} onOpen={openChannel} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
+            <Hero channel={spotlightChannel} liveFeatures={false} onOpen={openChannel} />
             <ContinueWatchingRail items={continueWatching} onOpen={openChannel} />
             <div id="movies-series" className="scroll-mt-24"><ContentRail title="Movies & Series" channels={animeChannels.slice(0, 12)} onOpen={openChannel} horizontal /></div>
             <MovieFeatureGrid channels={[...animeChannels.slice(2), ...animeChannels.slice(0, 2)]} onOpen={openChannel} />
             <CategoriesRail channels={animeChannels} onSelect={setQuery} />
-            <div id="live-anime"><ContentRail title="Live anime" channels={animeChannels} onOpen={openChannel} /></div>
+            <div id="creator-films"><ContentRail title="Creator Films" channels={animeChannels} onOpen={openChannel} /></div>
             <ContentRail title="Because you watch anime" channels={[...animeChannels].reverse()} onOpen={openChannel} />
-            {mode === "browse" && pagination && (pagination.page > 1 || pagination.hasNext) && <nav className="mt-6 flex items-center justify-center gap-3" aria-label="Channel pages">{pagination.page > 1 && <Link href={`${pagination.baseHref}${pagination.page - 1}`} onClick={(event) => { event.preventDefault(); startPageTransition(() => { router.push(`${pagination.baseHref}${pagination.page - 1}`); }); }} className="rounded bg-white/10 px-4 py-2 text-xs font-bold">Previous</Link>}<span className="text-xs text-[#94949f]">Page {pagination.page}</span>{pagination.hasNext && <Link href={`${pagination.baseHref}${pagination.page + 1}`} onClick={(event) => { event.preventDefault(); startPageTransition(() => { router.push(`${pagination.baseHref}${pagination.page + 1}`); }); }} className="rounded bg-[#e50914] px-4 py-2 text-xs font-bold">Next</Link>}</nav>}
+            {pagination && (pagination.page > 1 || pagination.hasNext) && <nav className="mt-6 flex items-center justify-center gap-3" aria-label="Channel pages">{pagination.page > 1 && <Link href={`${pagination.baseHref}${pagination.page - 1}`} onClick={(event) => { event.preventDefault(); startPageTransition(() => { router.push(`${pagination.baseHref}${pagination.page - 1}`); }); }} className="rounded bg-white/10 px-4 py-2 text-xs font-bold">Previous</Link>}<span className="text-xs text-[#94949f]">Page {pagination.page}</span>{pagination.hasNext && <Link href={`${pagination.baseHref}${pagination.page + 1}`} onClick={(event) => { event.preventDefault(); startPageTransition(() => { router.push(`${pagination.baseHref}${pagination.page + 1}`); }); }} className="rounded bg-[#e50914] px-4 py-2 text-xs font-bold">Next</Link>}</nav>}
           </main>
         </div>
       </div>

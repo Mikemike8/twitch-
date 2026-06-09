@@ -30,6 +30,7 @@ export function LiveDiscoveryApp({ liveChannels, followedChannels, clerkConfigur
   const [navVisible, setNavVisible] = useState(false);
   const [desktop, setDesktop] = useState(false);
   const chromeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const followedUsernames = useMemo(() => new Set(followedChannels.map((channel) => channel.username)), [followedChannels]);
   const visibleChannels = useMemo(() => discoveryChannels.filter((channel, index) => matchesFilter(channel, index, filter, followedUsernames) && `${channel.displayName} ${channel.title} ${channel.category}`.toLowerCase().includes(query.trim().toLowerCase())), [discoveryChannels, filter, followedUsernames, query]);
 
@@ -64,8 +65,8 @@ export function LiveDiscoveryApp({ liveChannels, followedChannels, clerkConfigur
 
   return (
     <>
-      {!desktop && <MobileLiveTv selected={selected} channels={visibleChannels} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} onSelect={setSelected} />}
-      {desktop && <div className="relative min-h-screen overflow-hidden bg-black text-white" onMouseMove={handleMouseMove} onMouseLeave={() => { setChromeVisible(false); setGuideVisible(false); setNavVisible(false); }}>
+      {!desktop && <MobileLiveTv selected={selected} channels={visibleChannels} followedUsernames={followedUsernames} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} onSelect={setSelected} />}
+      {desktop && <div ref={stageRef} className="relative min-h-screen overflow-hidden bg-black text-white" onMouseMove={handleMouseMove} onMouseLeave={() => { setChromeVisible(false); setGuideVisible(false); setNavVisible(false); }}>
         <StreamerBackdrop channel={selected} />
         <div className={`absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/30 transition-opacity duration-300 ${chromeVisible ? "opacity-100" : "opacity-0"}`} />
         <button onMouseEnter={() => setNavVisible(true)} className={`fixed left-1/2 top-6 z-40 -translate-x-1/2 text-sm font-medium text-white/90 transition-opacity duration-300 ${chromeVisible && !guideVisible && !navVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}>Menu</button>
@@ -73,9 +74,8 @@ export function LiveDiscoveryApp({ liveChannels, followedChannels, clerkConfigur
           <Link href="/" aria-label="Argus home"><BrandLogo className="h-8 w-auto" /></Link>
           <nav className="hidden items-center gap-7 text-sm font-bold text-white/75 md:flex">
             <Link href="/" className="hover:text-white">Home</Link>
-            <Link href="/" className="hover:text-white">Browse</Link>
             <Link href="/live" className="text-white">Live</Link>
-            <Link href={viewerUsername ? `/${viewerUsername}` : "/sign-in"} className="hover:text-white">Profile</Link>
+            <Link href={viewerUsername ? `/${viewerUsername}` : "/profile"} className="hover:text-white">Profile</Link>
           </nav>
           <button onClick={() => { setSearchOpen(!searchOpen); setGuideVisible(true); }} className="ml-auto text-white/80 hover:text-white" aria-label="Search streamers"><SearchIcon className="h-6 w-6" /></button>
         </header>
@@ -89,22 +89,27 @@ export function LiveDiscoveryApp({ liveChannels, followedChannels, clerkConfigur
             <div className="max-h-[72vh] space-y-3 overflow-y-auto pr-2 sm:space-y-4">{visibleChannels.map((channel, index) => <StreamerGuideRow key={channel.username} channel={channel} selected={channel.username === selected.username} index={index} onSelect={() => setSelected(channel)} />)}</div>
           </section>
         </main>
-        <footer className={`fixed inset-x-0 bottom-0 z-20 flex h-20 items-center gap-5 bg-gradient-to-t from-black/85 to-transparent px-5 transition-opacity duration-300 sm:px-10 lg:px-16 ${chromeVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}><span className="flex items-center gap-2 rounded-full border border-white/20 bg-black/30 px-3 py-2 text-sm font-bold tracking-[0.16em]"><i className="h-2.5 w-2.5 rounded-full bg-red-600" />LIVE</span><button onClick={() => setMuted(!muted)} className="ml-auto text-white/90" aria-label={muted ? "Unmute preview" : "Mute preview"}><VolumeIcon className={`h-8 w-8 ${muted ? "opacity-40" : ""}`} /></button><button className="text-white/90" aria-label="Enter fullscreen"><FullscreenIcon className="h-8 w-8" /></button></footer>
+        <footer className={`fixed inset-x-0 bottom-0 z-20 flex h-20 items-center gap-5 bg-gradient-to-t from-black/85 to-transparent px-5 transition-opacity duration-300 sm:px-10 lg:px-16 ${chromeVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}><span className="flex items-center gap-2 rounded-full border border-white/20 bg-black/30 px-3 py-2 text-sm font-bold tracking-[0.16em]"><i className="h-2.5 w-2.5 rounded-full bg-red-600" />LIVE</span><button onClick={() => setMuted(!muted)} className="ml-auto text-white/90" aria-label={muted ? "Unmute preview" : "Mute preview"}><VolumeIcon className={`h-8 w-8 ${muted ? "opacity-40" : ""}`} /></button><button type="button" onClick={() => stageRef.current?.requestFullscreen?.().catch(() => undefined)} className="text-white/90" aria-label="Enter fullscreen"><FullscreenIcon className="h-8 w-8" /></button></footer>
       </div>}
     </>
   );
 }
 
-function MobileLiveTv({ selected, channels, clerkConfigured, viewerUsername, onSelect }: { selected: Channel; channels: Channel[]; clerkConfigured: boolean; viewerUsername?: string; onSelect: (channel: Channel) => void }) {
-  const featured = channels.slice(0, 6);
+type MobileLiveFilter = "All" | "Following" | "Gaming" | "Music" | "IRL";
+
+function MobileLiveTv({ selected, channels, followedUsernames, clerkConfigured, viewerUsername, onSelect }: { selected: Channel; channels: Channel[]; followedUsernames: Set<string>; clerkConfigured: boolean; viewerUsername?: string; onSelect: (channel: Channel) => void }) {
+  const [mobileFilter, setMobileFilter] = useState<MobileLiveFilter>("All");
+  const displayedChannels = channels.filter((channel, index) => matchesFilter(channel, index, mobileFilter, followedUsernames));
+  const featured = displayedChannels.slice(0, 6);
+  const [notified, setNotified] = useState(false);
   return <div className="min-h-[100svh] bg-black pb-[78px] text-white lg:hidden landscape:fixed landscape:inset-0 landscape:z-50 landscape:min-h-0 landscape:pb-0">
     <header className="sticky top-0 z-30 bg-gradient-to-b from-black via-black/92 to-black/0 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] landscape:hidden">
       <div className="flex items-center justify-center">
         <Link href="/" aria-label="Argus home"><BrandLogo className="h-9 w-auto" /></Link>
-        <SearchIcon className="absolute right-5 h-6 w-6 text-white/80" />
+        <Link href="/search" className="absolute right-5 text-white/80" aria-label="Search"><SearchIcon className="h-6 w-6" /></Link>
       </div>
       <nav className="scroll-fade-x mt-6 flex items-center gap-5 overflow-x-auto text-sm font-medium [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {["All", "Following", "Gaming", "Music", "IRL"].map((item, index) => <button key={item} type="button" className={`shrink-0 ${index === 0 ? "text-white" : "text-[#b3b3b3]"}`}>{item}</button>)}
+        {(["All", "Following", "Gaming", "Music", "IRL"] as const).map((item) => <button key={item} type="button" onClick={() => setMobileFilter(item)} className={`shrink-0 ${mobileFilter === item ? "text-white" : "text-[#b3b3b3]"}`}>{item}</button>)}
       </nav>
     </header>
     <section className="relative mx-5 h-[58vh] min-h-[410px] overflow-hidden rounded border border-white/10 bg-[#181818] landscape:mx-0 landscape:h-full landscape:rounded-none landscape:border-0">
@@ -125,7 +130,7 @@ function MobileLiveTv({ selected, channels, clerkConfigured, viewerUsername, onS
     <div className="landscape:hidden">
       <div className="mt-5 grid grid-cols-2 gap-3 px-5">
         <Link href={`/${selected.username}`} className="rounded bg-white px-3 py-3 text-center text-sm font-bold text-black">Watch</Link>
-        <button type="button" className="rounded bg-white/20 px-3 py-3 text-sm font-bold text-white">Notify Me</button>
+        <button type="button" onClick={() => setNotified((current) => !current)} className="rounded bg-white/20 px-3 py-3 text-sm font-bold text-white">{notified ? "Notifications On" : "Notify Me"}</button>
       </div>
       <section className="mt-8">
         <h2 className="px-5 text-xl font-bold">Featured Live</h2>
@@ -135,7 +140,7 @@ function MobileLiveTv({ selected, channels, clerkConfigured, viewerUsername, onS
       </section>
       <section className="mt-7">
         <h2 className="px-5 text-xl font-bold">All Live Rooms</h2>
-        <div className="mt-2">{channels.map((channel, index) => <MobileLiveRow key={channel.username} channel={channel} selected={channel.username === selected.username} index={index} onSelect={() => onSelect(channel)} />)}</div>
+        <div className="mt-2">{displayedChannels.length ? displayedChannels.map((channel, index) => <MobileLiveRow key={channel.username} channel={channel} selected={channel.username === selected.username} index={index} onSelect={() => onSelect(channel)} />) : <p className="px-5 py-8 text-sm font-semibold text-[#808080]">No live rooms match this filter.</p>}</div>
       </section>
       <MobileLiveBottomNav viewerUsername={viewerUsername} clerkConfigured={clerkConfigured} />
     </div>
@@ -151,16 +156,16 @@ function MobileLiveBottomNav({ viewerUsername, clerkConfigured }: { viewerUserna
   const profileItem = clerkConfigured ? (
     <>
       <Show when="signed-in">
-        <Link href={viewerUsername ? `/${viewerUsername}` : "/"} className={itemClass}><ProfileIcon />Profile</Link>
+        <Link href={viewerUsername ? `/${viewerUsername}` : "/profile"} className={itemClass}><ProfileIcon />Profile</Link>
       </Show>
       <Show when="signed-out">
-        <SignInButton>
+        <SignInButton fallbackRedirectUrl="/profile">
           <button type="button" className={itemClass}><ProfileIcon />Profile</button>
         </SignInButton>
       </Show>
     </>
   ) : (
-    <Link href="/sign-in" className={itemClass}><ProfileIcon />Profile</Link>
+    <Link href="/profile" className={itemClass}><ProfileIcon />Profile</Link>
   );
   return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-white/10 bg-black/92 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 backdrop-blur-xl"><Link href="/" className={itemClass}><HomeIcon />Home</Link><Link href="/search" className={itemClass}><SearchIcon className="h-7 w-7" />Search</Link><span className={`${itemClass} text-white`}><i className="absolute top-0 h-0.5 w-8 rounded-full bg-[#e50914]" /><LiveTvIcon />Live</span>{profileItem}</nav>;
 }

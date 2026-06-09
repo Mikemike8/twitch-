@@ -8,6 +8,7 @@ import { ChevronIcon, MenuIcon, UsersIcon, VideoIcon } from "@/components/icons"
 
 const items = [
   { label: "Stream", href: "", icon: VideoIcon },
+  { label: "Catalog", href: "/catalog", icon: CatalogIcon },
   { label: "Keys", href: "/keys", icon: KeyIcon },
   { label: "Chat", href: "/chat", icon: ChatIcon },
   { label: "Community", href: "/community", icon: UsersIcon },
@@ -59,6 +60,10 @@ function KeyIcon({ className = "h-5 w-5" }: { className?: string }) {
 
 function ChatIcon({ className = "h-5 w-5" }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" /></svg>;
+}
+
+function CatalogIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="6" height="7" rx="1" /><rect x="14" y="4" width="6" height="7" rx="1" /><rect x="4" y="15" width="6" height="5" rx="1" /><path d="M14 17h6M17 14v6" /></svg>;
 }
 
 function PlanIcon({ className = "h-5 w-5" }: { className?: string }) {
