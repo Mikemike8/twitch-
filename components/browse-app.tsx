@@ -809,11 +809,10 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, 
           event.stopPropagation();
           onClose();
         }}
-        className="absolute left-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] flex h-11 items-center gap-2 rounded-full border border-white/20 bg-black/70 px-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(0,0,0,0.45)] backdrop-blur transition hover:bg-white/15 sm:left-5 sm:px-4"
+        className="absolute left-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] grid h-11 w-11 place-items-center text-white transition hover:text-white/75 sm:left-5"
         aria-label="Back to episode details"
       >
         <BackArrowIcon className="h-5 w-5" />
-        <span className="hidden sm:inline">Back</span>
       </button>
       <div className="flex h-full min-h-0 flex-col overscroll-none md:flex-row">
         <div className="relative min-h-0 flex-1 md:basis-auto">
@@ -875,7 +874,7 @@ function EpisodePlaybackOverlay({ title, episode, nextEpisode, previousEpisode, 
 function EpisodeChatShell({ children }: { children: React.ReactNode }) {
   return (
     <aside
-      className="flex h-[40vh] min-h-[260px] shrink-0 flex-col overflow-hidden border-t border-white/10 bg-[#08080b] text-white md:h-full md:min-h-0 md:w-[360px] md:border-l md:border-t-0"
+      className="flex h-[38dvh] max-h-[44dvh] min-h-[220px] shrink-0 flex-col overflow-hidden border-t border-white/10 bg-[#08080b] text-white md:h-full md:max-h-none md:min-h-0 md:w-[360px] md:border-l md:border-t-0"
       onClick={(event) => event.stopPropagation()}
     >
       {children}
@@ -1028,23 +1027,24 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
   }, [closeEpisode, playingEpisode]);
 
   return (
-    <div className="min-h-screen bg-[#141414] pb-24 text-white">
-      <section className="relative min-h-[620px] overflow-hidden bg-black">
+    <div className="min-h-screen overflow-x-hidden bg-[#141414] pb-24 text-white">
+      <section className="relative min-h-[100svh] overflow-hidden bg-black sm:min-h-[620px]">
         <HeroTrailerBackground channel={channel} className="absolute inset-0" showMuteControl />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/38 to-black/5" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#141414]/88 via-[#141414]/16 to-black/8" />
-        <header className="relative z-10 flex items-center gap-4 px-5 py-5 text-sm font-bold text-white/72 sm:gap-6 sm:px-8 lg:px-14">
-          <button type="button" onClick={onBack} className="flex h-11 items-center gap-2 rounded-full bg-black/55 px-3 text-white backdrop-blur transition hover:bg-white/15 sm:px-4" aria-label="Back to browse">
+        <header className="relative z-10 flex min-w-0 items-center gap-3 px-4 py-4 text-sm font-bold text-white/72 sm:gap-6 sm:px-8 sm:py-5 lg:px-14">
+          <button type="button" onClick={onBack} className="grid h-11 w-11 place-items-center text-white transition hover:text-white/75" aria-label="Back to browse">
             <BackArrowIcon className="h-5 w-5" />
-            <span className="text-sm font-bold">Back</span>
           </button>
-          <BrandLogo className="h-7 w-auto" />
-          <span className="text-white">{title}</span>
-          <a href="#episodes" className="hover:text-white">Episodes</a>
-          <a href="#about" className="hover:text-white">About</a>
+          <BrandLogo className="hidden h-7 w-auto shrink-0 sm:block" />
+          <span className="min-w-0 flex-1 truncate text-white sm:flex-none">{title}</span>
+          <nav className="hidden items-center gap-6 sm:flex">
+            <a href="#episodes" className="hover:text-white">Episodes</a>
+            <a href="#about" className="hover:text-white">About</a>
+          </nav>
         </header>
-        <div className="relative z-10 flex min-h-[520px] max-w-4xl flex-col justify-end px-5 pb-16 sm:px-8 lg:px-14">
-          <h1 className="max-w-3xl text-5xl font-black uppercase leading-none tracking-normal sm:text-7xl lg:text-8xl">{title}</h1>
+        <div className="relative z-10 flex min-h-[calc(100svh-76px)] max-w-4xl flex-col justify-end px-5 pb-14 sm:min-h-[520px] sm:px-8 sm:pb-16 lg:px-14">
+          <h1 className="max-w-3xl break-words text-[clamp(2.75rem,14vw,5rem)] font-black uppercase leading-none tracking-normal sm:text-7xl lg:text-8xl">{title}</h1>
           <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-base text-[#bcbcbc]">
             <span>{channel.category}</span>
             <span>2026</span>
@@ -1055,8 +1055,8 @@ function SeriesDetailPage({ channel, continueWatching, onBack, clerkConfigured, 
           <p className="mt-6 text-base font-medium text-[#46d369]">New episodes with live watch sessions</p>
           <p className="mt-5 max-w-2xl text-base leading-7 text-white sm:text-lg">{description}</p>
           <p className="mt-5 max-w-3xl text-sm leading-6 text-[#b3b3b3]"><span className="text-[#777]">Featuring:</span> elite hunters, cursed warriors, rival clans, and a season-long battle for survival.</p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            {episodes[0]?.muxPlaybackId ? <button type="button" onClick={() => openEpisode(episodes[0])} className="flex min-h-12 items-center gap-3 rounded bg-white px-6 text-base font-bold text-black"><PlayIcon />{episodes[0].positionSeconds ? "Resume S1 E1" : "Watch S1 E1"}</button> : <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-12 items-center gap-3 rounded bg-white px-6 text-base font-bold text-black"><PlayIcon />Watch S1 E1 Trailer</a>}
+          <div className="mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
+            {episodes[0]?.muxPlaybackId ? <button type="button" onClick={() => openEpisode(episodes[0])} className="flex min-h-12 min-w-0 items-center gap-3 rounded bg-white px-5 text-sm font-bold text-black sm:px-6 sm:text-base"><PlayIcon />{episodes[0].positionSeconds ? "Resume S1 E1" : "Watch S1 E1"}</button> : <a href={episodes[0]?.trailerUrl} target="_blank" rel="noreferrer" className="flex min-h-12 min-w-0 items-center gap-3 rounded bg-white px-5 text-sm font-bold text-black sm:px-6 sm:text-base"><PlayIcon />Watch S1 E1 Trailer</a>}
             <button type="button" onClick={() => setListed(!listed)} className="grid h-12 w-12 place-items-center rounded-full border border-[#bcbcbc] text-3xl leading-none">{listed ? "✓" : "+"}</button>
             <span className="text-sm font-bold">My List</span>
             <button type="button" className="ml-0 grid h-12 w-12 place-items-center rounded-full border border-[#bcbcbc] lg:ml-5" aria-label="Notify"><BellIcon className="h-6 w-6" /></button>

@@ -32,13 +32,13 @@ export function MobileProfilePage({
         <SiteTopbar clerkConfigured={clerkConfigured} viewerUsername={isSelf ? channel.username : undefined} active="profile" />
       </div>
       <main className="mx-auto w-full max-w-[1180px] px-5 py-5 sm:px-8 sm:py-10 lg:px-10">
-        <div className="mb-8 flex items-center justify-between gap-4 lg:hidden">
-          <Link href="/" className="text-sm font-bold text-[#b3b3b3]">Back</Link>
+        <div className="mb-8 flex min-w-0 items-center justify-between gap-4 lg:hidden">
+          <Link href="/" className="grid h-10 w-10 shrink-0 place-items-center text-white/80 hover:text-white" aria-label="Back home">←</Link>
           {!isSelf && <FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} />}
         </div>
 
         <section className="overflow-hidden rounded border border-white/10 bg-[#181818]">
-          <div className="relative min-h-[430px] overflow-hidden lg:min-h-[520px]">
+          <div className="relative min-h-[min(76svh,520px)] overflow-hidden lg:min-h-[520px]">
             {channel.thumbnailUrl ? (
               <div className="absolute inset-0 bg-cover bg-center opacity-60" style={{ backgroundImage: `url(${channel.thumbnailUrl})` }} />
             ) : (
@@ -46,12 +46,12 @@ export function MobileProfilePage({
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/25" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-[#181818]/32 to-black/20" />
-            <div className="relative flex min-h-[430px] flex-col justify-end p-5 sm:p-7 lg:min-h-[520px] lg:p-12">
+            <div className="relative flex min-h-[min(76svh,520px)] flex-col justify-end p-5 sm:p-7 lg:min-h-[520px] lg:p-12">
               <div className="flex items-end gap-4">
                 <Avatar channel={channel} size="lg" />
                 {channel.live && <span className="mb-1 rounded bg-[#e50914] px-2 py-1 text-xs font-bold uppercase text-white">Live now</span>}
               </div>
-              <h1 className="mt-5 max-w-4xl text-5xl font-black uppercase leading-none tracking-normal sm:text-7xl lg:text-8xl">{channel.displayName}</h1>
+              <h1 className="mt-5 max-w-4xl break-words text-[clamp(2.75rem,14vw,5rem)] font-black uppercase leading-none tracking-normal sm:text-7xl lg:text-8xl">{channel.displayName}</h1>
               <p className="mt-3 text-base font-medium text-[#b3b3b3]">@{channel.username}</p>
               <p className="mt-5 max-w-2xl text-base leading-7 text-[#e5e5e5]">{channel.bio || "Anime fan, streamer, and ARGUS community member."}</p>
               <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -82,7 +82,7 @@ export function MobileProfilePage({
               <p className="text-xs font-bold uppercase text-[#b3b3b3]">Live control</p>
               <p className="mt-3 text-2xl font-bold">{channel.live ? "Your channel is live" : "Ready to go live"}</p>
               <p className="mt-3 text-sm leading-6 text-[#b3b3b3]">{channel.live ? "Jump into your public profile or tune the stream from the dashboard." : "Set connection keys, update stream info, then start your broadcast."}</p>
-              <div className="mt-5 flex gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
                 <Link href={`${dashboardHref}/keys`} className="rounded bg-white/15 px-3 py-2 text-xs font-bold hover:bg-white/20">Keys</Link>
                 <Link href={`${dashboardHref}/chat`} className="rounded bg-white/15 px-3 py-2 text-xs font-bold hover:bg-white/20">Chat</Link>
               </div>
