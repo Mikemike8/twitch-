@@ -8,7 +8,9 @@ import { ChevronIcon, MenuIcon, UsersIcon, VideoIcon } from "@/components/icons"
 
 const items = [
   { label: "Stream", href: "", icon: VideoIcon },
+  { label: "Library", href: "/library", icon: LibraryIcon },
   { label: "Catalog", href: "/catalog", icon: CatalogIcon },
+  { label: "Avatar", href: "/avatar", icon: AvatarIcon },
   { label: "Keys", href: "/keys", icon: KeyIcon },
   { label: "Chat", href: "/chat", icon: ChatIcon },
   { label: "Community", href: "/community", icon: UsersIcon },
@@ -64,6 +66,14 @@ function ChatIcon({ className = "h-5 w-5" }: { className?: string }) {
 
 function CatalogIcon({ className = "h-5 w-5" }: { className?: string }) {
   return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="6" height="7" rx="1" /><rect x="14" y="4" width="6" height="7" rx="1" /><rect x="4" y="15" width="6" height="5" rx="1" /><path d="M14 17h6M17 14v6" /></svg>;
+}
+
+function LibraryIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M4 5h16M4 12h16M4 19h16" /><path d="M8 3v18" /></svg>;
+}
+
+function AvatarIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>;
 }
 
 function PlanIcon({ className = "h-5 w-5" }: { className?: string }) {

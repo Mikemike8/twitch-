@@ -11,6 +11,8 @@ export type AuditAction =
   | "rotate_token_issuer"
   | "revoke_token_issuer"
   | "token_issuance_failed"
+  | "create_creator_film"
+  | "update_avatar"
   | "update_profile"
   | "update_stream"
   | "kick_participant"

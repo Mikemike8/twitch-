@@ -22,6 +22,7 @@ type BrowseAppProps = {
   followedChannels?: Channel[];
   recommendedChannels?: Channel[];
   catalogChannels?: Channel[];
+  creatorFilmChannels?: Channel[];
   continueWatching?: ContinueWatchingItem[];
   demoFallback?: boolean;
   initialQuery?: string;
@@ -149,7 +150,7 @@ function Hero({ channel, liveFeatures = true, onOpen }: { channel?: Channel; liv
   );
 }
 
-function MobileStreamingHome({ channels: mobileChannels, liveFeatures = true, onOpen, clerkConfigured, viewerUsername }: { channels: Channel[]; liveFeatures?: boolean; onOpen: (channel: Channel) => void; clerkConfigured: boolean; viewerUsername?: string }) {
+function MobileStreamingHome({ channels: mobileChannels, independentChannels = [], liveFeatures = true, onOpen, clerkConfigured, viewerUsername }: { channels: Channel[]; independentChannels?: Channel[]; liveFeatures?: boolean; onOpen: (channel: Channel) => void; clerkConfigured: boolean; viewerUsername?: string }) {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [listed, setListed] = useState(false);
   const [navScrolled, setNavScrolled] = useState(false);
@@ -168,6 +169,7 @@ function MobileStreamingHome({ channels: mobileChannels, liveFeatures = true, on
   const nextWatch = mobileChannels.slice(1, 7);
   const keepWatching = [...mobileChannels].reverse().slice(0, 5);
   const comedy = [...mobileChannels.slice(3), ...mobileChannels.slice(0, 3)];
+  const independent = independentChannels.length ? independentChannels : [...mobileChannels.slice(2), ...mobileChannels.slice(0, 2)];
   const topTen = mobileChannels.slice(0, 10);
 
   return (
@@ -220,7 +222,7 @@ function MobileStreamingHome({ channels: mobileChannels, liveFeatures = true, on
           <MobileLandscapeRail title="Continue Watching" channels={keepWatching} onOpen={onOpen} compact />
           <MobileTopTenRail title="Top 10 Today" channels={topTen} onOpen={onOpen} />
           <MobilePosterRail title="Movies & Series" channels={nextWatch} onOpen={onOpen} />
-          <MobileFeatureBlocks channels={comedy.slice(0, 3)} onOpen={onOpen} />
+          <MobileLandscapeRail title="Independent Films" channels={independent} onOpen={onOpen} />
           <MobilePosterRail title="Comedy Shows" channels={comedy} onOpen={onOpen} />
           <MobilePosterRail title="Most-Watched Classics" channels={[...mobileChannels].reverse()} onOpen={onOpen} />
         </div>
@@ -240,22 +242,6 @@ function MobileLandscapeRail({ title, channels: railChannels, liveFeatures = tru
 
 function MobileTopTenRail({ title, channels: railChannels, onOpen }: { title: string; channels: Channel[]; onOpen: (channel: Channel) => void }) {
   return <section><h2 className="px-5 text-xl font-bold">{title}</h2><div className="scroll-fade-x mt-3 flex gap-3 overflow-x-auto px-5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{railChannels.map((channel, index) => <button type="button" key={`${title}-${channel.username}-${index}`} onClick={() => onOpen(channel)} className="relative flex w-[44vw] max-w-56 shrink-0 items-end text-left"><span className="mr-[-0.65rem] min-w-[2.8rem] text-7xl font-black leading-none text-black [-webkit-text-stroke:1.5px_#808080]">{index + 1}</span><span className="relative block aspect-[2/3] w-full overflow-hidden rounded border border-white/8 bg-[#181818]"><CatalogArtwork channel={channel} className="absolute inset-0" /><span className="absolute left-2 top-2 rounded bg-[#e50914] px-1.5 py-1 text-[9px] font-bold uppercase">Top 10</span></span></button>)}</div></section>;
-}
-
-function MobileFeatureBlocks({ channels: featureChannels, onOpen }: { channels: Channel[]; onOpen: (channel: Channel) => void }) {
-  const channelsToShow = featureChannels.filter(Boolean).slice(0, 3);
-  if (!channelsToShow.length) return null;
-
-  return (
-    <section className="space-y-3 px-5">
-      {channelsToShow.map((channel, index) => <MovieFeatureBlock key={`mobile-feature-${channel.username}-${index}`} channel={channel} index={index} onOpen={onOpen} compact />)}
-    </section>
-  );
-}
-
-function MovieFeatureBlock({ channel, index = 0, onOpen, compact = false }: { channel: Channel; index?: number; onOpen: (channel: Channel) => void; compact?: boolean }) {
-  const title = catalogTitle(channel, index);
-  return <button type="button" onClick={() => onOpen(channel)} className={`relative w-full overflow-hidden rounded border border-white/10 bg-[#181818] text-left ${compact ? "min-h-[220px]" : "min-h-[320px]"}`}><CatalogArtwork channel={channel} className="absolute inset-0" /><div className="absolute inset-0 bg-gradient-to-r from-black/76 via-black/28 to-transparent" /><div className={`relative z-10 flex max-w-[70%] flex-col justify-end p-4 ${compact ? "min-h-[220px]" : "min-h-[320px] p-6"}`}><p className="text-[11px] font-bold uppercase text-[#e50914]">Featured Movie</p><h2 className={`mt-1.5 font-black uppercase leading-none ${compact ? "text-2xl" : "text-4xl"}`}>{title}</h2><p className="mt-2 line-clamp-2 text-xs leading-5 text-[#d2d2d2]">{channel.title || "A featured anime title picked from the ARGUS movie library."}</p><span className="mt-4 w-fit rounded bg-white px-3.5 py-2 text-xs font-bold text-black">More Info</span></div></button>;
 }
 
 function LiveViewerBadge({ viewers, className = "" }: { viewers: number; className?: string }) {
@@ -473,7 +459,7 @@ function EpisodeCard({ episode, onPlay }: { episode: CatalogEpisode; onPlay: () 
   return <a href={episode.trailerUrl} target="_blank" rel="noreferrer" className="group text-left">{cardBody}</a>;
 }
 
-export function BrowseApp({ persistedChannels = [], followedChannels = [], recommendedChannels = [], catalogChannels = [], continueWatching = [], demoFallback = true, initialQuery = "", clerkConfigured = false, viewerIdentity, viewerUsername, mobileBrowse = false, pagination }: BrowseAppProps) {
+export function BrowseApp({ persistedChannels = [], followedChannels = [], recommendedChannels = [], catalogChannels = [], creatorFilmChannels = [], continueWatching = [], demoFallback = true, initialQuery = "", clerkConfigured = false, viewerIdentity, viewerUsername, mobileBrowse = false, pagination }: BrowseAppProps) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [selected, setSelected] = useState<Channel | null>(null);
@@ -487,7 +473,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
     .sort(prioritizePlayableCatalog);
   const searchResultChannels = animeChannels;
   const spotlightChannel = animeChannels[0];
-  const independentFilms = [...animeChannels.slice(2), ...animeChannels.slice(0, 2)];
+  const independentFilms = creatorFilmChannels.length ? creatorFilmChannels : [...animeChannels.slice(2), ...animeChannels.slice(0, 2)];
   const creatorFilms = animeChannels.filter((channel) => channel.kind === "creator");
   const creatorFilmBlock = creatorFilms.length ? creatorFilms : animeChannels;
   const openChannel = useCallback((channel: Channel) => {
@@ -523,7 +509,7 @@ export function BrowseApp({ persistedChannels = [], followedChannels = [], recom
       <div>
         <div className="px-4 pb-24 pt-4 lg:px-7 lg:pb-6">
           <main className="min-w-0">
-            {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={searchResultChannels} onOpen={openChannel} searchable /> : <MobileStreamingHome channels={animeChannels} liveFeatures={false} onOpen={openChannel} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
+            {mobileBrowse ? <MobileChannelFeed query={query} onQuery={setQuery} data={searchResultChannels} onOpen={openChannel} searchable /> : <MobileStreamingHome channels={animeChannels} independentChannels={creatorFilmChannels} liveFeatures={false} onOpen={openChannel} clerkConfigured={clerkConfigured} viewerUsername={viewerUsername} />}
             <Hero channel={spotlightChannel} liveFeatures={false} onOpen={openChannel} />
             <MovieBlockRail id="movies-series" title="Movies & Series" channels={animeChannels.slice(0, 14)} variant="first" onOpen={openChannel} />
             <ContinueWatchingMovieBlock items={continueWatching} onOpen={openChannel} />

@@ -64,6 +64,7 @@ export const ModelName = {
   TokenIssuer: 'TokenIssuer',
   AuditLog: 'AuditLog',
   Stream: 'Stream',
+  CreatorFilm: 'CreatorFilm',
   Follow: 'Follow',
   Block: 'Block'
 } as const
@@ -265,6 +266,22 @@ export const StreamScalarFieldEnum = {
 } as const
 
 export type StreamScalarFieldEnum = (typeof StreamScalarFieldEnum)[keyof typeof StreamScalarFieldEnum]
+
+
+export const CreatorFilmScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  description: 'description',
+  posterUrl: 'posterUrl',
+  playbackUrl: 'playbackUrl',
+  category: 'category',
+  visibility: 'visibility',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CreatorFilmScalarFieldEnum = (typeof CreatorFilmScalarFieldEnum)[keyof typeof CreatorFilmScalarFieldEnum]
 
 
 export const FollowScalarFieldEnum = {

@@ -18,6 +18,7 @@ model User {
   blocking       Block[]  @relation("Blocking")
   blockedBy      Block[]  @relation("BlockedBy")
   stream         Stream?
+  creatorFilms   CreatorFilm[]
   tokenIssuers   TokenIssuer[]
   playbackProgress PlaybackProgress[]
   episodeComments EpisodeComment[]
@@ -257,6 +258,29 @@ model Stream {
 
   @@index([isLive, updatedAt])
   @@index([name])
+}
+
+enum CreatorFilmVisibility {
+  DRAFT
+  PUBLIC
+}
+
+model CreatorFilm {
+  id          String                @id @default(uuid())
+  userId      String
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  posterUrl   String?
+  playbackUrl String?
+  category    String                @default("Independent Film")
+  visibility  CreatorFilmVisibility @default(PUBLIC)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@index([userId, updatedAt])
+  @@index([visibility, updatedAt])
+  @@index([title])
 }
 
 model Follow {

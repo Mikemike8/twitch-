@@ -338,6 +338,23 @@ export type BoolWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedBoolFilter<$PrismaModel>
 }
 
+export type EnumCreatorFilmVisibilityFilter<$PrismaModel = never> = {
+  equals?: $Enums.CreatorFilmVisibility | Prisma.EnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  in?: $Enums.CreatorFilmVisibility[] | Prisma.ListEnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CreatorFilmVisibility[] | Prisma.ListEnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCreatorFilmVisibilityFilter<$PrismaModel> | $Enums.CreatorFilmVisibility
+}
+
+export type EnumCreatorFilmVisibilityWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CreatorFilmVisibility | Prisma.EnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  in?: $Enums.CreatorFilmVisibility[] | Prisma.ListEnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CreatorFilmVisibility[] | Prisma.ListEnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCreatorFilmVisibilityWithAggregatesFilter<$PrismaModel> | $Enums.CreatorFilmVisibility
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCreatorFilmVisibilityFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCreatorFilmVisibilityFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -646,6 +663,23 @@ export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedBoolFilter<$PrismaModel>
   _max?: Prisma.NestedBoolFilter<$PrismaModel>
+}
+
+export type NestedEnumCreatorFilmVisibilityFilter<$PrismaModel = never> = {
+  equals?: $Enums.CreatorFilmVisibility | Prisma.EnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  in?: $Enums.CreatorFilmVisibility[] | Prisma.ListEnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CreatorFilmVisibility[] | Prisma.ListEnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCreatorFilmVisibilityFilter<$PrismaModel> | $Enums.CreatorFilmVisibility
+}
+
+export type NestedEnumCreatorFilmVisibilityWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CreatorFilmVisibility | Prisma.EnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  in?: $Enums.CreatorFilmVisibility[] | Prisma.ListEnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CreatorFilmVisibility[] | Prisma.ListEnumCreatorFilmVisibilityFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCreatorFilmVisibilityWithAggregatesFilter<$PrismaModel> | $Enums.CreatorFilmVisibility
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCreatorFilmVisibilityFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCreatorFilmVisibilityFilter<$PrismaModel>
 }
 
 

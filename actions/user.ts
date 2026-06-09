@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { getSelf } from "@/lib/auth-service";
 import { writeAuditLog } from "@/lib/audit";
+import { findCreatorAvatar, avatarImageValue } from "@/lib/avatar-library";
 import { enforceActionRateLimit } from "@/lib/rate-limit";
-import { updateUserBio, updateUsername } from "@/lib/user-service";
+import { updateUserBio, updateUserImageUrl, updateUsername } from "@/lib/user-service";
 import { requireBoundedText, requireUsername } from "@/lib/validation";
 
 export async function onUpdateBio(bio: string) {
@@ -27,5 +28,19 @@ export async function onUpdateUsername(username: string) {
   revalidatePath(`/u/${previousUsername}`);
   revalidatePath(`/${user.username}`);
   revalidatePath(`/u/${user.username}`);
+  return user;
+}
+
+export async function onUpdateAvatar(avatarId: string) {
+  const self = await getSelf();
+  await enforceActionRateLimit("profile-update", self.id, 30);
+  const avatar = findCreatorAvatar(avatarId);
+  if (!avatar) throw new Error("Avatar is invalid");
+
+  const user = await updateUserImageUrl(avatarImageValue(avatar.id));
+  await writeAuditLog(self.id, "update_avatar", user.id, { avatarId: avatar.id });
+  revalidatePath(`/${user.username}`);
+  revalidatePath(`/u/${user.username}`);
+  revalidatePath(`/u/${user.username}/avatar`);
   return user;
 }

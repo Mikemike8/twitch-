@@ -26,6 +26,15 @@ export async function updateUserBio(bio: string) {
   });
 }
 
+export async function updateUserImageUrl(imageUrl: string) {
+  const self = await getSelf();
+
+  return db.user.update({
+    where: { id: self.id },
+    data: { imageUrl },
+  });
+}
+
 export async function updateUsername(username: string) {
   const self = await getSelf();
   const existing = await db.user.findUnique({ where: { username } });

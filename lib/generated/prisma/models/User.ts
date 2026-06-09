@@ -203,6 +203,7 @@ export type UserWhereInput = {
   blocking?: Prisma.BlockListRelationFilter
   blockedBy?: Prisma.BlockListRelationFilter
   stream?: Prisma.XOR<Prisma.StreamNullableScalarRelationFilter, Prisma.StreamWhereInput> | null
+  creatorFilms?: Prisma.CreatorFilmListRelationFilter
   tokenIssuers?: Prisma.TokenIssuerListRelationFilter
   playbackProgress?: Prisma.PlaybackProgressListRelationFilter
   episodeComments?: Prisma.EpisodeCommentListRelationFilter
@@ -222,6 +223,7 @@ export type UserOrderByWithRelationInput = {
   blocking?: Prisma.BlockOrderByRelationAggregateInput
   blockedBy?: Prisma.BlockOrderByRelationAggregateInput
   stream?: Prisma.StreamOrderByWithRelationInput
+  creatorFilms?: Prisma.CreatorFilmOrderByRelationAggregateInput
   tokenIssuers?: Prisma.TokenIssuerOrderByRelationAggregateInput
   playbackProgress?: Prisma.PlaybackProgressOrderByRelationAggregateInput
   episodeComments?: Prisma.EpisodeCommentOrderByRelationAggregateInput
@@ -244,6 +246,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   blocking?: Prisma.BlockListRelationFilter
   blockedBy?: Prisma.BlockListRelationFilter
   stream?: Prisma.XOR<Prisma.StreamNullableScalarRelationFilter, Prisma.StreamWhereInput> | null
+  creatorFilms?: Prisma.CreatorFilmListRelationFilter
   tokenIssuers?: Prisma.TokenIssuerListRelationFilter
   playbackProgress?: Prisma.PlaybackProgressListRelationFilter
   episodeComments?: Prisma.EpisodeCommentListRelationFilter
@@ -289,6 +292,7 @@ export type UserCreateInput = {
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
@@ -308,6 +312,7 @@ export type UserUncheckedCreateInput = {
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
@@ -327,6 +332,7 @@ export type UserUpdateInput = {
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
@@ -346,6 +352,7 @@ export type UserUncheckedUpdateInput = {
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
@@ -506,6 +513,20 @@ export type UserUpdateOneRequiredWithoutStreamNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutStreamInput, Prisma.UserUpdateWithoutStreamInput>, Prisma.UserUncheckedUpdateWithoutStreamInput>
 }
 
+export type UserCreateNestedOneWithoutCreatorFilmsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCreatorFilmsInput, Prisma.UserUncheckedCreateWithoutCreatorFilmsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatorFilmsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutCreatorFilmsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCreatorFilmsInput, Prisma.UserUncheckedCreateWithoutCreatorFilmsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatorFilmsInput
+  upsert?: Prisma.UserUpsertWithoutCreatorFilmsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatorFilmsInput, Prisma.UserUpdateWithoutCreatorFilmsInput>, Prisma.UserUncheckedUpdateWithoutCreatorFilmsInput>
+}
+
 export type UserCreateNestedOneWithoutFollowingInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutFollowingInput, Prisma.UserUncheckedCreateWithoutFollowingInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutFollowingInput
@@ -575,6 +596,7 @@ export type UserCreateWithoutPlaybackProgressInput = {
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
   analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
@@ -593,6 +615,7 @@ export type UserUncheckedCreateWithoutPlaybackProgressInput = {
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
   analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
@@ -627,6 +650,7 @@ export type UserUpdateWithoutPlaybackProgressInput = {
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
   analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
@@ -645,6 +669,7 @@ export type UserUncheckedUpdateWithoutPlaybackProgressInput = {
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
   analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
@@ -663,6 +688,7 @@ export type UserCreateWithoutEpisodeCommentsInput = {
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
   analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
@@ -681,6 +707,7 @@ export type UserUncheckedCreateWithoutEpisodeCommentsInput = {
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
   analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
@@ -715,6 +742,7 @@ export type UserUpdateWithoutEpisodeCommentsInput = {
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
   analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
@@ -733,6 +761,7 @@ export type UserUncheckedUpdateWithoutEpisodeCommentsInput = {
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
   analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
@@ -751,6 +780,7 @@ export type UserCreateWithoutAnalyticsEventsInput = {
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
@@ -769,6 +799,7 @@ export type UserUncheckedCreateWithoutAnalyticsEventsInput = {
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
@@ -803,6 +834,7 @@ export type UserUpdateWithoutAnalyticsEventsInput = {
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
@@ -821,6 +853,7 @@ export type UserUncheckedUpdateWithoutAnalyticsEventsInput = {
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
@@ -839,6 +872,7 @@ export type UserCreateWithoutTokenIssuersInput = {
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
   analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
@@ -857,6 +891,7 @@ export type UserUncheckedCreateWithoutTokenIssuersInput = {
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
   analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
@@ -891,6 +926,7 @@ export type UserUpdateWithoutTokenIssuersInput = {
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
   analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
@@ -909,6 +945,7 @@ export type UserUncheckedUpdateWithoutTokenIssuersInput = {
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
   analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
@@ -926,6 +963,7 @@ export type UserCreateWithoutStreamInput = {
   followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
+  creatorFilms?: Prisma.CreatorFilmCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
@@ -944,6 +982,7 @@ export type UserUncheckedCreateWithoutStreamInput = {
   followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
@@ -978,6 +1017,7 @@ export type UserUpdateWithoutStreamInput = {
   followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
+  creatorFilms?: Prisma.CreatorFilmUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
@@ -996,6 +1036,99 @@ export type UserUncheckedUpdateWithoutStreamInput = {
   followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedUpdateManyWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutCreatorFilmsInput = {
+  id?: string
+  username: string
+  imageUrl: string
+  externalUserId: string
+  bio?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  following?: Prisma.FollowCreateNestedManyWithoutFollowerInput
+  followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
+  blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
+  blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
+  stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutCreatorFilmsInput = {
+  id?: string
+  username: string
+  imageUrl: string
+  externalUserId: string
+  bio?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  following?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowerInput
+  followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
+  blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
+  blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
+  stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
+  playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
+  episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
+  analyticsEvents?: Prisma.AnalyticsEventUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutCreatorFilmsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCreatorFilmsInput, Prisma.UserUncheckedCreateWithoutCreatorFilmsInput>
+}
+
+export type UserUpsertWithoutCreatorFilmsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCreatorFilmsInput, Prisma.UserUncheckedUpdateWithoutCreatorFilmsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCreatorFilmsInput, Prisma.UserUncheckedCreateWithoutCreatorFilmsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCreatorFilmsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCreatorFilmsInput, Prisma.UserUncheckedUpdateWithoutCreatorFilmsInput>
+}
+
+export type UserUpdateWithoutCreatorFilmsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  following?: Prisma.FollowUpdateManyWithoutFollowerNestedInput
+  followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
+  blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
+  blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
+  stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
+  playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
+  episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
+  analyticsEvents?: Prisma.AnalyticsEventUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCreatorFilmsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  imageUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  externalUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  following?: Prisma.FollowUncheckedUpdateManyWithoutFollowerNestedInput
+  followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
+  blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
+  blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
+  stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
@@ -1014,6 +1147,7 @@ export type UserCreateWithoutFollowingInput = {
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
@@ -1032,6 +1166,7 @@ export type UserUncheckedCreateWithoutFollowingInput = {
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
@@ -1055,6 +1190,7 @@ export type UserCreateWithoutFollowedByInput = {
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
@@ -1073,6 +1209,7 @@ export type UserUncheckedCreateWithoutFollowedByInput = {
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
@@ -1107,6 +1244,7 @@ export type UserUpdateWithoutFollowingInput = {
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
@@ -1125,6 +1263,7 @@ export type UserUncheckedUpdateWithoutFollowingInput = {
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
@@ -1154,6 +1293,7 @@ export type UserUpdateWithoutFollowedByInput = {
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
@@ -1172,6 +1312,7 @@ export type UserUncheckedUpdateWithoutFollowedByInput = {
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
@@ -1190,6 +1331,7 @@ export type UserCreateWithoutBlockingInput = {
   followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
   blockedBy?: Prisma.BlockCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
@@ -1208,6 +1350,7 @@ export type UserUncheckedCreateWithoutBlockingInput = {
   followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
   blockedBy?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockedInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
@@ -1231,6 +1374,7 @@ export type UserCreateWithoutBlockedByInput = {
   followedBy?: Prisma.FollowCreateNestedManyWithoutFollowingInput
   blocking?: Prisma.BlockCreateNestedManyWithoutBlockerInput
   stream?: Prisma.StreamCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentCreateNestedManyWithoutUserInput
@@ -1249,6 +1393,7 @@ export type UserUncheckedCreateWithoutBlockedByInput = {
   followedBy?: Prisma.FollowUncheckedCreateNestedManyWithoutFollowingInput
   blocking?: Prisma.BlockUncheckedCreateNestedManyWithoutBlockerInput
   stream?: Prisma.StreamUncheckedCreateNestedOneWithoutUserInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedCreateNestedManyWithoutUserInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedCreateNestedManyWithoutUserInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedCreateNestedManyWithoutUserInput
   episodeComments?: Prisma.EpisodeCommentUncheckedCreateNestedManyWithoutUserInput
@@ -1283,6 +1428,7 @@ export type UserUpdateWithoutBlockingInput = {
   followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
   blockedBy?: Prisma.BlockUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
@@ -1301,6 +1447,7 @@ export type UserUncheckedUpdateWithoutBlockingInput = {
   followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
   blockedBy?: Prisma.BlockUncheckedUpdateManyWithoutBlockedNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
@@ -1330,6 +1477,7 @@ export type UserUpdateWithoutBlockedByInput = {
   followedBy?: Prisma.FollowUpdateManyWithoutFollowingNestedInput
   blocking?: Prisma.BlockUpdateManyWithoutBlockerNestedInput
   stream?: Prisma.StreamUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUpdateManyWithoutUserNestedInput
@@ -1348,6 +1496,7 @@ export type UserUncheckedUpdateWithoutBlockedByInput = {
   followedBy?: Prisma.FollowUncheckedUpdateManyWithoutFollowingNestedInput
   blocking?: Prisma.BlockUncheckedUpdateManyWithoutBlockerNestedInput
   stream?: Prisma.StreamUncheckedUpdateOneWithoutUserNestedInput
+  creatorFilms?: Prisma.CreatorFilmUncheckedUpdateManyWithoutUserNestedInput
   tokenIssuers?: Prisma.TokenIssuerUncheckedUpdateManyWithoutUserNestedInput
   playbackProgress?: Prisma.PlaybackProgressUncheckedUpdateManyWithoutUserNestedInput
   episodeComments?: Prisma.EpisodeCommentUncheckedUpdateManyWithoutUserNestedInput
@@ -1364,6 +1513,7 @@ export type UserCountOutputType = {
   followedBy: number
   blocking: number
   blockedBy: number
+  creatorFilms: number
   tokenIssuers: number
   playbackProgress: number
   episodeComments: number
@@ -1375,6 +1525,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   followedBy?: boolean | UserCountOutputTypeCountFollowedByArgs
   blocking?: boolean | UserCountOutputTypeCountBlockingArgs
   blockedBy?: boolean | UserCountOutputTypeCountBlockedByArgs
+  creatorFilms?: boolean | UserCountOutputTypeCountCreatorFilmsArgs
   tokenIssuers?: boolean | UserCountOutputTypeCountTokenIssuersArgs
   playbackProgress?: boolean | UserCountOutputTypeCountPlaybackProgressArgs
   episodeComments?: boolean | UserCountOutputTypeCountEpisodeCommentsArgs
@@ -1422,6 +1573,13 @@ export type UserCountOutputTypeCountBlockedByArgs<ExtArgs extends runtime.Types.
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountCreatorFilmsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CreatorFilmWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountTokenIssuersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.TokenIssuerWhereInput
 }
@@ -1461,6 +1619,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   blocking?: boolean | Prisma.User$blockingArgs<ExtArgs>
   blockedBy?: boolean | Prisma.User$blockedByArgs<ExtArgs>
   stream?: boolean | Prisma.User$streamArgs<ExtArgs>
+  creatorFilms?: boolean | Prisma.User$creatorFilmsArgs<ExtArgs>
   tokenIssuers?: boolean | Prisma.User$tokenIssuersArgs<ExtArgs>
   playbackProgress?: boolean | Prisma.User$playbackProgressArgs<ExtArgs>
   episodeComments?: boolean | Prisma.User$episodeCommentsArgs<ExtArgs>
@@ -1505,6 +1664,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   blocking?: boolean | Prisma.User$blockingArgs<ExtArgs>
   blockedBy?: boolean | Prisma.User$blockedByArgs<ExtArgs>
   stream?: boolean | Prisma.User$streamArgs<ExtArgs>
+  creatorFilms?: boolean | Prisma.User$creatorFilmsArgs<ExtArgs>
   tokenIssuers?: boolean | Prisma.User$tokenIssuersArgs<ExtArgs>
   playbackProgress?: boolean | Prisma.User$playbackProgressArgs<ExtArgs>
   episodeComments?: boolean | Prisma.User$episodeCommentsArgs<ExtArgs>
@@ -1522,6 +1682,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     blocking: Prisma.$BlockPayload<ExtArgs>[]
     blockedBy: Prisma.$BlockPayload<ExtArgs>[]
     stream: Prisma.$StreamPayload<ExtArgs> | null
+    creatorFilms: Prisma.$CreatorFilmPayload<ExtArgs>[]
     tokenIssuers: Prisma.$TokenIssuerPayload<ExtArgs>[]
     playbackProgress: Prisma.$PlaybackProgressPayload<ExtArgs>[]
     episodeComments: Prisma.$EpisodeCommentPayload<ExtArgs>[]
@@ -1934,6 +2095,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   blocking<T extends Prisma.User$blockingArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$blockingArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BlockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   blockedBy<T extends Prisma.User$blockedByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$blockedByArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BlockPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   stream<T extends Prisma.User$streamArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$streamArgs<ExtArgs>>): Prisma.Prisma__StreamClient<runtime.Types.Result.GetResult<Prisma.$StreamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  creatorFilms<T extends Prisma.User$creatorFilmsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$creatorFilmsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CreatorFilmPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   tokenIssuers<T extends Prisma.User$tokenIssuersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$tokenIssuersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TokenIssuerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   playbackProgress<T extends Prisma.User$playbackProgressArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$playbackProgressArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlaybackProgressPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   episodeComments<T extends Prisma.User$episodeCommentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$episodeCommentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EpisodeCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2479,6 +2641,30 @@ export type User$streamArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
    */
   include?: Prisma.StreamInclude<ExtArgs> | null
   where?: Prisma.StreamWhereInput
+}
+
+/**
+ * User.creatorFilms
+ */
+export type User$creatorFilmsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CreatorFilm
+   */
+  select?: Prisma.CreatorFilmSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CreatorFilm
+   */
+  omit?: Prisma.CreatorFilmOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CreatorFilmInclude<ExtArgs> | null
+  where?: Prisma.CreatorFilmWhereInput
+  orderBy?: Prisma.CreatorFilmOrderByWithRelationInput | Prisma.CreatorFilmOrderByWithRelationInput[]
+  cursor?: Prisma.CreatorFilmWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CreatorFilmScalarFieldEnum | Prisma.CreatorFilmScalarFieldEnum[]
 }
 
 /**

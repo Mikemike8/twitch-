@@ -1,6 +1,9 @@
 const limits = {
   bio: 500,
   chatMessage: 500,
+  creatorFilmDescription: 600,
+  creatorFilmPosterUrl: 500,
+  creatorFilmTitle: 120,
   searchTerm: 100,
   streamName: 120,
   username: 24,

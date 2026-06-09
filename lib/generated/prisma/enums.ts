@@ -58,3 +58,11 @@ export const TokenIssuerStatus = {
 } as const
 
 export type TokenIssuerStatus = (typeof TokenIssuerStatus)[keyof typeof TokenIssuerStatus]
+
+
+export const CreatorFilmVisibility = {
+  DRAFT: 'DRAFT',
+  PUBLIC: 'PUBLIC'
+} as const
+
+export type CreatorFilmVisibility = (typeof CreatorFilmVisibility)[keyof typeof CreatorFilmVisibility]
