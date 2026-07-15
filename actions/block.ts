@@ -10,6 +10,7 @@ import { getUserIdFromParticipantIdentity } from "@/lib/participant-identity";
 import { requireUuid } from "@/lib/validation";
 import { writeAuditLog } from "@/lib/audit";
 import { resolveLiveKitTokenIssuer } from "@/lib/token-issuer-service";
+import { revalidateBrowseCaches } from "@/lib/cache-tags";
 
 export async function onBlock(participantIdentity: string) {
   const self = await getSelf();
@@ -24,6 +25,7 @@ export async function onBlock(participantIdentity: string) {
     // The participant may be offline or LiveKit may not be configured in local demo mode.
   }
 
+  revalidateBrowseCaches();
   revalidatePath("/");
   revalidatePath(`/${block.blocked.username}`);
   await writeAuditLog(self.id, "block_user", userId, { participantIdentity });
@@ -35,6 +37,7 @@ export async function onUnblock(userId: string) {
   const self = await getSelf();
   await enforceActionRateLimit("block", self.id, 10, 60_000, 60);
   const block = await unblockUser(userId);
+  revalidateBrowseCaches();
   revalidatePath("/");
   revalidatePath(`/${block.blocked.username}`);
   await writeAuditLog(self.id, "unblock_user", userId);

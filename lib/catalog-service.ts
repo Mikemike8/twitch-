@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import type { Channel } from "@/lib/channels";
 import { logger } from "@/lib/logger";
+import { unstable_cache } from "next/cache";
+import { cacheTags } from "@/lib/cache-tags";
 
 type CatalogTitleRow = {
   firstEpisodeId: string | null;
@@ -34,7 +36,7 @@ type ContinueWatchingRow = CatalogTitleRow & {
 
 const pageSize = 24;
 
-export async function getCatalogTitles(page = 1) {
+const getCatalogTitlesPage = unstable_cache(async (page: number) => {
   try {
     const rows = await db.$queryRaw<CatalogTitleRow[]>`
       SELECT
@@ -71,9 +73,13 @@ export async function getCatalogTitles(page = 1) {
     logger.error("catalog.titles.query_failed", { error: error instanceof Error ? error.message : "Unknown error", page });
     return { channels: [] as Channel[], hasNext: false };
   }
+}, ["catalog-titles-page"], { revalidate: 120, tags: [cacheTags.catalog] });
+
+export async function getCatalogTitles(page = 1) {
+  return getCatalogTitlesPage(page);
 }
 
-export async function searchCatalogTitles(query: string, page = 1) {
+const searchCatalogTitlesPage = unstable_cache(async (query: string, page: number) => {
   const term = `%${query}%`;
 
   try {
@@ -117,6 +123,10 @@ export async function searchCatalogTitles(query: string, page = 1) {
     logger.error("catalog.search.query_failed", { error: error instanceof Error ? error.message : "Unknown error", page });
     return { channels: [] as Channel[], hasNext: false };
   }
+}, ["catalog-search-page"], { revalidate: 60, tags: [cacheTags.catalog] });
+
+export async function searchCatalogTitles(query: string, page = 1) {
+  return searchCatalogTitlesPage(query, page);
 }
 
 export async function getContinueWatching(userId: string) {

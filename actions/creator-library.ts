@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getSelf } from "@/lib/auth-service";
 import { writeAuditLog } from "@/lib/audit";
+import { revalidateBrowseCaches } from "@/lib/cache-tags";
 import { createCreatorFilm } from "@/lib/creator-film-service";
 import { enforceActionRateLimit } from "@/lib/rate-limit";
 import { requireBoundedText } from "@/lib/validation";
@@ -25,6 +26,7 @@ export async function onCreateCreatorFilm(input: {
   const film = await createCreatorFilm(self.id, { title, description, posterUrl, playbackUrl, visibility });
 
   await writeAuditLog(self.id, "create_creator_film", film.id, { visibility });
+  if (visibility === "PUBLIC") revalidateBrowseCaches();
   revalidatePath("/");
   revalidatePath(`/u/${self.username}/library`);
   return {

@@ -4,6 +4,7 @@ import { clientRateLimitKey, RateLimitError, rateLimiter } from "@/lib/rate-limi
 import { logger } from "@/lib/logger";
 import { corsHeaders, preflight, validateOrigin } from "@/lib/cors";
 import { assertFreshWebhookEvent } from "@/lib/webhook-idempotency";
+import { revalidateBrowseCaches } from "@/lib/cache-tags";
 
 export function OPTIONS(request: Request) {
   return preflight(request);
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
       where: { ingressId },
       data: { isLive: true },
     });
+    revalidateBrowseCaches();
   }
 
   if (event.event === "ingress_ended") {
@@ -64,6 +66,7 @@ export async function POST(request: Request) {
       where: { ingressId },
       data: { isLive: false },
     });
+    revalidateBrowseCaches();
   }
 
   return new Response("Webhook processed", { status: 200, headers: corsHeaders(request) });

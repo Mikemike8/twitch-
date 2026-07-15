@@ -7,6 +7,7 @@ import { requireBoundedText } from "@/lib/validation";
 import { getSelf } from "@/lib/auth-service";
 import { writeAuditLog } from "@/lib/audit";
 import { enforceActionRateLimit } from "@/lib/rate-limit";
+import { revalidateBrowseCaches } from "@/lib/cache-tags";
 
 export async function onUpdateStream(values: Partial<Pick<
   Stream,
@@ -21,6 +22,7 @@ export async function onUpdateStream(values: Partial<Pick<
   await enforceActionRateLimit("stream-update", self.id, 60);
   const stream = await updateStream(update);
   await writeAuditLog(self.id, "update_stream", stream.id, { fields: Object.keys(update) });
+  revalidateBrowseCaches();
   revalidatePath(`/u/${stream.userId}`);
   return stream;
 }

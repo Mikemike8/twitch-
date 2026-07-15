@@ -1,46 +1,27 @@
 # Argus
+#### Video Demo: https://youtu.be/UGPOl_JOryw
+#### Description:
 
-A Twitch-inspired live streaming application built from the provided tutorial
-transcript.
+Argus is a full-stack streaming and video discovery application inspired by Twitch-style live channels and modern subscription video apps. The project combines a public browsing experience, creator profile pages, a live discovery screen, a creator dashboard, authentication, stream setup tools, chat moderation settings, video catalog data, and security-focused backend services. My goal was to build more than a static clone: I wanted a working platform skeleton where viewers can discover creators and shows, authenticated users can manage their own channel, and creator-facing actions are protected by validation, identity checks, and database-backed services.
 
-## Development
+The main user experience starts on the home page, implemented in `app/page.tsx` and rendered through `components/browse-app.tsx`. This page presents featured catalog content, creator film channels, continue-watching rows for signed-in users, mobile navigation, detail overlays, episode playback overlays, search entry points, and a responsive layout that changes between a television-like desktop interface and a mobile streaming interface. `app/search/page.tsx` provides the search route, while `app/live/page.tsx` and `components/live-discovery-app.tsx` create the live discovery experience. The live page lets users browse streamer-style channels, filter by category, search within live rooms, and open a selected channel preview. The channel profile pages live under `app/[username]/page.tsx` and use components such as `components/channel-page.tsx`, `components/desktop-channel-page.tsx`, `components/live-video-player.tsx`, `components/livekit-session.tsx`, and `components/live-chat-panel.tsx` to display a creator's public page, playback area, viewer state, and chat interface.
 
-```bash
-npm install
-npm run dev
-```
+The authenticated creator area is grouped under `app/(dashboard)/u/[username]`. Its layout is handled by `app/(dashboard)/u/[username]/layout.tsx` and `components/dashboard-shell.tsx`. The dashboard home, stream settings, connection keys, chat moderation, avatar picker, community, catalog, library, and subscription pages are split into route files so each workflow has a clear boundary. `components/dashboard-settings.tsx` manages channel metadata such as stream name and thumbnail. `components/connection-keys.tsx` displays streaming connection information, `components/dashboard-chat-moderation.tsx` exposes chat safety settings, `components/dashboard-avatar-picker.tsx` handles profile presentation, `components/community-list.tsx` displays social relationships, and `components/creator-library-dashboard.tsx` lets creators manage independent film entries. `components/thumbnail-upload.tsx` connects the dashboard to UploadThing so thumbnails can be uploaded instead of only typed in manually.
 
-Open `http://localhost:3000`.
+The backend behavior is organized around server actions and service modules. Files in `actions/` are the entry points called from the interface. For example, `actions/follow.ts` handles follow and unfollow requests, `actions/block.ts` handles blocking, `actions/stream.ts` updates stream settings, `actions/ingress.ts` creates or resets streaming ingress credentials, `actions/chat.ts` changes moderation settings, `actions/creator-library.ts` manages creator films, and `actions/episode-token.ts` issues viewing tokens for protected playback. These action files are intentionally thin compared with the service layer. Most business logic lives in `lib/`, where modules such as `lib/auth-service.ts`, `lib/user-service.ts`, `lib/stream-service.ts`, `lib/follow-service.ts`, `lib/block-service.ts`, `lib/ingress-service.ts`, `lib/viewer-token-service.ts`, `lib/token-issuer-service.ts`, `lib/catalog-service.ts`, `lib/creator-film-service.ts`, `lib/feed-service.ts`, and `lib/recommended-service.ts` perform database queries, authorization checks, and platform-specific work.
 
-The app includes browse and search, Clerk authentication, Prisma persistence, follow
-and block actions, a creator dashboard, RTMP and WHIP ingress generation, LiveKit
-webhooks, OBS streaming, viewer counts, moderated real-time chat, and thumbnail
-uploads.
+Authentication uses Clerk. The shared provider is in `components/auth-provider.tsx`, appearance configuration is in `lib/clerk-appearance.ts`, and runtime configuration checks are in `lib/clerk-config.ts`. `app/(auth)/sign-in/[[...sign-in]]/page.tsx` and `app/(auth)/sign-up/[[...sign-up]]/page.tsx` implement the sign-in and sign-up routes. `app/api/webhooks/clerk/route.ts` receives Clerk user events, while `lib/clerk-user-sync.ts` maps external Clerk user identities into the application's own `User` records. I kept public identity handling separate in `lib/public-identity.ts` because user-facing URLs should never expose provider-specific IDs.
 
-See [BUILD_PROMPT.md](./BUILD_PROMPT.md) for the continuous implementation guide and
-remaining transcript milestones.
+Live streaming support is centered on LiveKit. `lib/livekit.ts` creates the server client, `lib/livekit-url.ts` normalizes connection URLs, `lib/ingress-service.ts` creates RTMP or WHIP ingress data, `lib/viewer-token-service.ts` creates viewer tokens, `lib/token-issuer-service.ts` supports creator-specific LiveKit credentials, and `app/api/webhooks/livekit/route.ts` processes stream lifecycle events. The stream key and issuer code was one of the more important design choices. Instead of hard-coding one shared credential path everywhere, I added a token issuer model so a creator can use a creator-specific issuer while the app can still fall back to shared configuration when needed.
 
-See [RESPONSIVE_DESIGN.md](./RESPONSIVE_DESIGN.md) for the all-device responsive
-layout specification, acceptance criteria, and test matrix.
+The database schema is defined in `prisma/schema.prisma`. It includes users, streams, follows, blocks, audit logs, creator films, token issuers, catalog titles, seasons, episodes, video assets, playback progress, episode comments, and analytics events. I chose Prisma because the relationships in this app are central to the project: a user owns one stream, can follow or block other users, can publish creator films, can have playback progress on episodes, and can own token issuer credentials. The migrations in `prisma/migrations/` record the schema's evolution. `prisma/seed-video-catalog.sql` provides catalog seed data, and `prisma/sanitize-private-usernames.sql` is a maintenance script for protecting private identifiers.
 
-See [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md) for the current production
-scorecard, launch blockers, and the update protocol used as hardening work lands.
+Several files focus on security, validation, and production readiness. `lib/validation.ts` centralizes bounds for usernames, text fields, search terms, pagination, and UUID checks. `lib/rate-limit.ts` provides an in-memory rate limiter for sensitive actions. `lib/client-address.ts` and `lib/client-address-core.ts` avoid trusting proxy headers unless the deployment is configured to do so. `lib/secret-storage.ts` encrypts stored secrets, which matters for stream keys and provider credentials. `lib/webhook-idempotency.ts` helps prevent duplicate webhook processing, `lib/cors.ts` controls cross-origin behavior, `lib/audit.ts` writes audit events, and `lib/logger.ts` gives the server code a consistent logging interface. I added `tests/security-services.test.ts` to cover the parts of the project most likely to cause security or identity bugs, including participant identity parsing, secret storage, rate limiting, public username behavior, route reservations, analytics metadata limits, and viewer token issuer selection.
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for the production configuration, verification,
-stream-key migration, and rollback runbook.
+The visual design files are mostly in `components/` and `app/globals.css`. I used a dark media-service style because the application is built around video thumbnails, live previews, and large artwork. The app also includes reusable UI pieces such as `components/avatar.tsx`, `components/brand-logo.tsx`, `components/follow-button.tsx`, `components/icons.tsx`, and `components/site-topbar.tsx`. Static assets live in `public/`, including the Argus logo and demo poster images. I intentionally kept the interface dense and application-like instead of making a marketing landing page, because the project is meant to demonstrate a usable product surface rather than only describe one.
 
-## Configuration
+The configuration and operational files document how the app is run. `package.json` defines the development, build, lint, test, audit, and Prisma generation scripts. `scripts/check-env.mjs` validates required environment variables before production builds. `.env.example` lists the provider keys needed for Clerk, LiveKit, UploadThing, the database, and other services. `next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `postcss.config.mjs`, and `prisma.config.ts` configure the framework and tooling. I also kept supporting documentation in `DEPLOYMENT.md`, `PRODUCTION_READINESS.md`, `RESPONSIVE_DESIGN.md`, and `BUILD_PROMPT.md` to explain deployment steps, launch blockers, responsive acceptance criteria, and the implementation roadmap used while building the project.
 
-Create `.env` from `.env.example`. The template includes tutorial timestamps for each
-provider key. Database access uses Neon Postgres with a pooled runtime URL and a
-direct migration URL.
+The hardest design decision was balancing demo usability with real backend behavior. A pure mockup would have been easier, but it would not prove much beyond visual layout. A fully production-ready streaming business would be too large for a final project. Argus sits between those extremes: it includes real authentication, data models, server actions, webhook endpoints, stream credential flows, uploads, validation, and tests, while still using demo content and fallback data so the app remains easy to explore locally. Another decision was separating action files from service files. This made the codebase larger, but it kept UI-triggered mutations from becoming tangled with database and provider logic. That separation made the project easier to test and safer to extend.
 
-Configure provider callbacks during development with a tunnel such as ngrok:
-
-```text
-https://YOUR_DOMAIN/api/webhooks/clerk
-https://YOUR_DOMAIN/api/webhooks/livekit
-```
-
-For deployment, add every `.env.example` variable to the hosting provider, replace
-the callback domains with the deployed URL, and use a production database URL.
+To run the project locally, install dependencies with `npm install`, create `.env` from `.env.example`, configure the provider keys, and run `npm run dev`. The application opens at `http://localhost:3000`. For verification, I used `npm run lint`, `npm test`, and `npm run build`. At the time this README was prepared, all three commands completed successfully.

@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import type { Channel } from "@/lib/channels";
 import { logger } from "@/lib/logger";
+import { unstable_cache } from "next/cache";
+import { cacheTags } from "@/lib/cache-tags";
 
 export type CreatorFilmInput = {
   description?: string;
@@ -35,7 +37,7 @@ export async function getCreatorLibrary(userId: string) {
   }
 }
 
-export async function getPublicCreatorFilmChannels(limit = 12) {
+const getPublicCreatorFilmChannelPage = unstable_cache(async (limit: number) => {
   try {
     const films = await db.creatorFilm.findMany({
       where: { visibility: "PUBLIC" },
@@ -49,6 +51,10 @@ export async function getPublicCreatorFilmChannels(limit = 12) {
     logger.error("creator_films.public_query_failed", { error: error instanceof Error ? error.message : "Unknown error" });
     return [] as Channel[];
   }
+}, ["public-creator-film-channels"], { revalidate: 120, tags: [cacheTags.creatorFilms] });
+
+export async function getPublicCreatorFilmChannels(limit = 12) {
+  return getPublicCreatorFilmChannelPage(limit);
 }
 
 type CreatorFilmWithUser = {
