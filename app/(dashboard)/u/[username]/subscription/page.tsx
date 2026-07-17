@@ -1,5 +1,8 @@
 import Link from "next/link";
+import { createCreatorBillingPortalSession, createCreatorCheckoutSession } from "@/actions/billing";
 import { BrandLogo } from "@/components/brand-logo";
+import { getSelf } from "@/lib/auth-service";
+import { getUserBillingState, type BillingState } from "@/lib/billing-service";
 import { billingPlans, hasPaidBillingConfigured, type BillingPlan } from "@/lib/billing-config";
 
 export default async function SubscriptionPage({
@@ -9,6 +12,8 @@ export default async function SubscriptionPage({
 }) {
   const { username } = await params;
   const paidBillingConfigured = hasPaidBillingConfigured();
+  const self = await getSelf();
+  const billingState = await getUserBillingState(self.id);
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] min-w-0 bg-[#111116]">
@@ -31,14 +36,23 @@ export default async function SubscriptionPage({
 
           <div className="mt-9 grid gap-4 lg:grid-cols-3">
             {billingPlans.map((plan) => (
-              <PlanCard key={plan.id} plan={plan} username={username} />
+              <PlanCard key={plan.id} billingState={billingState} plan={plan} username={username} />
             ))}
           </div>
 
           <div className="mt-7 rounded-md border border-white/10 bg-black/25 p-4 text-sm leading-6 text-[#b8b8c4]">
             {paidBillingConfigured
-              ? "Paid checkout is configured. Stripe will handle card collection and receipts from the selected Payment Link."
-              : "Paid checkout buttons are locked until STRIPE_CREATOR_PRO_PAYMENT_LINK or STRIPE_CREATOR_PARTNER_PAYMENT_LINK is added to the environment."}
+              ? "Paid checkout is configured. Stripe will collect, save, and manage the creator payment method during checkout."
+              : "Paid checkout buttons are locked until STRIPE_SECRET_KEY and the creator plan price IDs are added to the environment."}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="rounded bg-white/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-white">Current: {billingState.planId}</span>
+              <span className="rounded bg-white/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-white">Status: {billingState.status}</span>
+              {billingState.stripeCustomerId && (
+                <form action={createCreatorBillingPortalSession}>
+                  <button type="submit" className="rounded bg-white px-3 py-2 text-xs font-black text-black hover:bg-[#e5e5e5]">Manage billing</button>
+                </form>
+              )}
+            </div>
           </div>
         </section>
       </div>
@@ -46,13 +60,13 @@ export default async function SubscriptionPage({
   );
 }
 
-function PlanCard({ plan, username }: { plan: BillingPlan; username: string }) {
-  const active = plan.id === "free";
-  const canCheckout = Boolean(plan.paymentLink);
+function PlanCard({ billingState, plan, username }: { billingState: BillingState; plan: BillingPlan; username: string }) {
+  const active = billingState.planId === plan.id;
+  const canCheckout = Boolean(plan.priceId);
   const cardClass = plan.highlighted
     ? "border-[#0aa7c8] bg-[#27272f] shadow-[0_18px_60px_rgba(0,0,0,0.35)]"
     : "border-white/10 bg-[#19191f]";
-  const ctaClass = active || canCheckout
+  const ctaClass = active || canCheckout || plan.id === "free"
     ? "bg-white text-black hover:bg-[#ececf1]"
     : "cursor-not-allowed bg-white/10 text-white/42";
 
@@ -79,14 +93,17 @@ function PlanCard({ plan, username }: { plan: BillingPlan; username: string }) {
         ))}
       </ul>
 
-      {active ? (
+      {plan.id === "free" ? (
         <Link href={`/u/${username}`} className={`mt-7 flex min-h-12 items-center justify-center rounded-md px-5 text-sm font-black uppercase tracking-wide ${ctaClass}`}>
-          {plan.cta}
+          {active ? "Current plan" : plan.cta}
         </Link>
       ) : canCheckout ? (
-        <a href={plan.paymentLink} className={`mt-7 flex min-h-12 items-center justify-center rounded-md px-5 text-sm font-black uppercase tracking-wide ${ctaClass}`}>
-          {plan.cta}
-        </a>
+        <form action={createCreatorCheckoutSession} className="mt-7">
+          <input type="hidden" name="planId" value={plan.id} />
+          <button type="submit" className={`flex min-h-12 w-full items-center justify-center rounded-md px-5 text-sm font-black uppercase tracking-wide ${ctaClass}`}>
+            {plan.cta}
+          </button>
+        </form>
       ) : (
         <button type="button" disabled className={`mt-7 min-h-12 rounded-md px-5 text-sm font-black uppercase tracking-wide ${ctaClass}`}>
           Checkout not configured

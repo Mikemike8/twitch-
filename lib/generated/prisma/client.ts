@@ -47,6 +47,21 @@ export { Prisma }
  */
 export type User = Prisma.UserModel
 /**
+ * Model BillingCustomer
+ *
+ */
+export type BillingCustomer = Prisma.BillingCustomerModel
+/**
+ * Model BillingSubscription
+ *
+ */
+export type BillingSubscription = Prisma.BillingSubscriptionModel
+/**
+ * Model WatchClub
+ *
+ */
+export type WatchClub = Prisma.WatchClubModel
+/**
  * Model CatalogTitle
  *
  */

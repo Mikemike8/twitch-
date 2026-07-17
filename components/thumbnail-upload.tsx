@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UploadDropzone } from "@/lib/uploadthing";
 
@@ -11,6 +12,7 @@ export function ThumbnailUpload({
   thumbnailUrl: string | null;
 }) {
   const router = useRouter();
+  const [status, setStatus] = useState("");
 
   if (!configured) {
     return (
@@ -26,8 +28,12 @@ export function ThumbnailUpload({
       <div className="min-w-0 overflow-hidden rounded border border-dashed border-white/20 bg-black p-2 sm:p-3">
         <UploadDropzone
           endpoint="thumbnailUploader"
-          onClientUploadComplete={() => router.refresh()}
-          onUploadError={(error: Error) => window.alert(`Upload failed: ${error.message}`)}
+          onUploadBegin={() => setStatus("Uploading thumbnail...")}
+          onClientUploadComplete={() => {
+            setStatus("Thumbnail updated");
+            router.refresh();
+          }}
+          onUploadError={(error: Error) => setStatus(`Upload failed: ${error.message}`)}
           appearance={{
             button: "bg-[#e50914] px-3 py-2 text-xs font-bold text-white hover:bg-[#f50723]",
             label: "text-sm text-white",
@@ -35,6 +41,7 @@ export function ThumbnailUpload({
           }}
         />
       </div>
+      {status && <p className="rounded border border-white/10 bg-black/35 px-3 py-2 text-xs text-[#d2d2d2]">{status}</p>}
     </div>
   );
 }

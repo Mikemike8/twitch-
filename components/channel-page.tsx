@@ -1,22 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { LiveVideoPlayer } from "@/components/live-video-player";
 import { LiveChatPanel } from "@/components/live-chat-panel";
 import { LiveKitSession } from "@/components/livekit-session";
 import { FollowButton } from "@/components/follow-button";
-import { FullscreenIcon, SendIcon, ShareIcon, StarIcon, VolumeIcon } from "@/components/icons";
+import { FullscreenIcon, ShareIcon, VolumeIcon } from "@/components/icons";
 import { formatViewers, type Channel } from "@/lib/channels";
-import { inputLimits } from "@/lib/validation";
-
-const initialMessages = [
-  ["nightowl", "This run is looking clean"],
-  ["emilycodes", "Just followed, glad I found this stream"],
-  ["pixel_fan", "That was such a good play!"],
-  ["orbit", "chat is moving fast tonight"],
-];
 
 export function ChannelPage({ channel, initialFollowing = false, canFollow = true, authenticated = false }: { channel: Channel; initialFollowing?: boolean; canFollow?: boolean; authenticated?: boolean }) {
   if (channel.hostIdentity && channel.live) {
@@ -30,14 +22,19 @@ function ChannelContent({ channel, initialFollowing, canFollow, authenticated }:
   const [chatOpen, setChatOpen] = useState(true);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [playerControlsOpen, setPlayerControlsOpen] = useState(false);
-  const [favorite, setFavorite] = useState(false);
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState(initialMessages);
+  const playerShellRef = useRef<HTMLDivElement | null>(null);
 
-  const send = () => {
-    if (!message.trim()) return;
-    setMessages([...messages, ["you", message.trim()]]);
-    setMessage("");
+  const enterFullscreen = () => {
+    playerShellRef.current?.requestFullscreen?.().catch(() => undefined);
+  };
+
+  const share = () => {
+    const url = `${window.location.origin}/${channel.username}`;
+    if (navigator.share) {
+      navigator.share({ title: channel.displayName, url }).catch(() => undefined);
+      return;
+    }
+    navigator.clipboard?.writeText(url).catch(() => undefined);
   };
 
   const fallback = (
@@ -50,10 +47,10 @@ function ChannelContent({ channel, initialFollowing, canFollow, authenticated }:
   return (
     <div className="flex min-h-[100svh] overflow-x-hidden bg-black pb-16 text-[#efeff1] md:pb-0">
       <section className="flex min-w-0 flex-1 flex-col">
-        <div className="relative aspect-video max-h-[62svh] min-h-[220px] w-full overflow-hidden bg-black md:max-h-none lg:min-h-0 lg:flex-1 lg:aspect-auto">
+        <div ref={playerShellRef} className="relative aspect-video max-h-[62svh] min-h-[220px] w-full overflow-hidden bg-black md:max-h-none lg:min-h-0 lg:flex-1 lg:aspect-auto">
           {channel.hostIdentity && channel.live ? <LiveVideoPlayer fallback={fallback} /> : fallback}
           <button onClick={() => setPlayerControlsOpen(!playerControlsOpen)} className="absolute inset-0 z-[5]" aria-label={playerControlsOpen ? "Hide player controls" : "Show player controls"} />
-          {playerControlsOpen && <PlayerControlsOverlay channel={channel} />}
+          {playerControlsOpen && <PlayerControlsOverlay channel={channel} onFullscreen={enterFullscreen} onShare={share} />}
           <div className="absolute left-3 top-3 z-10 flex items-center gap-2 md:hidden">
             <Link href="/" className="grid h-10 w-10 place-items-center rounded-full bg-black/70 text-xl text-white backdrop-blur" aria-label="Return home">←</Link>
             <button onClick={() => setDetailsOpen(true)} className="grid h-10 w-10 place-items-center rounded-full bg-black/70 text-xl text-white backdrop-blur" aria-label="Open stream details">›</button>
@@ -66,33 +63,27 @@ function ChannelContent({ channel, initialFollowing, canFollow, authenticated }:
           </div>}
         </div>
       </section>
-      {channel.hostIdentity && channel.live ? <LiveChatPanel hostIdentity={channel.hostIdentity} creatorHeader={<StreamCreatorHeader channel={channel} expanded={playerControlsOpen} favorite={favorite} onFavorite={() => setFavorite(!favorite)} onDetails={() => setDetailsOpen(true)} initialFollowing={initialFollowing} authenticated={authenticated} />} /> : <aside className={`${chatOpen ? "w-[380px] xl:w-[460px]" : "w-12"} hidden shrink-0 border-l border-[#29292f] bg-[#18181b] transition-[width] md:flex md:flex-col`}>
-        {chatOpen && <StreamCreatorHeader channel={channel} expanded={playerControlsOpen} favorite={favorite} onFavorite={() => setFavorite(!favorite)} onDetails={() => setDetailsOpen(true)} initialFollowing={initialFollowing} authenticated={authenticated} />}
+      {channel.hostIdentity && channel.live ? <LiveChatPanel hostIdentity={channel.hostIdentity} creatorHeader={<StreamCreatorHeader channel={channel} expanded={playerControlsOpen} onDetails={() => setDetailsOpen(true)} initialFollowing={initialFollowing} authenticated={authenticated} />} /> : <aside className={`${chatOpen ? "w-[380px] xl:w-[460px]" : "w-12"} hidden shrink-0 border-l border-[#29292f] bg-[#18181b] transition-[width] md:flex md:flex-col`}>
+        {chatOpen && <StreamCreatorHeader channel={channel} expanded={playerControlsOpen} onDetails={() => setDetailsOpen(true)} initialFollowing={initialFollowing} authenticated={authenticated} />}
         <div className="flex h-12 items-center justify-between border-b border-[#29292f] px-3">
           {chatOpen && <span className="text-xs font-black uppercase">Stream chat</span>}
           <button onClick={() => setChatOpen(!chatOpen)} className="ml-auto rounded p-1 text-[#adadb8] hover:bg-[#2f2f35]">{chatOpen ? "→" : "←"}</button>
         </div>
-        {chatOpen && channel.hostIdentity ? <div className="grid flex-1 place-items-center p-4 text-center text-xs text-[#adadb8]">Chat is available while the channel is live.</div> : chatOpen && <>
-          <div className="flex-1 space-y-4 overflow-y-auto p-3 text-sm">{messages.map(([user, text], index) => <p key={`${user}-${index}`}><strong className="mr-2 text-[#bf94ff]">{user}:</strong><span className="text-[#dedee3]">{text}</span></p>)}</div>
-          <div className="border-t border-[#29292f] p-3">
-            <div className="flex rounded-md border border-[#3f3f46] bg-[#242429] focus-within:border-[#9147ff]"><input value={message} maxLength={inputLimits.chatMessage} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => event.key === "Enter" && send()} placeholder="Send a message" className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none" /><button onClick={send} className="px-3 text-[#bf94ff]"><SendIcon className="h-4 w-4" /></button></div>
-            <p className="mt-2 text-[11px] text-[#adadb8]">Chat messages are local until WebSockets are connected.</p>
-          </div>
-        </>}
+        {chatOpen && <div className="grid flex-1 place-items-center p-4 text-center text-xs text-[#adadb8]">Chat is available only while the channel is live.</div>}
       </aside>}
       {detailsOpen && <StreamDetails channel={channel} canFollow={canFollow} initialFollowing={initialFollowing} authenticated={authenticated} onClose={() => setDetailsOpen(false)} />}
     </div>
   );
 }
 
-function StreamCreatorHeader({ channel, expanded, favorite, onFavorite, onDetails, initialFollowing, authenticated }: { channel: Channel; expanded: boolean; favorite: boolean; onFavorite: () => void; onDetails: () => void; initialFollowing: boolean; authenticated: boolean }) {
-  if (expanded) return <div className="flex h-20 min-w-0 shrink-0 items-center gap-2 overflow-hidden border-b border-[#29292f] px-3"><Link href="/" className="grid h-9 w-9 shrink-0 place-items-center rounded text-xl text-[#adadb8] hover:bg-[#2f2f35] hover:text-white" aria-label="Return home">←</Link><Avatar channel={channel} /><span className="min-w-0 flex-1"><strong className="block truncate text-sm">{channel.displayName}</strong><i className="mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-[11px] not-italic text-[#d2d2d8]"><span>{formatViewers(channel.viewers)}</span><b className="h-2 w-2 shrink-0 rounded-full bg-red-600" /><span>LIVE</span></i></span><button onClick={onDetails} className="grid h-9 w-7 shrink-0 place-items-center rounded text-2xl text-[#adadb8] hover:bg-[#2f2f35] hover:text-white" aria-label="Open stream details">›</button><FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} compact /><button onClick={onFavorite} className={`grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#29292f] hover:bg-[#35353d] ${favorite ? "text-[#facc15]" : "text-white"} sm:h-12 sm:w-12`} aria-label={favorite ? "Remove from favorites" : "Add to favorites"} title={favorite ? "Favorited" : "Favorite"}><StarIcon className={`h-5 w-5 sm:h-6 sm:w-6 ${favorite ? "fill-[#facc15]" : ""}`} /></button></div>;
+function StreamCreatorHeader({ channel, expanded, onDetails, initialFollowing, authenticated }: { channel: Channel; expanded: boolean; onDetails: () => void; initialFollowing: boolean; authenticated: boolean }) {
+  if (expanded) return <div className="flex h-20 min-w-0 shrink-0 items-center gap-2 overflow-hidden border-b border-[#29292f] px-3"><Link href="/" className="grid h-9 w-9 shrink-0 place-items-center rounded text-xl text-[#adadb8] hover:bg-[#2f2f35] hover:text-white" aria-label="Return home">←</Link><Avatar channel={channel} /><span className="min-w-0 flex-1"><strong className="block truncate text-sm">{channel.displayName}</strong><i className="mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-[11px] not-italic text-[#d2d2d8]"><span>{formatViewers(channel.viewers)}</span><b className="h-2 w-2 shrink-0 rounded-full bg-red-600" /><span>LIVE</span></i></span><button onClick={onDetails} className="grid h-9 w-7 shrink-0 place-items-center rounded text-2xl text-[#adadb8] hover:bg-[#2f2f35] hover:text-white" aria-label="Open stream details">›</button><FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} compact /></div>;
 
-  return <div className="flex h-20 min-w-0 shrink-0 items-center gap-2 overflow-hidden border-b border-[#29292f] px-3"><Avatar channel={channel} /><span className="min-w-0 flex-1" /><FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} compact /><button onClick={onFavorite} className={`grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#29292f] hover:bg-[#35353d] ${favorite ? "text-[#facc15]" : "text-white"} sm:h-12 sm:w-12`} aria-label={favorite ? "Remove from favorites" : "Add to favorites"} title={favorite ? "Favorited" : "Favorite"}><StarIcon className={`h-5 w-5 sm:h-6 sm:w-6 ${favorite ? "fill-[#facc15]" : ""}`} /></button></div>;
+  return <div className="flex h-20 min-w-0 shrink-0 items-center gap-2 overflow-hidden border-b border-[#29292f] px-3"><Avatar channel={channel} /><span className="min-w-0 flex-1" /><FollowButton userId={channel.hostIdentity} initialFollowing={initialFollowing} authenticated={authenticated} compact /></div>;
 }
 
-function PlayerControlsOverlay({ channel }: { channel: Channel }) {
-  return <div className="pointer-events-none absolute inset-0 z-[6] bg-black/60"><span className="absolute inset-0 grid place-items-center"><i className="flex gap-2"><b className="h-10 w-3 bg-white" /><b className="h-10 w-3 bg-white" /></i></span><div className="absolute inset-x-0 bottom-0 flex items-center gap-4 bg-gradient-to-t from-black/90 to-transparent pb-5 pl-4 pr-4 pt-14 text-white sm:gap-6 sm:pl-20 sm:pr-5"><span className="text-xs font-bold">{formatViewers(channel.viewers)} viewers</span><ShareIcon className="ml-auto h-6 w-6" /><FullscreenIcon className="h-6 w-6" /></div></div>;
+function PlayerControlsOverlay({ channel, onFullscreen, onShare }: { channel: Channel; onFullscreen: () => void; onShare: () => void }) {
+  return <div className="pointer-events-none absolute inset-0 z-[6] bg-black/60"><span className="absolute inset-0 grid place-items-center"><i className="flex gap-2"><b className="h-10 w-3 bg-white" /><b className="h-10 w-3 bg-white" /></i></span><div className="absolute inset-x-0 bottom-0 flex items-center gap-4 bg-gradient-to-t from-black/90 to-transparent pb-5 pl-4 pr-4 pt-14 text-white sm:gap-6 sm:pl-20 sm:pr-5"><span className="text-xs font-bold">{formatViewers(channel.viewers)} viewers</span><button type="button" onClick={(event) => { event.stopPropagation(); onShare(); }} className="pointer-events-auto ml-auto grid h-10 w-10 place-items-center rounded-full bg-black/50 hover:bg-black/80" aria-label="Share channel"><ShareIcon className="h-5 w-5" /></button><button type="button" onClick={(event) => { event.stopPropagation(); onFullscreen(); }} className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full bg-black/50 hover:bg-black/80" aria-label="Enter fullscreen"><FullscreenIcon className="h-5 w-5" /></button></div></div>;
 }
 
 function StreamDetails({ channel, canFollow, initialFollowing, authenticated, onClose }: { channel: Channel; canFollow: boolean; initialFollowing: boolean; authenticated: boolean; onClose: () => void }) {

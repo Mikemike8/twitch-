@@ -6,6 +6,8 @@ const limits = {
   creatorFilmTitle: 120,
   searchTerm: 100,
   streamName: 120,
+  watchClubDescription: 500,
+  watchClubTitle: 120,
   username: 24,
 } as const;
 

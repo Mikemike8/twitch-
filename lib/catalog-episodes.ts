@@ -91,6 +91,27 @@ export const muxEpisodePlaybackIds: Record<string, string[]> = {
 
 export function seriesEpisodes(channel: Channel, progressByEpisode = new Map<string, EpisodeProgress>()) {
   const title = channel.catalogTitle ?? channel.displayName;
+  if (channel.catalogEpisodes?.length) {
+    const thumbnails = demoCatalogTitles.map((item) => item.posterUrl ?? item.thumbnailUrl).filter(Boolean) as string[];
+    return channel.catalogEpisodes.map((episode, index) => {
+      const progress = progressByEpisode.get(episode.id);
+      return {
+        id: episode.id,
+        code: `S${episode.seasonNumber} E${episode.number}`,
+        name: episode.title,
+        date: `Mar ${1 + index * 7}, 2026`,
+        duration: episode.durationSeconds ? `${Math.ceil(episode.durationSeconds / 60)}M` : `${42 + (index % 3)}M`,
+        description: `Watch ${title}: ${episode.title}.`,
+        thumbnailUrl: episode.thumbnailUrl ?? thumbnails[index % thumbnails.length],
+        viewers: Math.max(120, Math.round(channel.viewers * (1 - index * 0.085))),
+        muxPlaybackId: episode.muxPlaybackId ?? undefined,
+        positionSeconds: progress?.positionSeconds ?? 0,
+        progressPercent: progress?.progressPercent ?? 0,
+        trailerUrl: trailerSources[title]?.url ?? `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} official trailer`)}`,
+      };
+    });
+  }
+
   const playbackIds = muxEpisodePlaybackIds[title] ?? [];
   const trailer = trailerSources[title] ?? {
     url: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${title} official trailer episode`)}`,

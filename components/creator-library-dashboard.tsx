@@ -15,7 +15,7 @@ type CreatorFilmListItem = {
   updatedAt: string;
 };
 
-export function CreatorLibraryDashboard({ initialFilms }: { initialFilms: CreatorFilmListItem[] }) {
+export function CreatorLibraryDashboard({ initialFilms, persistChanges }: { initialFilms: CreatorFilmListItem[]; persistChanges: boolean }) {
   const [films, setFilms] = useState(initialFilms);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -27,6 +27,32 @@ export function CreatorLibraryDashboard({ initialFilms }: { initialFilms: Creato
 
   const addFilm = () => {
     setStatus("");
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle) {
+      setStatus("Title is required");
+      return;
+    }
+
+    if (!persistChanges) {
+      const now = new Date().toISOString();
+      setFilms((current) => [{
+        id: globalThis.crypto?.randomUUID?.() ?? String(now),
+        title: normalizedTitle,
+        description: description.trim(),
+        posterUrl: posterUrl.trim(),
+        playbackUrl: playbackUrl.trim(),
+        visibility,
+        updatedAt: now,
+      }, ...current]);
+      setTitle("");
+      setDescription("");
+      setPosterUrl("");
+      setPlaybackUrl("");
+      setVisibility("PUBLIC");
+      setStatus(visibility === "PUBLIC" ? "Demo film added locally" : "Demo draft saved locally");
+      return;
+    }
+
     startTransition(() => {
       onCreateCreatorFilm({ title, description, posterUrl, playbackUrl, visibility })
         .then((film) => {

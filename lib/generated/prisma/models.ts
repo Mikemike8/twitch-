@@ -9,6 +9,9 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/User.ts'
+export type * from './models/BillingCustomer.ts'
+export type * from './models/BillingSubscription.ts'
+export type * from './models/WatchClub.ts'
 export type * from './models/CatalogTitle.ts'
 export type * from './models/Season.ts'
 export type * from './models/Episode.ts'

@@ -2,13 +2,15 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { createParticipantIdentity, getUserIdFromParticipantIdentity } from "../lib/participant-identity.ts";
 import { publicUsername, redactPrivateIdentity } from "../lib/public-identity.ts";
-import { createMemoryRateLimiter, RateLimitError } from "../lib/rate-limit.ts";
+import { createMemoryRateLimiter, createUpstashRateLimiter, RateLimitError } from "../lib/rate-limit.ts";
 import { createSecretStorage } from "../lib/secret-storage.ts";
 import { getClientAddressFromHeaders } from "../lib/client-address-core.ts";
 import { resolveLiveKitTokenIssuer } from "../lib/token-issuer-service.ts";
 import { serializeAnalyticsMetadata } from "../lib/analytics-validation.ts";
 import { demoCatalogTitles, demoLiveChannels } from "../lib/channels.ts";
+import { getConfiguredLiveTvChannels, parseXmlTv } from "../lib/live-tv-service.ts";
 import { isUsernameRootSegment } from "../lib/routes.ts";
+import { sanitizeStreamSettingsUpdate } from "../lib/settings-validation.ts";
 import { boundedPage, boundedSearchTerm, inputLimits, requireBoundedText, requireUsername, requireUuid } from "../lib/validation.ts";
 import { createViewerTokenService } from "../lib/viewer-token-service.ts";
 
@@ -61,11 +63,41 @@ test("client address ignores proxy headers unless trusted", () => {
   assert.equal(getClientAddressFromHeaders(requestHeaders, {}), "unknown");
   assert.equal(getClientAddressFromHeaders(requestHeaders, { TRUST_PROXY_HEADERS: "true" }), "203.0.113.7");
   assert.equal(getClientAddressFromHeaders(requestHeaders, { VERCEL: "1" }), "203.0.113.7");
+  assert.equal(getClientAddressFromHeaders(new Headers({ "x-forwarded-for": "bad value" }), { TRUST_PROXY_HEADERS: "true" }), "unknown");
+});
+
+test("upstash rate limiter rejects over-limit buckets", async (context) => {
+  const calls: unknown[] = [];
+  context.mock.method(globalThis, "fetch", async (_input, init) => {
+    calls.push(JSON.parse(String(init?.body)));
+    return Response.json([{ result: calls.length }, { result: 1 }]);
+  });
+
+  const limiter = createUpstashRateLimiter({ url: "https://redis.example.test", token: "secret" });
+  await limiter.enforce("viewer-token:host:ip", 2);
+  await limiter.enforce("viewer-token:host:ip", 2);
+  await assert.rejects(() => limiter.enforce("viewer-token:host:ip", 2), RateLimitError);
+  assert.equal(calls.length, 3);
 });
 
 test("bounded text validation trims accepted values and rejects oversized input", () => {
   assert.equal(requireBoundedText("  stream title  ", "streamName"), "stream title");
   assert.throws(() => requireBoundedText("x".repeat(inputLimits.streamName + 1), "streamName"), /streamName is too long/);
+});
+
+test("stream settings sanitizer accepts only supported persisted fields", () => {
+  assert.deepEqual(sanitizeStreamSettingsUpdate({
+    isChatDelayed: true,
+    isChatEnabled: false,
+    isChatFollowersOnly: true,
+    name: "  Night stream  ",
+  }), {
+    isChatDelayed: true,
+    isChatEnabled: false,
+    isChatFollowersOnly: true,
+    name: "Night stream",
+  });
+  assert.throws(() => sanitizeStreamSettingsUpdate({}), /No valid stream settings/);
 });
 
 test("search terms are trimmed and capped", () => {
@@ -105,6 +137,31 @@ test("catalog and live demo fixtures expose explicit product domains", () => {
   assert.ok(demoLiveChannels.length > 0);
   assert.equal(demoCatalogTitles.every((item) => item.kind === "catalog" && item.source === "demo" && !item.live), true);
   assert.equal(demoLiveChannels.every((item) => item.kind === "creator" && item.source === "demo" && item.live), true);
+});
+
+test("live television config and XMLTV guide parsing are bounded and explicit", () => {
+  const channels = getConfiguredLiveTvChannels({
+    LIVE_TV_CHANNELS_JSON: JSON.stringify([{
+      description: "Local test channel",
+      id: "local-5",
+      name: "Local 5",
+      streamType: "hls",
+      streamUrl: "https://video.example.test/live.m3u8",
+    }]),
+  } as NodeJS.ProcessEnv);
+  assert.equal(channels[0].id, "local-5");
+
+  const programs = parseXmlTv(`
+    <tv>
+      <programme channel="local-5" start="20260716180000 +0000" stop="20260716190000 +0000">
+        <title>Evening News</title>
+        <desc>Local city news.</desc>
+      </programme>
+    </tv>
+  `, "local-5");
+  assert.equal(programs.length, 1);
+  assert.equal(programs[0].title, "Evening News");
+  assert.equal(programs[0].description, "Local city news.");
 });
 
 test("route registry keeps reserved app roots out of public profile matching", () => {
@@ -245,4 +302,104 @@ test("viewer tokens use the requested creator issuer and room", async () => {
     { apiKey: "creator-a-key", room: creatorA },
     { apiKey: "creator-b-key", room: creatorB },
   ]);
+});
+
+test("anonymous viewer tokens cannot chat or publish data", async () => {
+  const hostId = "77777777-7777-4777-8777-777777777777";
+  const grants: Array<{ canPublish?: boolean; canPublishData?: boolean; room?: string }> = [];
+  class MockAccessToken {
+    addGrant(grant: { canPublish?: boolean; canPublishData?: boolean; room?: string }) {
+      grants.push(grant);
+    }
+
+    async toJwt() {
+      return "token";
+    }
+  }
+  const db = {
+    follow: { findUnique: async () => null },
+    stream: {
+      findUnique: async () => ({
+        id: "stream-host",
+        isChatDelayed: false,
+        isChatEnabled: true,
+        isChatFollowersOnly: false,
+        userId: hostId,
+      }),
+    },
+    user: {
+      findUnique: async () => ({ id: hostId, username: "host" }),
+    },
+  };
+  const issueViewerToken = createViewerTokenService({
+    createAccessToken: MockAccessToken as never,
+    createParticipantIdentity: (userId) => `${userId}:viewer:88888888-8888-4888-8888-888888888888`,
+    createGuestId: () => "99999999-9999-4999-8999-999999999999",
+    db: db as never,
+    getAuthenticatedViewer: async () => null,
+    getTokenIssuer: async () => ({
+      apiKey: "key",
+      apiSecret: "secret",
+      source: "global",
+      wsUrl: "wss://livekit.example.test",
+    }),
+  });
+
+  const result = await issueViewerToken(hostId);
+
+  assert.equal(result.isAuthenticated, false);
+  assert.equal(result.canChat, false);
+  assert.deepEqual(grants, [{ room: hostId, roomJoin: true, canPublish: false, canPublishData: false, canSubscribe: true }]);
+});
+
+test("followers-only chat requires an authenticated follow relationship", async () => {
+  const hostId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const viewerId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  class MockAccessToken {
+    addGrant() {}
+    async toJwt() { return "token"; }
+  }
+  const db = {
+    follow: { findUnique: async () => null },
+    stream: {
+      findUnique: async () => ({
+        id: "stream-host",
+        isChatDelayed: false,
+        isChatEnabled: true,
+        isChatFollowersOnly: true,
+        userId: hostId,
+      }),
+    },
+    user: { findUnique: async () => ({ id: hostId, username: "host" }) },
+  };
+  const issueViewerToken = createViewerTokenService({
+    createAccessToken: MockAccessToken as never,
+    db: db as never,
+    getAuthenticatedViewer: async () => ({ id: viewerId, username: "viewer" }),
+    getTokenIssuer: async () => ({ apiKey: "key", apiSecret: "secret", source: "global" }),
+  });
+
+  const result = await issueViewerToken(hostId);
+
+  assert.equal(result.isAuthenticated, true);
+  assert.equal(result.isFollowing, false);
+  assert.equal(result.canChat, false);
+});
+
+test("blocked viewers cannot receive viewer tokens", async () => {
+  const hostId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+  const viewerId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+  const db = {
+    follow: { findUnique: async () => null },
+    stream: { findUnique: async () => ({ id: "stream-host", isChatDelayed: false, isChatEnabled: true, isChatFollowersOnly: false }) },
+    user: { findUnique: async () => ({ id: hostId, username: "host" }) },
+  };
+  const issueViewerToken = createViewerTokenService({
+    db: db as never,
+    getAuthenticatedViewer: async () => ({ id: viewerId, username: "viewer" }),
+    getTokenIssuer: async () => ({ apiKey: "key", apiSecret: "secret", source: "global" }),
+    isBlocked: async () => true,
+  });
+
+  await assert.rejects(() => issueViewerToken(hostId), /cannot watch/);
 });

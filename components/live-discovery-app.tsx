@@ -101,7 +101,6 @@ function MobileLiveTv({ selected, channels, followedUsernames, clerkConfigured, 
   const [mobileFilter, setMobileFilter] = useState<MobileLiveFilter>("All");
   const displayedChannels = channels.filter((channel, index) => matchesFilter(channel, index, mobileFilter, followedUsernames));
   const featured = displayedChannels.slice(0, 6);
-  const [notified, setNotified] = useState(false);
   return <div className="min-h-[100svh] bg-black pb-[78px] text-white lg:hidden landscape:fixed landscape:inset-0 landscape:z-50 landscape:min-h-0 landscape:pb-0">
     <header className="sticky top-0 z-30 bg-gradient-to-b from-black via-black/92 to-black/0 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] landscape:hidden">
       <div className="flex items-center justify-center">
@@ -117,8 +116,6 @@ function MobileLiveTv({ selected, channels, followedUsernames, clerkConfigured, 
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/15" />
       <div className="absolute inset-x-0 top-0 flex items-start gap-3 bg-gradient-to-b from-black/75 to-transparent px-4 py-4 landscape:px-6">
         <span className="rounded bg-[#e50914] px-2 py-1 text-[10px] font-bold uppercase">LIVE</span>
-        <CastIcon className="ml-auto h-6 w-6" />
-        <FullscreenIcon className="h-6 w-6" />
       </div>
       <div className="absolute inset-x-0 bottom-0 p-5">
         <p className="text-xs font-bold uppercase text-[#e50914]">Live now</p>
@@ -130,7 +127,7 @@ function MobileLiveTv({ selected, channels, followedUsernames, clerkConfigured, 
     <div className="landscape:hidden">
       <div className="mt-5 grid grid-cols-2 gap-3 px-5">
         <Link href={`/${selected.username}`} className="rounded bg-white px-3 py-3 text-center text-sm font-bold text-black">Watch</Link>
-        <button type="button" onClick={() => setNotified((current) => !current)} className="rounded bg-white/20 px-3 py-3 text-sm font-bold text-white">{notified ? "Notifications On" : "Notify Me"}</button>
+        <Link href={viewerUsername ? `/${viewerUsername}` : "/profile"} className="rounded bg-white/20 px-3 py-3 text-center text-sm font-bold text-white">Profile</Link>
       </div>
       <section className="mt-8">
         <h2 className="px-5 text-xl font-bold">Featured Live</h2>
@@ -168,10 +165,6 @@ function MobileLiveBottomNav({ viewerUsername, clerkConfigured }: { viewerUserna
     <Link href="/profile" className={itemClass}><ProfileIcon />Profile</Link>
   );
   return <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-white/10 bg-black/92 px-2 pb-[env(safe-area-inset-bottom)] text-white/55 backdrop-blur-xl"><Link href="/" className={itemClass}><HomeIcon />Home</Link><Link href="/search" className={itemClass}><SearchIcon className="h-7 w-7" />Search</Link><span className={`${itemClass} text-white`}><i className="absolute top-0 h-0.5 w-8 rounded-full bg-[#e50914]" /><LiveTvIcon />Live</span>{profileItem}</nav>;
-}
-
-function CastIcon({ className = "h-5 w-5" }: { className?: string }) {
-  return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M4 19a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" /><path d="M3 13a6 6 0 0 1 6 6M3 8a11 11 0 0 1 11 11" /><path d="M5 5h15a1 1 0 0 1 1 1v11" /></svg>;
 }
 
 function HomeIcon() {

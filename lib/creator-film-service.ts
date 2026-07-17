@@ -56,6 +56,7 @@ type CreatorFilmWithUser = {
   title: string;
   description: string | null;
   posterUrl: string | null;
+  playbackUrl: string | null;
   category: string;
   user: {
     imageUrl: string;
@@ -78,10 +79,17 @@ function creatorFilmToChannel(film: CreatorFilmWithUser): Channel {
     colors: colorsFor(film.id),
     initials: initialsFor(film.title),
     posterUrl: film.posterUrl,
+    playbackProvider: playbackProviderFor(film.playbackUrl),
+    playbackUrl: film.playbackUrl,
     catalogTitle: film.title,
     bio: film.description,
     imageUrl: film.user.imageUrl,
   };
+}
+
+function playbackProviderFor(value: string | null): Channel["playbackProvider"] {
+  if (!value) return undefined;
+  return /^https?:\/\//i.test(value) ? "url" : "mux";
 }
 
 function initialsFor(value: string) {

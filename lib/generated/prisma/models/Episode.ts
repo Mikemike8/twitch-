@@ -593,10 +593,6 @@ export type NullableIntFieldUpdateOperationsInput = {
   divide?: number
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type EpisodeCreateNestedOneWithoutVideoAssetsInput = {
   create?: Prisma.XOR<Prisma.EpisodeCreateWithoutVideoAssetsInput, Prisma.EpisodeUncheckedCreateWithoutVideoAssetsInput>
   connectOrCreate?: Prisma.EpisodeCreateOrConnectWithoutVideoAssetsInput

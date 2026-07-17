@@ -1,6 +1,6 @@
 # Production Readiness Tracker
 
-Last updated: 2026-06-02
+Last updated: 2026-07-16
 
 Target: every vital area at 90-95% before production launch.
 
@@ -9,30 +9,30 @@ percentages when implementation changes are verified with the relevant checks.
 
 ## Overall Status
 
-Current estimated production readiness: **90%**
+Current estimated production readiness: **92%**
 
 ## Scorecard
 
 | Area | Complete | Target | Main work needed |
 | --- | ---: | ---: | --- |
-| Security baseline | 93% | 95% | Provision Upstash, remove remaining CSP inline allowances, configure trusted proxy handling |
-| Token isolation | 94% | 95% | Add provider-backed token integration tests and finalize anonymous-viewer abuse controls |
+| Security baseline | 94% | 95% | Provision production Upstash and remove remaining CSP inline allowances |
+| Token isolation | 95% | 95% | Run provider-backed token checks against production LiveKit |
 | Authentication | 92% | 95% | Verify production Clerk callbacks, add account-sync recovery flow, run signed-in end-to-end tests |
 | Authorization | 94% | 95% | Add provider-backed ownership and abuse tests |
 | Dynamic per-user experience | 86% | 95% | Run signed-in flow tests and add provider-backed personalization coverage |
 | Follow system | 90% | 95% | Add end-to-end tests, improve errors, add optimistic rollback |
-| Block and moderation | 90% | 95% | Add anonymous-viewer abuse controls and provider-backed abuse tests |
-| Live video and OBS ingress | 82% | 95% | Regenerate encrypted keys, test RTMP and WHIP end to end, handle reconnects |
-| WebSockets and LiveKit chat | 90% | 95% | Test room lifecycle and reconnects with provider-backed LiveKit checks |
+| Block and moderation | 92% | 95% | Run provider-backed abuse and moderation checks |
+| Live video and OBS ingress | 85% | 95% | Regenerate encrypted keys, test RTMP and WHIP end to end, handle reconnects |
+| WebSockets and LiveKit chat | 92% | 95% | Run provider-backed room lifecycle and reconnect smoke checks |
 | Webhooks | 92% | 95% | Configure production callback URLs and Upstash, add replay/load tests and monitoring |
 | Stream key security | 91% | 95% | Regenerate legacy keys and document encryption-key rotation |
 | Uploads | 90% | 95% | Test authenticated uploads and define replacement/deletion policy |
 | Search | 93% | 95% | Add query performance tests |
-| Creator dashboard | 80% | 95% | Improve status feedback and test production workflow |
+| Creator dashboard | 84% | 95% | Test production settings, ingress, upload, and moderation workflows |
 | Visible UI interactions | 90% | 95% | Complete provider-backed interaction testing |
-| Reliability | 84% | 95% | Expand integration tests, add error tracking, and define retries |
-| Performance | 70% | 95% | Add caching policy, load tests, and database query review |
-| Deployment readiness | 76% | 95% | Add production secrets, hosting config, observability provider, and verified backups |
+| Reliability | 88% | 95% | Configure error tracking provider and run provider E2E checks |
+| Performance | 76% | 95% | Run load smoke and database query review against production data |
+| Deployment readiness | 84% | 95% | Add production secrets, hosting config, observability provider, and verified backups |
 | Disk and local environment | 70% | 90% | Maintain cache cleanup and preserve working disk headroom |
 
 ## Completed Hardening
@@ -87,16 +87,19 @@ Current estimated production readiness: **90%**
 - Recommended channels are ranked by live status and follower count, exclude followed/blocked relationships, and render in the browse experience.
 - Chat messages are sent through a server action with bounded text validation, authenticated sender checks, block/follower enforcement, per-user and client-address rate limits, and server-side slow mode.
 - LiveKit viewer tokens no longer grant client-side data publishing.
+- Production environment, backup restore, LiveKit provider, and load smoke checks are available as npm scripts.
+- Forwarded client addresses are ignored unless trusted and malformed forwarded addresses are discarded.
+- Automated tests cover Upstash limiter behavior, anonymous viewer no-chat/no-publish grants, followers-only chat denial, and blocked-viewer token denial.
 
 ## Priority Plan
 
-1. Configure production secrets and Upstash distributed rate limiting.
-2. Add integration tests for auth, follow, block, tokens, webhooks, ingress, and uploads.
-3. Test OBS RTMP/WHIP and LiveKit chat end to end.
-4. Run provider-backed room lifecycle, reconnect, and chat delivery tests.
-5. Add monitoring, error tracking, and verified backup restore checks.
-6. Add caching, load tests, and database query review.
-7. Finalize anonymous-viewer abuse controls and trusted proxy behavior.
+1. Enter production secrets in the hosting platform and run `npm run check:prod`.
+2. Run `npm run smoke:provider`, then manually verify RTMP and WHIP ingest from OBS.
+3. Run provider-backed room lifecycle, reconnect, chat delivery, kick, and block tests.
+4. Configure `ERROR_TRACKING_DSN` and host log-drain alerts for structured error logs.
+5. Complete a backup restore drill, set `BACKUP_RESTORE_VERIFIED_AT`, and run `npm run smoke:backup`.
+6. Run `npm run smoke:load` against production and review slow database queries.
+7. Regenerate creator stream keys after deployment so all stored keys use current encryption.
 
 ## Production Configuration Gates
 
@@ -104,6 +107,9 @@ These values must exist in the production environment:
 
 ```text
 APP_ENCRYPTION_KEY
+STRIPE_SECRET_KEY
+STRIPE_CREATOR_PRO_PRICE_ID
+STRIPE_CREATOR_PARTNER_PRICE_ID
 UPSTASH_REDIS_REST_URL
 UPSTASH_REDIS_REST_TOKEN
 ```
@@ -126,6 +132,10 @@ npm run lint
 npm run build
 npm test
 npm audit --omit=dev --audit-level=moderate
+npm run check:prod
+npm run smoke:backup
+npm run smoke:provider
+npm run smoke:load
 npx prisma validate
 git diff --check
 ```

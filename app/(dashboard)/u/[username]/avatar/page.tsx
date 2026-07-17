@@ -10,5 +10,5 @@ export default async function CreatorAvatarPage({
   const { username } = await params;
   const self = isClerkConfigured ? await getSelf() : null;
 
-  return <DashboardAvatarPicker username={self?.username ?? username} currentImageUrl={self?.imageUrl ?? ""} />;
+  return <DashboardAvatarPicker username={self?.username ?? username} currentImageUrl={self?.imageUrl ?? ""} persistChanges={Boolean(self)} />;
 }

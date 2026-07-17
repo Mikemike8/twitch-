@@ -13,6 +13,17 @@ type CatalogTitleRow = {
   episodeTitle: string | null;
 };
 
+type CatalogEpisodeRow = {
+  catalogSlug: string;
+  durationSeconds: number | null;
+  id: string;
+  muxPlaybackId: string | null;
+  number: number;
+  seasonNumber: number;
+  thumbnailUrl: string | null;
+  title: string;
+};
+
 export type ContinueWatchingItem = {
   channel: Channel;
   durationSeconds: number | null;
@@ -66,7 +77,9 @@ export async function getCatalogTitles(page = 1) {
       OFFSET ${(page - 1) * pageSize}
     `;
 
-    return { channels: rows.slice(0, pageSize).map(rowToChannel), hasNext: rows.length > pageSize };
+    const pageRows = rows.slice(0, pageSize);
+    const episodeMap = await getEpisodesBySlugs(pageRows.map((row) => row.slug));
+    return { channels: pageRows.map((row) => rowToChannel(row, episodeMap.get(row.slug))), hasNext: rows.length > pageSize };
   } catch (error) {
     logger.error("catalog.titles.query_failed", { error: error instanceof Error ? error.message : "Unknown error", page });
     return { channels: [] as Channel[], hasNext: false };
@@ -112,7 +125,9 @@ export async function searchCatalogTitles(query: string, page = 1) {
       OFFSET ${(page - 1) * pageSize}
     `;
 
-    return { channels: rows.slice(0, pageSize).map(rowToChannel), hasNext: rows.length > pageSize };
+    const pageRows = rows.slice(0, pageSize);
+    const episodeMap = await getEpisodesBySlugs(pageRows.map((row) => row.slug));
+    return { channels: pageRows.map((row) => rowToChannel(row, episodeMap.get(row.slug))), hasNext: rows.length > pageSize };
   } catch (error) {
     logger.error("catalog.search.query_failed", { error: error instanceof Error ? error.message : "Unknown error", page });
     return { channels: [] as Channel[], hasNext: false };
@@ -164,7 +179,34 @@ export async function getContinueWatching(userId: string) {
   }
 }
 
-function rowToChannel(row: CatalogTitleRow): Channel {
+async function getEpisodesBySlugs(slugs: string[]) {
+  if (!slugs.length) return new Map<string, CatalogEpisodeRow[]>();
+
+  const rows = await db.$queryRaw<CatalogEpisodeRow[]>`
+    SELECT
+      ct."slug" AS "catalogSlug",
+      ep."id",
+      ep."number",
+      ep."title",
+      ep."durationSeconds",
+      ep."thumbnailUrl",
+      ep."muxPlaybackId",
+      season."number" AS "seasonNumber"
+    FROM "CatalogTitle" ct
+    JOIN "Season" season ON season."catalogTitleId" = ct."id"
+    JOIN "Episode" ep ON ep."seasonId" = season."id"
+    WHERE ct."slug" = ANY(${slugs})
+    ORDER BY ct."slug", season."number" ASC, ep."number" ASC
+  `;
+
+  const map = new Map<string, CatalogEpisodeRow[]>();
+  for (const row of rows) {
+    map.set(row.catalogSlug, [...(map.get(row.catalogSlug) ?? []), row]);
+  }
+  return map;
+}
+
+function rowToChannel(row: CatalogTitleRow, episodes: CatalogEpisodeRow[] = []): Channel {
   return {
     kind: "catalog",
     source: "database",
@@ -182,6 +224,15 @@ function rowToChannel(row: CatalogTitleRow): Channel {
     catalogTitle: row.title,
     bio: row.description,
     firstEpisodeId: row.firstEpisodeId,
+    catalogEpisodes: episodes.map((episode) => ({
+      durationSeconds: episode.durationSeconds,
+      id: episode.id,
+      muxPlaybackId: episode.muxPlaybackId,
+      number: episode.number,
+      seasonNumber: episode.seasonNumber,
+      thumbnailUrl: episode.thumbnailUrl,
+      title: episode.title,
+    })),
   };
 }
 

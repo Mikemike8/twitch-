@@ -10,6 +10,8 @@ const forbiddenPublicPatterns = [
   "UPLOADTHING_TOKEN",
   "UPSTASH_REDIS_REST_TOKEN",
   "APP_ENCRYPTION_KEY",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
 ];
 
 let failed = false;

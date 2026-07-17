@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { onUpdateAvatar } from "@/actions/user";
 import { avatarIdFromImageUrl, creatorAvatars, type CreatorAvatar } from "@/lib/avatar-library";
 
-export function DashboardAvatarPicker({ currentImageUrl, username }: { currentImageUrl: string; username: string }) {
+export function DashboardAvatarPicker({ currentImageUrl, persistChanges, username }: { currentImageUrl: string; persistChanges: boolean; username: string }) {
   const [selectedId, setSelectedId] = useState(avatarIdFromImageUrl(currentImageUrl) ?? "red");
   const [status, setStatus] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -14,6 +14,11 @@ export function DashboardAvatarPicker({ currentImageUrl, username }: { currentIm
 
   const save = () => {
     setStatus("");
+    if (!persistChanges) {
+      setStatus("Demo avatar updated locally");
+      return;
+    }
+
     startTransition(() => {
       onUpdateAvatar(selectedId)
         .then(() => setStatus("Avatar updated"))

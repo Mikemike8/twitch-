@@ -9,6 +9,7 @@ export default async function CreatorLibraryPage() {
 
   return (
     <CreatorLibraryDashboard
+      persistChanges={Boolean(self)}
       initialFilms={films.map((film) => ({
         id: film.id,
         title: film.title,

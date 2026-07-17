@@ -19,6 +19,17 @@ export type Channel = {
   bio?: string | null;
   followerCount?: number;
   firstEpisodeId?: string | null;
+  catalogEpisodes?: {
+    durationSeconds: number | null;
+    id: string;
+    muxPlaybackId: string | null;
+    number: number;
+    seasonNumber: number;
+    thumbnailUrl: string | null;
+    title: string;
+  }[];
+  playbackProvider?: "mux" | "url";
+  playbackUrl?: string | null;
 };
 
 export const demoCatalogTitles: Channel[] = [

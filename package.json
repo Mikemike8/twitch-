@@ -9,8 +9,13 @@
     "lint": "eslint",
     "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/*.test.ts",
     "check-env": "node scripts/check-env.mjs",
+    "check:prod": "node scripts/check-env.mjs && node scripts/check-production-env.mjs",
     "audit": "npm audit --audit-level=high",
     "audit:fix": "npm audit fix",
+    "smoke:provider": "node scripts/provider-smoke.mjs",
+    "smoke:load": "node scripts/load-smoke.mjs",
+    "smoke:mobile": "node scripts/mobile-smoke.mjs",
+    "smoke:backup": "node scripts/backup-restore-check.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -27,10 +32,13 @@
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "shaka-player": "^5.2.1",
+    "stripe": "^22.3.2",
     "svix": "^1.95.1",
     "uploadthing": "^7.7.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

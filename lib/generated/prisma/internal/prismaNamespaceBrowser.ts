@@ -52,6 +52,9 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  BillingCustomer: 'BillingCustomer',
+  BillingSubscription: 'BillingSubscription',
+  WatchClub: 'WatchClub',
   CatalogTitle: 'CatalogTitle',
   Season: 'Season',
   Episode: 'Episode',
@@ -96,6 +99,51 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const BillingCustomerScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  stripeCustomerId: 'stripeCustomerId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingCustomerScalarFieldEnum = (typeof BillingCustomerScalarFieldEnum)[keyof typeof BillingCustomerScalarFieldEnum]
+
+
+export const BillingSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  stripeCustomerId: 'stripeCustomerId',
+  stripeSubscriptionId: 'stripeSubscriptionId',
+  stripePriceId: 'stripePriceId',
+  planId: 'planId',
+  status: 'status',
+  currentPeriodStart: 'currentPeriodStart',
+  currentPeriodEnd: 'currentPeriodEnd',
+  cancelAtPeriodEnd: 'cancelAtPeriodEnd',
+  canceledAt: 'canceledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BillingSubscriptionScalarFieldEnum = (typeof BillingSubscriptionScalarFieldEnum)[keyof typeof BillingSubscriptionScalarFieldEnum]
+
+
+export const WatchClubScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  channelId: 'channelId',
+  programId: 'programId',
+  startsAt: 'startsAt',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WatchClubScalarFieldEnum = (typeof WatchClubScalarFieldEnum)[keyof typeof WatchClubScalarFieldEnum]
 
 
 export const CatalogTitleScalarFieldEnum = {

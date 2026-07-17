@@ -520,10 +520,6 @@ export type StreamUncheckedUpdateOneWithoutUserNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.StreamUpdateToOneWithWhereWithoutUserInput, Prisma.StreamUpdateWithoutUserInput>, Prisma.StreamUncheckedUpdateWithoutUserInput>
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type StreamCreateWithoutUserInput = {
   id?: string
   name: string
